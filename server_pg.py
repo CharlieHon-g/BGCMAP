@@ -61,7 +61,16 @@ NCBI_BIOSAMPLE_RE = re.compile(r"^(SAMN|SAMEA|SAMD)")
 NCBI_SRA_RE = re.compile(r"^(SRR|ERR|DRR|SRX|ERX|DRX|SRS|ERS|DRS|SRP|ERP|DRP)")
 
 
-# ── PostgreSQL query helpers ──────────────────────────────
+# ── Count cache (MV is read-only, counts never change) ────
+_count_cache: dict = {}
+
+def cached_count(conn, sql: str, params: list) -> int:
+    key = (sql, tuple(params))
+    if key in _count_cache:
+        return _count_cache[key]
+    cnt = pg_query_one(conn, sql, params)["cnt"]
+    _count_cache[key] = cnt
+    return cnt
 
 def open_db() -> psycopg2.extensions.connection:
     conn = get_conn(autocommit=True, cursor_factory=psycopg2.extras.RealDictCursor)
@@ -1592,7 +1601,7 @@ class SpireHandler(BaseHTTPRequestHandler):
             order_by, order_dir = "display_order", "asc"
         order_sql = f"ORDER BY {order_by} {order_dir.upper()}, sample_id ASC"
 
-        total = pg_query_one(conn, f"SELECT count(*) AS cnt FROM mv_sample_page {where}", params)["cnt"]
+        total = cached_count(conn, f"SELECT count(*) AS cnt FROM mv_sample_page {where}", list(params))
         if total == 0:
             conn.close()
             send_json(self, page_payload(0, page, page_size, []))
@@ -1681,7 +1690,7 @@ class SpireHandler(BaseHTTPRequestHandler):
         else:
             order_clause = "ORDER BY v.genome_id"
 
-        total = pg_query_one(conn, f"SELECT count(*) AS cnt FROM mv_mag_page v {where}", params)["cnt"]
+        total = cached_count(conn, f"SELECT count(*) AS cnt FROM mv_mag_page v {where}", list(params))
         conn.close()
         if total == 0:
             send_json(self, page_payload(0, page, page_size, []))
@@ -1768,10 +1777,10 @@ class SpireHandler(BaseHTTPRequestHandler):
 
         clauses = [c for c in clauses if c != "1 = 1"]
         has_filters = len(clauses) > 0
-        total = pg_query_one(conn, f"""
+        total = cached_count(conn, f"""
             SELECT count(*) AS cnt FROM mv_bgc_page v
             {where}
-        """, params)["cnt"]
+        """, list(params))
         if total == 0:
             conn.close()
             send_json(self, page_payload(0, page, page_size, []))
@@ -1810,7 +1819,7 @@ class SpireHandler(BaseHTTPRequestHandler):
             where = "WHERE lower(COALESCE(representative_type, '')) LIKE %s"
             params.extend([like])
         conn = open_db()
-        total = pg_query_one(conn, f"SELECT count(*) AS cnt FROM mv_gcf_page {where}", params)["cnt"]
+        total = cached_count(conn, f"SELECT count(*) AS cnt FROM mv_gcf_page {where}", list(params))
         if total == 0:
             conn.close()
             send_json(self, page_payload(0, page, page_size, []))
