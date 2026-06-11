@@ -1682,6 +1682,11 @@ class SpireHandler(BaseHTTPRequestHandler):
             order_clause = "ORDER BY v.genome_id"
 
         total = pg_query_one(conn, f"SELECT count(*) AS cnt FROM mv_mag_page v {where}", params)["cnt"]
+        conn.close()
+        if total == 0:
+            send_json(self, page_payload(0, page, page_size, []))
+            return
+        conn = open_db()
         rows = pg_query(conn, f"SELECT v.* FROM mv_mag_page v {where} {order_clause} LIMIT %s OFFSET %s",
                         params + [page_size, (page - 1) * page_size])
         conn.close()
@@ -1781,7 +1786,6 @@ class SpireHandler(BaseHTTPRequestHandler):
         """, params + [page_size, (page - 1) * page_size])
         conn.close()
 
-        env_lookup = load_sample_env_lookup()
         payload_rows = []
         for row in rows:
             item = row_to_dict(row)
