@@ -330,16 +330,32 @@ GROUP BY
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_mv_sample_page_sample_pk
     ON mv_sample_page (sample_pk);
-CREATE INDEX IF NOT EXISTS idx_mv_sample_page_sample_id
-    ON mv_sample_page (sample_id);
-CREATE INDEX IF NOT EXISTS idx_mv_sample_page_biome
-    ON mv_sample_page (biome);
+CREATE INDEX IF NOT EXISTS idx_mv_sample_biome_lower
+    ON mv_sample_page (lower(biome));
+CREATE INDEX IF NOT EXISTS idx_mv_sample_biome_lower_trgm
+    ON mv_sample_page USING gin (lower(biome) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_sample_biome1_lower
+    ON mv_sample_page (lower(biome1));
+CREATE INDEX IF NOT EXISTS idx_mv_sample_biome1_lower_trgm
+    ON mv_sample_page USING gin (lower(biome1) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_sample_biome2_lower
+    ON mv_sample_page (lower(biome2));
+CREATE INDEX IF NOT EXISTS idx_mv_sample_biome2_lower_trgm
+    ON mv_sample_page USING gin (lower(biome2) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_mv_sample_page_project_lower
     ON mv_sample_page (lower(project));
 CREATE INDEX IF NOT EXISTS idx_mv_sample_page_category_lower
     ON mv_sample_page (lower(category));
 CREATE INDEX IF NOT EXISTS idx_mv_sample_page_display_order
     ON mv_sample_page (display_order);
+CREATE INDEX IF NOT EXISTS idx_mv_sample_sample_id_lower
+    ON mv_sample_page (lower(sample_id));
+CREATE INDEX IF NOT EXISTS idx_mv_sample_sampleid_lower_trgm
+    ON mv_sample_page USING gin (lower(sample_id) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_sample_category_lower_trgm
+    ON mv_sample_page USING gin (lower(category) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_sample_project_lower_trgm
+    ON mv_sample_page USING gin (lower(project) gin_trgm_ops);
 
 -- MAG 页
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_mag_page AS
@@ -394,16 +410,32 @@ GROUP BY
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_mv_mag_page_mag_pk
     ON mv_mag_page (mag_pk);
-CREATE INDEX IF NOT EXISTS idx_mv_mag_page_genome_id
-    ON mv_mag_page (genome_id);
-CREATE INDEX IF NOT EXISTS idx_mv_mag_page_sample_id
-    ON mv_mag_page (sample_id);
 CREATE INDEX IF NOT EXISTS idx_mv_mag_sample_id_lower
     ON mv_mag_page (lower(sample_id));
 CREATE INDEX IF NOT EXISTS idx_mv_mag_page_species_lower
     ON mv_mag_page (lower(species));
-CREATE INDEX IF NOT EXISTS idx_mv_mag_page_biome
-    ON mv_mag_page (biome);
+CREATE INDEX IF NOT EXISTS idx_mv_mag_biome_lower_trgm
+    ON mv_mag_page USING gin (lower(biome) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_mag_biome1_lower_trgm
+    ON mv_mag_page USING gin (lower(biome1) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_mag_biome2_lower_trgm
+    ON mv_mag_page USING gin (lower(biome2) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_mag_genome_id_lower
+    ON mv_mag_page (lower(genome_id));
+CREATE INDEX IF NOT EXISTS idx_mv_mag_genomeid_lower_trgm
+    ON mv_mag_page USING gin (lower(genome_id) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_mag_genus_lower_trgm
+    ON mv_mag_page USING gin (lower(genus) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_mag_sampleid_lower_trgm
+    ON mv_mag_page USING gin (lower(sample_id) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_mag_species_lower_trgm
+    ON mv_mag_page USING gin (lower(species) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_mag_biome1_lower
+    ON mv_mag_page (lower(biome1));
+CREATE INDEX IF NOT EXISTS idx_mv_mag_biome2_lower
+    ON mv_mag_page (lower(biome2));
+CREATE INDEX IF NOT EXISTS idx_mv_mag_biome3_lower
+    ON mv_mag_page (lower(biome));
 
 -- BGC 页
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_bgc_page AS
@@ -442,14 +474,8 @@ LEFT JOIN bgc_gcf_membership gm ON gm.bgc_pk = b.bgc_pk;
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_mv_bgc_page_bgc_pk
     ON mv_bgc_page (bgc_pk);
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_page_bgc_name
-    ON mv_bgc_page (bgc_name);
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_page_genome_id
-    ON mv_bgc_page (genome_id);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_page_gcf_id
     ON mv_bgc_page (gcf_id);
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_page_sample_id
-    ON mv_bgc_page (sample_id);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_page_product_lower
     ON mv_bgc_page (lower(product));
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_page_membership_value
@@ -460,14 +486,13 @@ CREATE INDEX IF NOT EXISTS idx_mv_bgc_page_bgc_source_id
 -- Additional indexes for filter performance
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_genome_id_lower ON mv_bgc_page (lower(genome_id));
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_sample_id_lower ON mv_bgc_page (lower(sample_id));
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_bgc_name_lower ON mv_bgc_page (lower(bgc_name));
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_genome_id_src ON mv_bgc_page (lower(genome_id), bgc_source_id);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_biome1_lower ON mv_bgc_page (lower(biome1));
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_biome2_lower ON mv_bgc_page (lower(biome2));
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_biome3_lower ON mv_bgc_page (lower(biome));
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b1_src ON mv_bgc_page (lower(biome1), bgc_source_id);
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b2_src ON mv_bgc_page (lower(biome2), bgc_source_id);
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b3_src ON mv_bgc_page (lower(biome), bgc_source_id);
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_biome1_lower_trgm ON mv_bgc_page USING gin (lower(biome1) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_biome2_lower_trgm ON mv_bgc_page USING gin (lower(biome2) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_biome3_lower_trgm ON mv_bgc_page USING gin (lower(biome) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_category_lower ON mv_bgc_page (lower(category));
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_product_lower ON mv_bgc_page (lower(product));
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_np_pathway_lower ON mv_bgc_page (lower(np_pathway));
@@ -477,6 +502,13 @@ CREATE INDEX IF NOT EXISTS idx_mv_bgc_np_pathway_lower_trgm ON mv_bgc_page USING
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_np_superclass_lower_trgm ON mv_bgc_page USING gin (lower(np_superclass) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_np_class_lower_trgm ON mv_bgc_page USING gin (lower(np_class) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_contig_edge ON mv_bgc_page (contig_edge);
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_genomeid_lower_trgm ON mv_bgc_page USING gin (lower(genome_id) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_sampleid_lower_trgm ON mv_bgc_page USING gin (lower(sample_id) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_product_lower_trgm ON mv_bgc_page USING gin (lower(product) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_category_lower_trgm ON mv_bgc_page USING gin (lower(category) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b1_src ON mv_bgc_page (lower(biome1), bgc_source_id);
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b2_src ON mv_bgc_page (lower(biome2), bgc_source_id);
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b3_src ON mv_bgc_page (lower(biome), bgc_source_id);
 
 -- GCF 页
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_gcf_page AS

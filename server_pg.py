@@ -1507,7 +1507,6 @@ class SpireHandler(BaseHTTPRequestHandler):
         sample_id_filter = (query.get("sample_id", [""])[0] or "").strip()
         genome_id_filter = (query.get("genome_id", [""])[0] or "").strip()
         gcf_filter = (query.get("gcf_id", [""])[0] or "").strip()
-        bgc_name_filter = (query.get("bgc_name", [""])[0] or "").strip()
         bigscape_type_filter = (query.get("category_primary", [""])[0] or "").strip()
         order_by = (query.get("order_by", [""])[0] or "").strip()
         order_dir = (query.get("order_dir", ["asc"])[0] or "asc").strip().lower()
@@ -1533,7 +1532,6 @@ class SpireHandler(BaseHTTPRequestHandler):
         if sample_id_filter: clauses.append("lower(v.sample_id) = lower(%s)"); params.append(sample_id_filter)
         if genome_id_filter: clauses.append("lower(v.genome_id) = lower(%s)"); params.append(genome_id_filter)
         if gcf_filter: clauses.append("v.gcf_id = %s"); params.append(int(gcf_filter))
-        if bgc_name_filter: clauses.append("lower(v.bgc_name) = lower(%s)"); params.append(bgc_name_filter)
         if bigscape_type_filter:
             bs_values = expand_bigscape_type_aliases(bigscape_type_filter)
             if bs_values:
