@@ -398,6 +398,8 @@ CREATE INDEX IF NOT EXISTS idx_mv_mag_page_genome_id
     ON mv_mag_page (genome_id);
 CREATE INDEX IF NOT EXISTS idx_mv_mag_page_sample_id
     ON mv_mag_page (sample_id);
+CREATE INDEX IF NOT EXISTS idx_mv_mag_sample_id_lower
+    ON mv_mag_page (lower(sample_id));
 CREATE INDEX IF NOT EXISTS idx_mv_mag_page_species_lower
     ON mv_mag_page (lower(species));
 CREATE INDEX IF NOT EXISTS idx_mv_mag_page_biome
@@ -457,6 +459,8 @@ CREATE INDEX IF NOT EXISTS idx_mv_bgc_page_bgc_source_id
 
 -- Additional indexes for filter performance
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_genome_id_lower ON mv_bgc_page (lower(genome_id));
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_sample_id_lower ON mv_bgc_page (lower(sample_id));
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_bgc_name_lower ON mv_bgc_page (lower(bgc_name));
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_genome_id_src ON mv_bgc_page (lower(genome_id), bgc_source_id);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_biome1_lower ON mv_bgc_page (lower(biome1));
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_biome2_lower ON mv_bgc_page (lower(biome2));
@@ -465,7 +469,13 @@ CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b1_src ON mv_bgc_page (lower(biome1)
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b2_src ON mv_bgc_page (lower(biome2), bgc_source_id);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b3_src ON mv_bgc_page (lower(biome), bgc_source_id);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_category_lower ON mv_bgc_page (lower(category));
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_np_pathway ON mv_bgc_page (np_pathway);
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_product_lower ON mv_bgc_page (lower(product));
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_np_pathway_lower ON mv_bgc_page (lower(np_pathway));
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_np_superclass_lower ON mv_bgc_page (lower(np_superclass));
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_np_class_lower ON mv_bgc_page (lower(np_class));
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_np_pathway_lower_trgm ON mv_bgc_page USING gin (lower(np_pathway) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_np_superclass_lower_trgm ON mv_bgc_page USING gin (lower(np_superclass) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_np_class_lower_trgm ON mv_bgc_page USING gin (lower(np_class) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_contig_edge ON mv_bgc_page (contig_edge);
 
 -- GCF 页

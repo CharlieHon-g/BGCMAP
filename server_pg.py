@@ -511,10 +511,10 @@ def build_text_clause(expr: str, operator: str, value: str) -> Tuple[str, List]:
     if operator in ("contains", "equals"):
         parts = [p.strip() for p in re.split(r"\s*[，,]\s*", lowered) if p.strip()]
         if len(parts) > 1:
-            clauses = [f"lower(COALESCE({expr}, '')) LIKE %s" for _ in parts]
+            clauses = [f"lower({expr}) LIKE %s" for _ in parts]
             return "(" + " AND ".join(clauses) + ")", [f"%{p}%" for p in parts]
     if operator == "contains":
-        return f"lower(COALESCE({expr}, '')) LIKE %s", [f"%{lowered}%"]
+        return f"lower({expr}) LIKE %s", [f"%{lowered}%"]
     if operator == "equals":
         return f"lower({expr}) = %s", [lowered]
     if operator == "not_equals":
@@ -1135,16 +1135,16 @@ def compile_filter_rule(node: dict, page_kind: str, conn) -> Tuple[str, List]:
             "genome_id": ("text", "v.genome_id"),
             "sample_id": ("text", "v.sample_id"),
             "gcf_id": ("number", "v.gcf_id"),
-            "product": ("text", "COALESCE(v.product, '')"),
-            "category": ("text", "COALESCE(v.category, '')"),
+            "product": ("text", "v.product"),
+            "category": ("text", "v.category"),
             "biome1": ("text", "v.biome1"),
             "biome2": ("text", "v.biome2"),
             "biome3": ("text", "v.biome"),
             "length": ("number", "v.length"),
             "membership_value": ("number", "v.membership_value"),
-            "np_pathway": ("text", "COALESCE(v.NP_pathway, '')"),
-            "np_superclass": ("text", "COALESCE(v.NP_superclass, '')"),
-            "np_class": ("text", "COALESCE(v.NP_class, '')"),
+            "np_pathway": ("text", "v.np_pathway"),
+            "np_superclass": ("text", "v.np_superclass"),
+            "np_class": ("text", "v.np_class"),
             "contig_edge": ("bool", "v.contig_edge"),
         },
     }
@@ -1593,6 +1593,10 @@ class SpireHandler(BaseHTTPRequestHandler):
         order_sql = f"ORDER BY {order_by} {order_dir.upper()}, sample_id ASC"
 
         total = pg_query_one(conn, f"SELECT count(*) AS cnt FROM mv_sample_page {where}", params)["cnt"]
+        if total == 0:
+            conn.close()
+            send_json(self, page_payload(0, page, page_size, []))
+            return
         rows = pg_query(conn, f"SELECT * FROM mv_sample_page {where} {order_sql} LIMIT %s OFFSET %s",
                         params + [page_size, (page - 1) * page_size])
         conn.close()
@@ -1650,8 +1654,8 @@ class SpireHandler(BaseHTTPRequestHandler):
             clauses.append(sc)
             params.extend([like, like, like, like, like, like, like, like, like, like, like, like])
             params.extend(ep)
-        if sample_id_filter: clauses.append("v.sample_id = %s"); params.append(sample_id_filter)
-        if genome_id_filter: clauses.append("v.genome_id = %s"); params.append(genome_id_filter)
+        if sample_id_filter: clauses.append("lower(v.sample_id) = lower(%s)"); params.append(sample_id_filter)
+        if genome_id_filter: clauses.append("lower(v.genome_id) = lower(%s)"); params.append(genome_id_filter)
         if phylum_filter: clauses.append("lower(COALESCE(m.phylum, '')) = %s"); params.append(phylum_filter.lower())
         if class_filter: clauses.append("lower(COALESCE(m.class_name, '')) = %s"); params.append(class_filter.lower())
         if genus_filter: clauses.append("lower(COALESCE(m.genus, '')) = %s"); params.append(genus_filter.lower())
@@ -1718,36 +1722,44 @@ class SpireHandler(BaseHTTPRequestHandler):
         if search:
             like = f"%{search}%"
             env_sample_ids = search_sample_ids_by_env_text(search)
-            sc = ("(lower(v.bgc_name) LIKE %s OR lower(COALESCE(v.bgc_source_id::text, '')) LIKE %s OR "
-                  "lower(v.genome_id) LIKE %s OR lower(COALESCE(v.product, '')) LIKE %s OR "
-                  "lower(v.sample_id) LIKE %s OR lower(COALESCE(v.gcf_id::text, '')) LIKE %s OR "
-                  "lower(COALESCE(v.category, '')) LIKE %s")
+            sc = ("(lower(v.bgc_name) LIKE %s OR lower(v.genome_id) LIKE %s OR "
+                  "lower(v.product) LIKE %s OR lower(v.sample_id) LIKE %s OR "
+                  "lower(v.category) LIKE %s")
             if env_sample_ids:
                 ec, ep = build_in_clauses("v.sample_id", env_sample_ids); sc += f" OR {ec}"
             else:
                 ep = []
             sc += ")"
             clauses.append(sc)
-            params.extend([like, like, like, like, like, like, like])
+            params.extend([like, like, like, like, like])
             params.extend(ep)
-        if sample_id_filter: clauses.append("v.sample_id = %s"); params.append(sample_id_filter)
-        if genome_id_filter: clauses.append("v.genome_id = %s"); params.append(genome_id_filter)
+        if sample_id_filter: clauses.append("lower(v.sample_id) = lower(%s)"); params.append(sample_id_filter)
+        if genome_id_filter: clauses.append("lower(v.genome_id) = lower(%s)"); params.append(genome_id_filter)
         if gcf_filter: clauses.append("v.gcf_id = %s"); params.append(int(gcf_filter))
-        if bgc_name_filter: clauses.append("v.bgc_name = %s"); params.append(bgc_name_filter)
+        if bgc_name_filter: clauses.append("lower(v.bgc_name) = lower(%s)"); params.append(bgc_name_filter)
         if bigscape_type_filter:
-            ac, ap = build_case_insensitive_any_clause("src.category_primary", expand_bigscape_type_aliases(bigscape_type_filter))
-            clauses.append(f"EXISTS (SELECT 1 FROM bgc src WHERE src.bgc_name = v.bgc_name AND {ac})")
-            params.extend(ap)
+            bs_values = expand_bigscape_type_aliases(bigscape_type_filter)
+            if bs_values:
+                placeholders = " OR ".join(["lower(v.category) = lower(%s)"] * len(bs_values))
+                clauses.append(f"({placeholders})")
+                params.extend([str(v).strip() for v in bs_values])
         if filters:
             fc, fp = compile_filter_group(filters, "bgc", conn)
             if fc: clauses.append(fc); params.extend(fp)
 
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
-        if order_by not in {"bgc_id", "gcf_id", "length", "membership_value"}:
-            order_by = "membership_value" if gcf_filter else "bgc_id"
+        user_ordered = order_by in {"bgc_id", "gcf_id", "length", "membership_value"}
+        if not user_ordered:
+            if gcf_filter:
+                order_by = "membership_value"
+            elif not search:
+                order_by = "bgc_id"
         if order_dir not in {"asc", "desc"}: order_dir = "asc"
-        order_map = {"bgc_id": "v.bgc_source_id", "gcf_id": "v.gcf_id", "length": "v.length", "membership_value": "v.membership_value"}
-        order = f"ORDER BY {order_map[order_by]} {order_dir.upper()}, v.bgc_pk ASC"
+        if order_by in {"bgc_id", "gcf_id", "length", "membership_value"}:
+            order_map = {"bgc_id": "v.bgc_source_id", "gcf_id": "v.gcf_id", "length": "v.length", "membership_value": "v.membership_value"}
+            order = f"ORDER BY {order_map[order_by]} {order_dir.upper()}, v.bgc_pk ASC"
+        else:
+            order = ""
 
         clauses = [c for c in clauses if c != "1 = 1"]
         has_filters = len(clauses) > 0
@@ -1755,6 +1767,10 @@ class SpireHandler(BaseHTTPRequestHandler):
             SELECT count(*) AS cnt FROM mv_bgc_page v
             {where}
         """, params)["cnt"]
+        if total == 0:
+            conn.close()
+            send_json(self, page_payload(0, page, page_size, []))
+            return
         rows = pg_query(conn, f"""
             SELECT v.bgc_pk, v.bgc_name, v.bgc_source_id, v.genome_id, v.sample_id, v.biome AS biome3,
                    v.species, v.biome1, v.biome2, v.domain, v.phylum, v.class_name, v.order_name,
@@ -1787,10 +1803,14 @@ class SpireHandler(BaseHTTPRequestHandler):
         where = ""; params: List = []
         if search:
             like = f"%{search}%"
-            where = "WHERE gcf_id::text LIKE %s OR lower(COALESCE(representative_type, '')) LIKE %s"
-            params.extend([like, like])
+            where = "WHERE lower(COALESCE(representative_type, '')) LIKE %s"
+            params.extend([like])
         conn = open_db()
         total = pg_query_one(conn, f"SELECT count(*) AS cnt FROM mv_gcf_page {where}", params)["cnt"]
+        if total == 0:
+            conn.close()
+            send_json(self, page_payload(0, page, page_size, []))
+            return
         rows = pg_query(conn, f"SELECT * FROM mv_gcf_page {where} ORDER BY gcf_id LIMIT %s OFFSET %s",
                         params + [page_size, (page - 1) * page_size])
         conn.close()
