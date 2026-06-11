@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stat · GEM-BGC</title>
+  <link rel="stylesheet" href="/static/style.css?v=20260611">
+  <style>
+    .kpi-row { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:24px; justify-content:center; }
+    .kpi-box { flex:0 1 180px; background:#fbfdff; border:1px solid #d4dfef; border-radius:14px; padding:18px 20px; text-align:center; }
+    .kpi-box .num { font-size:1.8rem; font-weight:800; color:#3b6fb2; }
+    .kpi-box .label { font-size:0.82rem; color:#667b8f; margin-top:4px; }
+    .chart-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:1240px; margin:0 auto; }
+    .chart-card { background:#fff; border:1px solid #dbe6f8; border-radius:14px; padding:20px; text-align:center; display:flex; flex-direction:column; align-items:center; }
+    .chart-card h2 { font-size:0.95rem; color:#42586b; margin:0 0 14px; font-weight:700; }
+    .chart-card img { width:600px; max-width:100%; height:auto; }
+  </style>
+</head>
+<body data-page="stats">
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand-title" href="/index.html"><span class="brand-mark"><span class="diamond-icon"></span><strong>GEM-BGC</strong></span><span>Statistics overview</span></a>
+      <nav class="top-nav"><a href="/index.html">Home</a><a href="/sample.html">Sample</a><a href="/tax.html">Taxon (MAG)</a><a href="/bgc.html">BGC</a><a href="/stats.html">Stat</a><a href="/download.html">Download</a><a href="/help.html">Help</a></nav>
+    </div>
+  </header>
+  <main class="page-shell"><div class="container">
+    <section class="card" style="margin-bottom:20px;text-align:center;"><h1>GEM-BGC statistics overview</h1><div class="footer-note" id="stats-release"></div></section>
+    <div class="kpi-row" id="kpi-strip"></div>
+    <div class="chart-grid">
+      <article class="chart-card"><h2>Collection year</h2><img src="/static/stats_collection_year.svg" alt="Year"></article>
+      <article class="chart-card"><h2>Biome distribution</h2><img src="/static/stats_biome.svg" alt="Biome"></article>
+      <article class="chart-card"><h2>BGC type abundance</h2><img src="/static/stats_bgc_type.svg" alt="BGC type"></article>
+      <article class="chart-card"><h2>GCF size distribution</h2><img src="/static/stats_gcf_size.svg" alt="GCF"></article>
+    </div>
+  </div></main>
+  <script>
+    fetch('/api/home').then(r=>r.json()).then(d=>{
+      let s=d.stats;
+      document.getElementById('stats-release').innerHTML='Current release: <strong>'+d.release.release_name+'</strong>';
+      document.getElementById('kpi-strip').innerHTML=[
+        ['Samples',s.sample_count],['MAGs',s.mag_count],['BGCs',s.bgc_count],['GCFs',s.gcf_count],
+        ['Geocoded',s.geocoded_sample_count]
+      ].map(([l,v])=>'<div class="kpi-box"><div class="num">'+(v||0).toLocaleString()+'</div><div class="label">'+l+'</div></div>').join('');
+    });
+  </script>
+</body>
+</html>

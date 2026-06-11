@@ -1,0 +1,1074 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GEM-BGC Phylogenetic Overview</title>
+  <style>
+    :root {
+      --ink: #20374e;
+      --muted: #607890;
+      --panel-line: #d6e1ec;
+      --bacteria: #2f6fab;
+      --bacteria-soft: rgba(47, 111, 171, 0.08);
+      --archaea: #b9622f;
+      --archaea-soft: rgba(185, 98, 47, 0.09);
+      --branch: #7b8ea4;
+      --shadow: 0 18px 40px rgba(31, 59, 92, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: #fbfdff;
+      color: var(--ink);
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      padding: 22px;
+    }
+
+    .tree-shell {
+      width: 100%;
+      height: 100%;
+      min-height: 656px;
+      border: 1px solid var(--panel-line);
+      border-radius: 28px;
+      background: transparent;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tree-header {
+      padding: 12px 30px 8px;
+    }
+
+    .tree-kicker,
+    .tree-header h1,
+    .tree-subtitle {
+      display: none;
+    }
+
+    .tree-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      color: #55728d;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .tree-kicker::before {
+      content: "";
+      width: 34px;
+      height: 1px;
+      background: #92abc2;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 32px;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: #1f3a57;
+    }
+
+    .tree-subtitle {
+      margin: 10px 0 16px;
+      max-width: 980px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .tree-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .segmented {
+      display: inline-flex;
+      padding: 4px;
+      border-radius: 999px;
+      border: 1px solid #d7e1ea;
+      background: #f6f9fc;
+    }
+
+    .segmented button,
+    .toolbar-button {
+      border: 0;
+      background: transparent;
+      color: #4f6982;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .segmented button {
+      padding: 9px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .segmented button.is-active {
+      background: #ffffff;
+      color: #1f3b57;
+      box-shadow: 0 3px 12px rgba(43, 75, 108, 0.12);
+    }
+
+    .toolbar-button {
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid #d7e1ea;
+      background: rgba(255, 255, 255, 0.9);
+      font-size: 13px;
+      font-weight: 700;
+      transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .toolbar-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(44, 72, 103, 0.08);
+      border-color: #c6d4e0;
+    }
+
+    .toolbar-button[disabled] {
+      opacity: 0.45;
+      cursor: default;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .tree-metric,
+    .tree-coverage {
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid #dbe6ef;
+      background: rgba(255, 255, 255, 0.92);
+      color: #4f6a84;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .tree-stage {
+      position: relative;
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 4px 12px 20px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      border-radius: 22px;
+    }
+
+    .footer-note {
+      padding: 0 30px 22px;
+      color: #667f98;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .loading,
+    .error {
+      position: absolute;
+      inset: 0;
+      align-items: center;
+      justify-content: center;
+      color: #59728b;
+      font-size: 15px;
+      text-align: center;
+      padding: 30px;
+      display: none;
+    }
+
+    .loading.is-visible,
+    .error.is-visible {
+      display: flex;
+    }
+
+    .loading.is-visible {
+      background: transparent;
+    }
+
+    .error.is-visible {
+      color: #9a4d47;
+      background: rgba(255, 240, 238, 0.55);
+    }
+
+    .tooltip {
+      position: absolute;
+      z-index: 10;
+      min-width: 220px;
+      max-width: 320px;
+      padding: 12px 14px;
+      border: 1px solid rgba(200, 214, 225, 0.95);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 14px 30px rgba(36, 60, 89, 0.14);
+      color: #24405d;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.14s ease, transform 0.14s ease;
+    }
+
+    .tooltip.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .tooltip strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+      color: #1f3b57;
+    }
+
+    .tooltip p {
+      margin: 2px 0;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #5b748d;
+    }
+
+    @media (max-width: 1200px) {
+      body {
+        padding: 12px;
+      }
+
+      .tree-shell {
+        min-height: 620px;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="tree-shell">
+    <div class="tree-header">
+      <div class="tree-kicker">Tree Overview</div>
+      <h1>Rooted phylogenetic overview of GEM-BGC MAG diversity</h1>
+      <p class="tree-subtitle">
+        This cladogram now keeps only the biologically central <strong>Domain → Phylum</strong> hierarchy on the homepage. Every visible node can open the corresponding MAG records, while the toolbar above controls focus and expansion.
+      </p>
+      <div class="tree-toolbar">
+        <div class="toolbar-left">
+          <div class="segmented" id="domain-toggle" aria-label="Domain focus">
+            <button type="button" data-domain="all" class="is-active">All domains</button>
+            <button type="button" data-domain="Bacteria">Bacteria</button>
+            <button type="button" data-domain="Archaea">Archaea</button>
+          </div>
+          <button type="button" id="show-more" class="toolbar-button">Show more phyla</button>
+          <button type="button" id="expand-all" class="toolbar-button">Expand all phyla</button>
+          <button type="button" id="reset-view" class="toolbar-button">Reset view</button>
+        </div>
+        <div class="toolbar-right">
+          <div id="tree-coverage" class="tree-coverage">Loading phyla...</div>
+        </div>
+      </div>
+    </div>
+    <div class="tree-stage" id="tree-stage">
+      <svg id="phylo-tree" viewBox="0 0 1600 760" preserveAspectRatio="xMidYMid meet" aria-label="Phylogenetic overview tree"></svg>
+      <div id="tree-loading" class="loading is-visible">Loading phylogenetic overview...</div>
+      <div id="tree-error" class="error" hidden>Unable to load phylogenetic overview.</div>
+      <div id="tree-tooltip" class="tooltip" hidden></div>
+    </div>
+    <div id="tree-footer" class="footer-note"></div>
+  </div>
+
+  <script>
+    const DOMAIN_COLORS = {
+      Bacteria: "#2f6fab",
+      Archaea: "#b9622f",
+    };
+
+    const DOMAIN_BACKGROUNDS = {
+      Bacteria: "rgba(47, 111, 171, 0.08)",
+      Archaea: "rgba(185, 98, 47, 0.09)",
+    };
+
+    const DEFAULT_VISIBLE = {
+      Bacteria: 14,
+      Archaea: 8,
+    };
+
+    const PREVIEW_COUNT = {
+      Bacteria: 5,
+      Archaea: 3,
+    };
+
+    const FOCUS_VISIBLE = {
+      Bacteria: 24,
+      Archaea: 12,
+    };
+
+    const MORE_STEP = {
+      Bacteria: 8,
+      Archaea: 4,
+    };
+
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const state = {
+      activeDomain: "all",
+      visibleByDomain: { ...DEFAULT_VISIBLE },
+      expandedAll: false,
+    };
+
+    let phyloPayload = null;
+
+    function formatCount(value) {
+      return new Intl.NumberFormat("en-US").format(Number(value || 0));
+    }
+
+    function createSvg(tag, attrs = {}) {
+      const node = document.createElementNS(SVG_NS, tag);
+      Object.entries(attrs).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          node.setAttribute(key, String(value));
+        }
+      });
+      return node;
+    }
+
+    function truncateLabel(text, maxLength) {
+      const value = String(text || "");
+      if (value.length <= maxLength) {
+        return value;
+      }
+      return `${value.slice(0, Math.max(1, maxLength - 1))}…`;
+    }
+
+    function makeTaxonPortalUrl(domainName = "", phylumName = "") {
+      const params = new URLSearchParams();
+      params.set("tax_mode", "phylum");
+      params.set("page", "1");
+      params.set(
+        "filters",
+        JSON.stringify({
+          type: "group",
+          id: "home-tree-root",
+          combinator: "and",
+          rules: [
+            {
+              type: "rule",
+              id: `home-tree-${domainName || "all"}-${phylumName || "all"}`,
+              field: "taxon",
+              operator: "equals",
+              value: "",
+              taxon: {
+                domain: domainName || "",
+                phylum: phylumName || "",
+                class_name: "",
+                order_name: "",
+                genus: "",
+                species: "",
+              },
+            },
+          ],
+        })
+      );
+      return `/tax.html?${params.toString()}`;
+    }
+
+    function openPortalUrl(url) {
+      if (window.top && window.top !== window) {
+        window.top.location.href = url;
+        return;
+      }
+      window.location.href = url;
+    }
+
+    function totalPhylaInPayload() {
+      if (!phyloPayload || !Array.isArray(phyloPayload.domains)) {
+        return 0;
+      }
+      return phyloPayload.domains.reduce((sum, domain) => sum + (Array.isArray(domain.phyla) ? domain.phyla.length : 0), 0);
+    }
+
+    function visibleDomains() {
+      if (!phyloPayload || !Array.isArray(phyloPayload.domains)) {
+        return [];
+      }
+      const domains = state.activeDomain === "all"
+        ? phyloPayload.domains
+        : phyloPayload.domains.filter((domain) => domain.name === state.activeDomain);
+      return domains.map((domain) => {
+        const allPhyla = domain.phyla || [];
+        const visibleCount = Math.min(state.visibleByDomain[domain.name] || 0, allPhyla.length);
+        const previewCount = Math.min(PREVIEW_COUNT[domain.name] || 3, allPhyla.length - visibleCount);
+        return {
+          ...domain,
+          phyla: allPhyla.slice(0, visibleCount),
+          previewPhyla: allPhyla.slice(visibleCount, visibleCount + previewCount),
+          remainingCount: allPhyla.length - visibleCount - previewCount,
+          totalPhyla: allPhyla.length,
+        };
+      });
+    }
+
+    function shownPhylaCount(domains) {
+      return domains.reduce((sum, domain) => sum + (domain.phyla || []).length, 0);
+    }
+
+    function totalMagCount() {
+      if (!phyloPayload || !Array.isArray(phyloPayload.domains)) {
+        return 0;
+      }
+      return phyloPayload.domains.reduce((sum, domain) => sum + Number(domain.mag_count || 0), 0) + Number(phyloPayload.unclassified_mag_count || 0);
+    }
+
+    function canShowMore() {
+      if (!phyloPayload || !Array.isArray(phyloPayload.domains)) {
+        return false;
+      }
+      const domains = visibleDomains();
+      return domains.some((d) => d.remainingCount > 0);
+    }
+
+    function updateToolbar() {
+      const coverage = document.getElementById("tree-coverage");
+      const showMore = document.getElementById("show-more");
+      const expandAll = document.getElementById("expand-all");
+
+      const domains = visibleDomains();
+      const shown = shownPhylaCount(domains);
+      const total = totalPhylaInPayload();
+      coverage.textContent = `${formatCount(shown)} / ${formatCount(total)} phyla shown`;
+      showMore.disabled = !canShowMore();
+      if (expandAll) expandAll.disabled = state.expandedAll || !canShowMore();
+
+      document.querySelectorAll("#domain-toggle button").forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.domain === state.activeDomain);
+      });
+    }
+
+    function ensureFocusVisible(domainName) {
+      state.visibleByDomain[domainName] = Math.max(state.visibleByDomain[domainName] || 0, FOCUS_VISIBLE[domainName] || 10);
+    }
+
+    function resetView() {
+      state.activeDomain = "all";
+      state.visibleByDomain = { ...DEFAULT_VISIBLE };
+      state.expandedAll = false;
+      render();
+    }
+
+    function showMore() {
+      if (!phyloPayload) {
+        return;
+      }
+      const targetDomains = state.activeDomain === "all"
+        ? phyloPayload.domains
+        : phyloPayload.domains.filter((domain) => domain.name === state.activeDomain);
+      targetDomains.forEach((domain) => {
+        const current = state.visibleByDomain[domain.name] || 0;
+        const next = current + (MORE_STEP[domain.name] || 6);
+        state.visibleByDomain[domain.name] = Math.min(next, (domain.phyla || []).length);
+      });
+      state.expandedAll = false;
+      render();
+    }
+
+    function expandAll() {
+      if (!phyloPayload) return;
+      const targetDomains = state.activeDomain === "all"
+        ? phyloPayload.domains
+        : phyloPayload.domains.filter((domain) => domain.name === state.activeDomain);
+      targetDomains.forEach((domain) => {
+        state.visibleByDomain[domain.name] = (domain.phyla || []).length;
+      });
+      state.expandedAll = true;
+      render();
+    }
+
+    function focusDomain(domainName) {
+      state.activeDomain = domainName;
+      if (domainName !== "all") {
+        ensureFocusVisible(domainName);
+      }
+      render();
+    }
+
+    function drawLabel(svg, x, y, lines, options = {}) {
+      const {
+        color = "#20374e",
+        accent = "#607890",
+        titleSize = 19,
+        detailSize = 13,
+        italic = false,
+        anchor = "start",
+        titleWeight = 700,
+        detailWeight = 600,
+        opacity = 1,
+      } = options;
+
+      const text = createSvg("text", {
+        x,
+        y,
+        "text-anchor": anchor,
+        "font-family": "Segoe UI, Helvetica Neue, Arial, sans-serif",
+        opacity,
+      });
+
+      lines.forEach((line, index) => {
+        const tspan = createSvg("tspan", {
+          x,
+          dy: index === 0 ? 0 : 18,
+          fill: index === 0 ? color : accent,
+          "font-size": index === 0 ? titleSize : detailSize,
+          "font-weight": index === 0 ? titleWeight : detailWeight,
+        });
+        if (index === 0 && italic) {
+          tspan.setAttribute("font-style", "italic");
+        }
+        tspan.textContent = line;
+        text.appendChild(tspan);
+      });
+
+      svg.appendChild(text);
+      return text;
+    }
+
+    function tooltipHtml(title, lines) {
+      return `<strong>${title}</strong>${lines.map((line) => `<p>${line}</p>`).join("")}`;
+    }
+
+    function attachTooltip(node, htmlBuilder) {
+      const tooltip = document.getElementById("tree-tooltip");
+      const stage = document.getElementById("tree-stage");
+
+      function move(event) {
+        tooltip.innerHTML = typeof htmlBuilder === "function" ? htmlBuilder() : htmlBuilder;
+        tooltip.hidden = false;
+        tooltip.classList.add("is-visible");
+        const stageRect = stage.getBoundingClientRect();
+        const rawX = event.clientX - stageRect.left + stage.scrollLeft + 18;
+        const rawY = event.clientY - stageRect.top + stage.scrollTop + 18;
+        const tooltipWidth = tooltip.offsetWidth || 280;
+        const tooltipHeight = tooltip.offsetHeight || 120;
+        const maxX = stage.scrollLeft + stage.clientWidth - tooltipWidth - 14;
+        const maxY = stage.scrollTop + stage.clientHeight - tooltipHeight - 14;
+        const x = Math.max(stage.scrollLeft + 10, Math.min(rawX, maxX));
+        const y = Math.max(stage.scrollTop + 10, Math.min(rawY, maxY));
+        tooltip.style.left = `${x}px`;
+        tooltip.style.top = `${y}px`;
+      }
+
+      node.addEventListener("mouseenter", move);
+      node.addEventListener("mousemove", move);
+      node.addEventListener("mouseleave", () => {
+        tooltip.classList.remove("is-visible");
+        tooltip.hidden = true;
+      });
+    }
+
+    function renderTree(domains) {
+      const svg = document.getElementById("phylo-tree");
+      svg.innerHTML = "";
+
+      // Measure longest phylum name to set right edge
+      let maxPhylaChars = 20;
+      domains.forEach((domain) => {
+        (domain.phyla || []).forEach((p) => { maxPhylaChars = Math.max(maxPhylaChars, (p.name || "").length); });
+        (domain.previewPhyla || []).forEach((p) => { maxPhylaChars = Math.max(maxPhylaChars, (p.name || "").length); });
+      });
+      const charWidth = 9.2; // ~px per character at font-size 17
+      const rightPad = 48;
+      const phylumTextX = 650;
+      const estimatedTextPx = maxPhylaChars * charWidth;
+      const width = Math.max(1000, phylumTextX + Math.ceil(estimatedTextPx) + rightPad);
+
+      const topMargin = 52;
+      const bottomMargin = 92;
+      const rowHeight = 58;
+      const domainGap = 92;
+      const bandInset = 34;
+      const rootX = 120;
+      const rootSplitX = 220;
+      const domainNodeX = 350;
+      const domainBusX = 480;
+      const phylumNodeX = 630;
+      const domainTextX = 375;
+      const rootLabelX = 30;
+      const classifiedCount = phyloPayload.domains.reduce((sum, domain) => sum + Number(domain.mag_count || 0), 0);
+
+      const layout = [];
+      let cursorY = topMargin;
+      domains.forEach((domain) => {
+        const phyla = Array.isArray(domain.phyla) ? domain.phyla : [];
+        const previewPhyla = Array.isArray(domain.previewPhyla) ? domain.previewPhyla : [];
+        const visibleYs = phyla.map((_, index) => cursorY + index * rowHeight);
+        const topY = visibleYs[0] ?? cursorY;
+        const lastVisibleY = visibleYs[visibleYs.length - 1] ?? cursorY;
+        const centerY = (topY + lastVisibleY) / 2;
+
+        // Preview tier Y positions
+        const previewBaseY = lastVisibleY + rowHeight;
+        const previewYs = previewPhyla.map((_, index) => previewBaseY + index * rowHeight);
+        const lastPreviewY = previewYs.length > 0 ? previewYs[previewYs.length - 1] : lastVisibleY;
+
+        // Remaining indicator
+        const hasRemaining = domain.remainingCount > 0;
+        const remainingY = hasRemaining ? (previewYs.length > 0 ? lastPreviewY + rowHeight : lastVisibleY + rowHeight) : 0;
+        const bottomY = hasRemaining ? remainingY : (previewYs.length > 0 ? lastPreviewY : lastVisibleY);
+
+        layout.push({
+          domain,
+          topY,
+          bottomY,
+          centerY,
+          visibleYs,
+          previewYs,
+          hasRemaining,
+          remainingY,
+          remainingCount: domain.remainingCount,
+        });
+        cursorY = bottomY + domainGap;
+      });
+
+      const firstDomainY = layout[0] ? layout[0].centerY : 260;
+      const lastDomainY = layout[layout.length - 1] ? layout[layout.length - 1].centerY : 500;
+      const rootY = (firstDomainY + lastDomainY) / 2;
+
+      // Unclassified node — positioned below all classified domains
+      const unclassifiedCount = Number(phyloPayload.unclassified_mag_count || 0);
+      const unclassifiedY = unclassifiedCount > 0 ? cursorY : 0;
+      const treeBottom = unclassifiedCount > 0 ? unclassifiedY + rowHeight : cursorY - domainGap;
+      const height = Math.max(720, treeBottom + bottomMargin);
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svg.style.height = `${height}px`;
+
+      // Extend root path to reach unclassified node if present
+      const rootToY = unclassifiedCount > 0 ? unclassifiedY + rowHeight / 2 : lastDomainY;
+
+      const defs = createSvg("defs");
+      const gradient = createSvg("linearGradient", { id: "root-branch", x1: "0%", y1: "0%", x2: "100%", y2: "0%" });
+      gradient.appendChild(createSvg("stop", { offset: "0%", "stop-color": "#2b3340" }));
+      gradient.appendChild(createSvg("stop", { offset: "100%", "stop-color": "#7b8ea4" }));
+      defs.appendChild(gradient);
+      svg.appendChild(defs);
+
+      layout.forEach(({ domain, topY, bottomY, centerY }) => {
+        const color = DOMAIN_COLORS[domain.name] || "#7b8ea4";
+        const background = createSvg("rect", {
+          x: domainNodeX - 70,
+          y: topY - bandInset,
+          width: width - (domainNodeX - 70) - 34,
+          height: bottomY - topY + bandInset * 2,
+          rx: 28,
+          fill: DOMAIN_BACKGROUNDS[domain.name] || "rgba(123, 142, 164, 0.08)",
+          stroke: color,
+          "stroke-opacity": "0.12",
+        });
+        svg.appendChild(background);
+      });
+
+      const rootPath = createSvg("path", {
+        d: `M ${rootX} ${rootY} H ${rootSplitX} V ${firstDomainY} M ${rootSplitX} ${rootY} V ${rootToY}`,
+        fill: "none",
+        stroke: "url(#root-branch)",
+        "stroke-width": "4",
+        "stroke-linecap": "round",
+        "stroke-linejoin": "round",
+      });
+      svg.appendChild(rootPath);
+
+      const rootNode = createSvg("circle", {
+        cx: rootX,
+        cy: rootY,
+        r: 7,
+        fill: "#2b3340",
+      });
+      svg.appendChild(rootNode);
+
+      const rootHit = createSvg("rect", {
+        x: 18,
+        y: rootY - 32,
+        width: 250,
+        height: 72,
+        rx: 20,
+        fill: "transparent",
+        cursor: "pointer",
+      });
+      attachTooltip(
+        rootHit,
+        tooltipHtml(phyloPayload.root_label || "Cellular life", [
+          `${formatCount(classifiedCount)} classified MAGs in tree body`,
+          `${formatCount(phyloPayload.unclassified_mag_count || 0)} unclassified MAGs shown below`,
+          "Click to open all MAG records",
+        ])
+      );
+      rootHit.addEventListener("click", () => openPortalUrl("/tax.html?tax_mode=phylum&page=1"));
+      svg.appendChild(rootHit);
+
+      drawLabel(
+        svg,
+        rootLabelX,
+        rootY - 8,
+        [phyloPayload.root_label || "Cellular life", `${formatCount(classifiedCount)} classified MAGs`],
+        {
+          color: "#24384f",
+          accent: "#647d96",
+          titleSize: 22,
+          detailSize: 13,
+          titleWeight: 800,
+        }
+      );
+
+      layout.forEach(({ domain, centerY, visibleYs, previewYs, bottomY, hasRemaining, remainingY, remainingCount }) => {
+        const color = DOMAIN_COLORS[domain.name] || "#7b8ea4";
+        const topY = visibleYs[0] ?? centerY;
+
+        const domainUrl = makeTaxonPortalUrl(domain.name, "");
+        const domainGroup = createSvg("g", { cursor: "pointer" });
+        const domainJoin = createSvg("path", {
+          d: `M ${rootSplitX} ${centerY} H ${domainNodeX - 18}`,
+          fill: "none",
+          stroke: color,
+          "stroke-width": "4",
+          "stroke-linecap": "round",
+        });
+        domainGroup.appendChild(domainJoin);
+
+        const domainNode = createSvg("circle", {
+          cx: domainNodeX,
+          cy: centerY,
+          r: 12,
+          fill: color,
+        });
+        domainGroup.appendChild(domainNode);
+
+        const domainBusPath = createSvg("path", {
+          d: `M ${domainNodeX + 12} ${centerY} H ${domainBusX} M ${domainBusX} ${topY} V ${bottomY}`,
+          fill: "none",
+          stroke: color,
+          "stroke-width": "3.5",
+          "stroke-linecap": "round",
+          "stroke-linejoin": "round",
+        });
+        domainGroup.appendChild(domainBusPath);
+
+        const domainHit = createSvg("rect", {
+          x: rootSplitX + 6,
+          y: centerY - 32,
+          width: 320,
+          height: 68,
+          rx: 18,
+          fill: "transparent",
+        });
+        domainGroup.appendChild(domainHit);
+
+        drawLabel(
+          domainGroup,
+          domainTextX,
+          centerY - 8,
+          [domain.name, `${formatCount(domain.mag_count)} MAGs`],
+          {
+            color,
+            accent: "#59738c",
+            titleSize: 24,
+            detailSize: 14,
+            titleWeight: 800,
+          }
+        );
+        attachTooltip(
+          domainGroup,
+          tooltipHtml(domain.name, [
+            `${formatCount(domain.mag_count)} MAGs in this domain`,
+            `${formatCount(domain.totalPhyla)} phyla available`,
+            "Click to open MAG records for this domain",
+          ])
+        );
+        domainGroup.addEventListener("click", () => openPortalUrl(domainUrl));
+        svg.appendChild(domainGroup);
+
+        // ── Tier 1: Visible phyla (clear, clickable) ──
+        (domain.phyla || []).forEach((phylum, index) => {
+          const y = visibleYs[index];
+          const totalPercent = totalMagCount() ? ((Number(phylum.mag_count || 0) / totalMagCount()) * 100).toFixed(2) : "0.00";
+          const domainPercent = domain.mag_count ? ((Number(phylum.mag_count || 0) / Number(domain.mag_count || 0)) * 100).toFixed(2) : "0.00";
+          const phylumUrl = makeTaxonPortalUrl(domain.name, phylum.name);
+
+          const branchGroup = createSvg("g", { cursor: "pointer" });
+          branchGroup.appendChild(createSvg("path", {
+            d: `M ${domainBusX} ${y} H ${phylumNodeX}`,
+            fill: "none",
+            stroke: color,
+            "stroke-opacity": "0.78",
+            "stroke-width": "2.4",
+            "stroke-linecap": "round",
+          }));
+          branchGroup.appendChild(createSvg("circle", {
+            cx: phylumNodeX, cy: y, r: 5, fill: color,
+          }));
+          branchGroup.appendChild(createSvg("rect", {
+            x: domainBusX + 6, y: y - 24,
+            width: width - domainBusX - 48, height: 48,
+            rx: 12, fill: "transparent",
+          }));
+          svg.appendChild(branchGroup);
+
+          attachTooltip(branchGroup, tooltipHtml(phylum.name, [
+            `Domain: ${domain.name}`,
+            `MAGs: ${formatCount(phylum.mag_count)}`,
+            "Click to open MAG records for this phylum",
+          ]));
+          branchGroup.addEventListener("click", () => openPortalUrl(phylumUrl));
+
+          drawLabel(branchGroup, phylumTextX, y - 6,
+            [truncateLabel(phylum.name, 44), `${formatCount(phylum.mag_count)} MAGs`],
+            { color: "#1f3650", accent: "#6a839b", titleSize: 17, detailSize: 12, titleWeight: 700 }
+          );
+        });
+
+        // ── Tier 2: Preview phyla (blurred/ghosted, not clickable) ──
+        (domain.previewPhyla || []).forEach((phylum, index) => {
+          const y = previewYs[index];
+          const branchGroup = createSvg("g", {
+            opacity: "0.38",
+            "pointer-events": "none",
+          });
+          branchGroup.appendChild(createSvg("path", {
+            d: `M ${domainBusX} ${y} H ${phylumNodeX}`,
+            fill: "none",
+            stroke: color,
+            "stroke-opacity": "0.3",
+            "stroke-width": "1.6",
+            "stroke-linecap": "round",
+            "stroke-dasharray": "4 4",
+          }));
+          branchGroup.appendChild(createSvg("circle", {
+            cx: phylumNodeX, cy: y, r: 3.5,
+            fill: color, "fill-opacity": "0.3",
+            stroke: color, "stroke-opacity": "0.25", "stroke-width": "1.2",
+          }));
+          drawLabel(branchGroup, phylumTextX, y - 6,
+            [truncateLabel(phylum.name, 38), `${formatCount(phylum.mag_count)} MAGs`],
+            { color: "#7a8ea4", accent: "#9aacbb", titleSize: 14, detailSize: 11, titleWeight: 500, opacity: 0.5 }
+          );
+          svg.appendChild(branchGroup);
+        });
+
+        // ── Tier 3: Remaining collapsed indicator ──
+        if (hasRemaining) {
+          const ry = remainingY;
+          const dashGroup = createSvg("g", { cursor: "pointer" });
+          dashGroup.appendChild(createSvg("path", {
+            d: `M ${domainBusX} ${ry} H ${phylumNodeX}`,
+            fill: "none",
+            stroke: color,
+            "stroke-opacity": "0.35",
+            "stroke-width": "2",
+            "stroke-linecap": "round",
+            "stroke-dasharray": "6 4",
+          }));
+          dashGroup.appendChild(createSvg("circle", {
+            cx: phylumNodeX, cy: ry, r: 4,
+            fill: "none",
+            stroke: color,
+            "stroke-opacity": "0.45",
+            "stroke-width": "2",
+          }));
+          dashGroup.appendChild(createSvg("rect", {
+            x: domainBusX + 6, y: ry - 22,
+            width: width - domainBusX - 48, height: 44,
+            rx: 10, fill: "transparent",
+          }));
+          drawLabel(dashGroup, phylumTextX, ry - 6,
+            [`${remainingCount} more phyla`, "Click Show more to reveal"],
+            { color, accent: "#7a8ea4", titleSize: 15, detailSize: 11, titleWeight: 600 }
+          );
+          dashGroup.addEventListener("click", () => {
+            if (state.activeDomain !== "all" && state.activeDomain !== domain.name) {
+              focusDomain(domain.name);
+            }
+            showMore();
+          });
+          attachTooltip(dashGroup, tooltipHtml(`${domain.name} — collapsed`, [
+            `${formatCount(remainingCount)} phyla not shown`,
+            `Click to reveal more ${domain.name} phyla`,
+          ]));
+          svg.appendChild(dashGroup);
+        }
+      });
+
+      // Unclassified MAGs — rendered below all classified domains
+      if (unclassifiedCount > 0) {
+        const unclassifiedNodeY = unclassifiedY + rowHeight / 2;
+        const unclassifiedColor = "#8a9bb0";
+        const unclassifiedBg = "rgba(138, 155, 176, 0.06)";
+
+        // Background band
+        svg.appendChild(createSvg("rect", {
+          x: domainNodeX - 70,
+          y: unclassifiedY - bandInset / 2,
+          width: width - (domainNodeX - 70) - 34,
+          height: rowHeight + bandInset,
+          rx: 28,
+          fill: unclassifiedBg,
+          stroke: unclassifiedColor,
+          "stroke-opacity": "0.10",
+        }));
+
+        // Connection line from root split to unclassified node
+        const unclassifiedGroup = createSvg("g", { cursor: "pointer" });
+        unclassifiedGroup.appendChild(createSvg("path", {
+          d: `M ${rootSplitX} ${unclassifiedNodeY} H ${domainNodeX - 18}`,
+          fill: "none",
+          stroke: unclassifiedColor,
+          "stroke-width": "3",
+          "stroke-linecap": "round",
+          "stroke-dasharray": "8 4",
+        }));
+
+        // Node circle
+        unclassifiedGroup.appendChild(createSvg("circle", {
+          cx: domainNodeX,
+          cy: unclassifiedNodeY,
+          r: 10,
+          fill: unclassifiedColor,
+          "fill-opacity": "0.6",
+          stroke: unclassifiedColor,
+          "stroke-width": "2",
+        }));
+
+        // Hit area
+        unclassifiedGroup.appendChild(createSvg("rect", {
+          x: rootSplitX + 6,
+          y: unclassifiedNodeY - 28,
+          width: 340,
+          height: 56,
+          rx: 18,
+          fill: "transparent",
+        }));
+
+        // Label
+        drawLabel(
+          unclassifiedGroup,
+          domainTextX,
+          unclassifiedNodeY - 8,
+          ["Unclassified MAGs", `${formatCount(unclassifiedCount)} MAGs without domain assignment`],
+          {
+            color: "#5b6e82",
+            accent: "#7a8ea4",
+            titleSize: 22,
+            detailSize: 13,
+            titleWeight: 700,
+            italic: true,
+          }
+        );
+
+        attachTooltip(
+          unclassifiedGroup,
+          tooltipHtml("Unclassified MAGs", [
+            `${formatCount(unclassifiedCount)} MAGs lack domain-level taxonomy`,
+            "These are not drawn as a domain in the tree body",
+            "Click to browse all unclassified MAG records",
+          ])
+        );
+
+        const unclassifiedUrl = makeTaxonPortalUrl("Unclassified", "");
+        unclassifiedGroup.addEventListener("click", () => openPortalUrl(unclassifiedUrl));
+        svg.appendChild(unclassifiedGroup);
+      }
+    }
+
+    function render() {
+      if (!phyloPayload) {
+        return;
+      }
+      updateToolbar();
+      const domains = visibleDomains();
+      drawTreeFooter(domains);
+      renderTree(domains);
+    }
+
+    function drawTreeFooter(domains) {
+      const shown = shownPhylaCount(domains);
+      const total = totalPhylaInPayload();
+      const domainSummary = domains
+        .map((domain) => `${domain.name}: ${formatCount((domain.phyla || []).length)} shown of ${formatCount((phyloPayload.domains.find((item) => item.name === domain.name)?.phyla || []).length)}`)
+        .join(" | ");
+      document.getElementById("tree-footer").textContent = `${phyloPayload.note || ""} ${domainSummary}. Unclassified MAGs: ${formatCount(phyloPayload.unclassified_mag_count || 0)}. Currently showing ${formatCount(shown)} of ${formatCount(total)} phyla.`;
+    }
+
+    function hideLoading() {
+      const el = document.getElementById("tree-loading");
+      if (el) el.classList.remove("is-visible");
+    }
+    function showError() {
+      hideLoading();
+      const el = document.getElementById("tree-error");
+      if (el) el.classList.add("is-visible");
+    }
+
+    async function loadTree() {
+      try {
+        const response = await fetch("/api/home-phylo");
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        phyloPayload = await response.json();
+        hideLoading();
+        try {
+          render();
+        } catch (renderErr) {
+          console.error(renderErr);
+          showError();
+        }
+      } catch (fetchErr) {
+        console.error(fetchErr);
+        showError();
+      }
+    }
+
+    function bindEvents() {
+      document.querySelectorAll("#domain-toggle button").forEach((button) => {
+        button.addEventListener("click", () => focusDomain(button.dataset.domain));
+      });
+      document.getElementById("show-more").addEventListener("click", showMore);
+      document.getElementById("expand-all").addEventListener("click", expandAll);
+      document.getElementById("reset-view").addEventListener("click", resetView);
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => { bindEvents(); loadTree(); });
+    } else {
+      bindEvents();
+      loadTree();
+    }
+  </script>
+</body>
+</html>

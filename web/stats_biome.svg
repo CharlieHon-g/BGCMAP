@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 280" width="100%" height="100%" style="background:#fbfdff;font-family:system-ui,sans-serif"><text x="12" y="47.0" font-size="12" fill="#42586b">Host-Associated</text>
+<rect x="175" y="28" width="340.0" height="30" rx="5" fill="#3b6fb2" opacity="0.85"/>
+<text x="523.0" y="47.0" font-size="12" fill="#42586b" font-weight="700">55,680</text>
+<text x="12" y="87.0" font-size="12" fill="#42586b">Aquatic</text>
+<rect x="175" y="68" width="45.71803160919541" height="30" rx="5" fill="#5c8a8f" opacity="0.85"/>
+<text x="228.7180316091954" y="87.0" font-size="12" fill="#42586b" font-weight="700">7,487</text>
+<text x="12" y="127.0" font-size="12" fill="#42586b">Artificial/Engineered</text>
+<rect x="175" y="108" width="35.0319683908046" height="30" rx="5" fill="#9b7ea6" opacity="0.85"/>
+<text x="218.0319683908046" y="127.0" font-size="12" fill="#42586b" font-weight="700">5,737</text>
+<text x="12" y="167.0" font-size="12" fill="#42586b">Terrestrial</text>
+<rect x="175" y="148" width="16.969468390804597" height="30" rx="5" fill="#c4a06a" opacity="0.85"/>
+<text x="199.9694683908046" y="167.0" font-size="12" fill="#42586b" font-weight="700">2,779</text>
+<text x="12" y="207.0" font-size="12" fill="#42586b">Special/Extreme</text>
+<rect x="175" y="188" width="5" height="30" rx="5" fill="#2c5f8a" opacity="0.85"/>
+<text x="188" y="207.0" font-size="12" fill="#42586b" font-weight="700">594</text>
+<text x="12" y="247.0" font-size="12" fill="#42586b">Other</text>
+<rect x="175" y="228" width="5" height="30" rx="5" fill="#7a9eb1" opacity="0.85"/>
+<text x="188" y="247.0" font-size="12" fill="#42586b" font-weight="700">181</text>
+</svg>

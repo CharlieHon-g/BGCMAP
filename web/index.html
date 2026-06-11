@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GEM-BGC</title>
+  <link rel="stylesheet" href="/static/style.css?v=20260609">
+</head>
+<body data-page="home">
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand-title" href="/index.html">
+        <span class="brand-mark"><span class="diamond-icon"></span><strong>GEM-BGC</strong></span>
+        <span>A Global Ecological Metagenome-Identified Biosynthetic Gene Cluster Resource!</span>
+      </a>
+      <nav class="top-nav">
+        <a data-page="home" href="/index.html">Home</a>
+        <a data-page="sample" href="/sample.html">Sample</a>
+        <a data-page="tax" href="/tax.html">Taxon (MAG)</a>
+        <a data-page="bgc" href="/bgc.html">BGC</a>
+        <a data-page="stats" href="/stats.html">Stat</a>
+        <a data-page="download" href="/download.html">Download</a>
+        <a data-page="help" href="/help.html">Help</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <div class="container">
+      <section class="home-hero card">
+        <div class="home-hero-split">
+          <div class="home-hero-search">
+            <div class="title-line">
+              <span class="hero-welcome">Welcome to</span>
+              <span class="hero-brand"><span class="diamond-icon hero-diamond"></span>GEM-BGC</span>
+            </div>
+            <div class="home-search-bar">
+              <select class="search-type-select" id="home-search-type" aria-label="Search type">
+                <option value="project">Project</option>
+                <option value="sample_id">Sample ID</option>
+                <option value="bgc_category">BGC Category</option>
+              </select>
+              <input
+                type="text"
+                class="search-input"
+                id="home-search-input"
+                placeholder="Type to search..."
+                autocomplete="off"
+              >
+              <button class="search-submit" id="home-search-submit" aria-label="Search">&#8594;</button>
+            </div>
+            <div class="search-suggest" id="home-search-suggest" hidden></div>
+          </div>
+          <div class="home-hero-copy">
+            <p id="hero-summary" class="intro-text home-intro">
+              GEM-BGC Resource is a hierarchical database for exploring biosynthetic gene clusters together with their genome-resolved, taxonomic, and ecological context. It links each BGC to its source metagenome-assembled genome (MAG), and further connects each MAG to sample provenance, collection habitat, and taxonomic annotation, enabling users to trace biosynthetic potential from globally collected samples to genomes and gene clusters. Built upon SPIRE-derived MAGs and associated metagenomic datasets, GEM-BGC predicts BGCs from MAGs using antiSMASH 8.0.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="home-carousel card home-carousel-card">
+        <div class="carousel-shell carousel-shell-hero" id="home-carousel-shell">
+          <button type="button" class="carousel-arrow carousel-arrow-left" id="carousel-prev" aria-label="Previous board">&#8249;</button>
+          <button type="button" class="carousel-arrow carousel-arrow-right" id="carousel-next" aria-label="Next board">&#8250;</button>
+          <div class="carousel-track" id="home-carousel-track">
+            <article class="carousel-slide is-active" data-slide-index="0">
+              <div class="slide-canvas">
+                <object class="board-object" data="/static/bgc_biosynthetic_districts.svg?v=20260513-notitle1" type="image/svg+xml" aria-label="Biosynthetic districts"></object>
+              </div>
+            </article>
+
+            <article class="carousel-slide is-next" data-slide-index="1">
+              <div class="slide-canvas">
+                <iframe class="board-frame" src="/static/home_phylogenetic_tree.html?v=20260513-treeorder9" title="Phylogenetic overview"></iframe>
+              </div>
+            </article>
+
+            <article class="carousel-slide" data-slide-index="2">
+              <div class="slide-canvas">
+                <iframe class="board-frame" src="/static/sample_global_distribution_bigmode.html?v=20260611b" title="Sample global distribution"></iframe>
+              </div>
+            </article>
+
+            <article class="carousel-slide is-prev" data-slide-index="3">
+              <div class="slide-canvas">
+                <object class="board-object" data="/static/environment_group1_board.svg?v=20260611" type="image/svg+xml" aria-label="Environment gateways"></object>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+      <div id="page-error" class="footer-note"></div>
+    </div>
+  </main>
+  <script src="/static/app.js?v=20260609"></script>
+</body>
+</html>
