@@ -11,11 +11,9 @@ Requires environment variables:
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import mimetypes
 import re
-import subprocess
 import sys
 from collections import Counter, defaultdict
 from dataclasses import dataclass
@@ -110,21 +108,6 @@ def pg_query_one(conn, sql: str, params=None):
         cur.close()
 
 
-def pg_query_val(conn, sql: str, params=None):
-    """Execute query and return first column of first row, or None."""
-    cur = conn.cursor()
-    try:
-        if params is not None:
-            cur.execute(sql, params)
-        else:
-            cur.execute(sql)
-        row = cur.fetchone()
-        if row is None:
-            return None
-        return next(iter(row.values()))
-    finally:
-        cur.close()
-
 
 def row_to_dict(row) -> dict:
     """Convert a RealDictRow to a JSON-safe plain dict."""
@@ -181,8 +164,6 @@ GROUP_LABELS = {
     "F2": "developmental stage",
     "F3": "process environment",
 }
-GROUP_LABELS_REVERSE = {canonicalize_group_text(value): key for key, value in GROUP_LABELS.items()}
-
 
 @dataclass
 class AntismashCatalog:
@@ -244,44 +225,6 @@ def ncbi_url(
     return None
 
 
-@lru_cache(maxsize=10000)
-def biosample_search_unique_url(sample_id: str) -> Optional[str]:
-    term = (sample_id or "").strip()
-    if not term:
-        return None
-    url = f"https://www.ncbi.nlm.nih.gov/biosample/?term={quote(term, safe='')}"
-    try:
-        proc = subprocess.run(
-            ["curl", "-L", "-A", "Mozilla/5.0", "-s", url],
-            check=False, capture_output=True, text=True, timeout=6,
-        )
-    except Exception:
-        return None
-    if proc.returncode != 0:
-        return None
-    payload = proc.stdout or ""
-    match = re.search(r'ncbi_resultcount"\s+content="(\d+)"', payload)
-    if not match:
-        return None
-    try:
-        result_count = int(match.group(1))
-    except (TypeError, ValueError):
-        return None
-    if result_count != 1:
-        return None
-    acc_match = re.search(r'id="biosample-acc"\s+value="([^"]+)"', payload)
-    if acc_match:
-        accession = acc_match.group(1).strip()
-        if accession:
-            return f"https://www.ncbi.nlm.nih.gov/biosample/{quote(accession)}"
-    id_match = re.search(r'<dt>\s*ID:\s*</dt>\s*<dd>(\d+)</dd>', payload)
-    if id_match:
-        return f"https://www.ncbi.nlm.nih.gov/biosample/{quote(id_match.group(1))}"
-    link_match = re.search(r'/biosample/((?:SAMN|SAMEA|SAMD)[A-Za-z0-9]+|\d+)', payload)
-    if link_match:
-        return f"https://www.ncbi.nlm.nih.gov/biosample/{quote(link_match.group(1))}"
-    return None
-
 
 def load_map_filters() -> Dict[str, dict]:
     for path in MAP_FILTERS_PATHS:
@@ -335,59 +278,6 @@ def load_sample_env_lookup() -> Dict[str, dict]:
     }
 
 
-def fetch_bgc_source_rows(conn, bgc_names: List[str]) -> Dict[str, dict]:
-    if not bgc_names:
-        return {}
-    in_clause, params = build_in_clauses("b.bgc_name", [str(name) for name in bgc_names])
-    rows = pg_query(
-        conn,
-        f"""SELECT b.bgc_name, b.product_primary AS product, b.category_primary AS category_primary,
-                   b.bgc_source_id::text AS bgc_id,
-                   gm.gcf_id::text AS gcf_id
-            FROM bgc b LEFT JOIN bgc_gcf_membership gm ON gm.bgc_pk = b.bgc_pk
-            WHERE {in_clause}""",
-        params,
-    )
-    return {
-        row["bgc_name"]: {
-            "product": row["product"] or "",
-            "category_primary": row["category_primary"] or "",
-            "bgc_id": row["bgc_id"] or "",
-            "gcf_id": row["gcf_id"] or "",
-        }
-        for row in rows
-    }
-
-
-def fetch_mag_source_previews(conn, genome_ids: List[str]) -> Dict[str, dict]:
-    if not genome_ids:
-        return {}
-    in_clause, params = build_in_clauses("m.genome_id", [str(gid) for gid in genome_ids])
-    rows = pg_query(
-        conn,
-        f"""
-        SELECT m.genome_id, b.product_primary AS product, b.category_primary AS category_primary
-        FROM bgc b
-        JOIN mag m ON m.mag_pk = b.mag_pk
-        WHERE {in_clause}
-        """,
-        params,
-    )
-    payload: Dict[str, dict] = {}
-    for row in rows:
-        entry = payload.setdefault(row["genome_id"], {"products": set(), "types": set()})
-        if row["product"]:
-            entry["products"].add(row["product"])
-        if row["category_primary"]:
-            entry["types"].add(row["category_primary"])
-    return {
-        gid: {
-            "product_preview": ", ".join(sorted(v["products"])) or "NA",
-            "category_preview": ", ".join(sorted(v["types"])) or "NA",
-        }
-        for gid, v in payload.items()
-    }
-
 
 def normalize_group_label(raw: str) -> str:
     value = (raw or "").strip()
@@ -422,59 +312,6 @@ def search_sample_ids_by_env_text(search: str) -> List[str]:
                     matches.add(str(sid))
     return sorted(matches)
 
-
-def search_genome_ids_by_bigscape_type(conn, search: str) -> List[str]:
-    term = (search or "").strip().lower()
-    if not term:
-        return []
-    rows = pg_query(
-        conn,
-        """
-        SELECT DISTINCT m.genome_id
-        FROM bgc b
-        JOIN mag m ON m.mag_pk = b.mag_pk
-        JOIN bgc AS src ON src.bgc_name = b.bgc_name
-        WHERE lower(COALESCE(src.category_primary, '')) LIKE %s
-        """,
-        (f"%{term}%",),
-    )
-    return [row["genome_id"] for row in rows]
-
-
-def search_genome_ids_by_source_text(conn, search: str) -> List[str]:
-    term = (search or "").strip()
-    if not term:
-        return []
-    rows = pg_query(
-        conn,
-        """
-        SELECT DISTINCT m.genome_id
-        FROM bgc b
-        JOIN mag m ON m.mag_pk = b.mag_pk
-        JOIN bgc AS src ON src.bgc_name = b.bgc_name
-        WHERE src.category_primary ILIKE %s
-           OR lower(COALESCE(src.product_primary, '')) LIKE %s
-        """,
-        (term, f"%{term.lower()}%"),
-    )
-    return [row["genome_id"] for row in rows]
-
-
-def search_bgc_names_by_source_text(conn, search: str) -> List[str]:
-    term = (search or "").strip()
-    if not term:
-        return []
-    rows = pg_query(
-        conn,
-        """
-        SELECT src.bgc_name
-        FROM bgc src
-        WHERE src.category_primary ILIKE %s
-           OR lower(COALESCE(src.product_primary, '')) LIKE %s
-        """,
-        (term, f"%{term.lower()}%"),
-    )
-    return [row["bgc_name"] for row in rows]
 
 
 def expand_bigscape_type_aliases(raw: str) -> List[str]:
@@ -531,9 +368,9 @@ def build_text_clause(expr: str, operator: str, value: str) -> Tuple[str, List]:
     if operator == "equals":
         return f"lower({expr}) = %s", [lowered]
     if operator == "not_equals":
-        return f"lower(COALESCE({expr}, '')) <> %s", [lowered]
+        return f"lower({expr}) <> %s", [lowered]
     if operator == "starts_with":
-        return f"lower(COALESCE({expr}, '')) LIKE %s", [f"{lowered}%"]
+        return f"lower({expr}) LIKE %s", [f"{lowered}%"]
     if operator == "is_empty":
         return f"COALESCE({expr}, '') = ''", []
     if operator == "is_not_empty":
@@ -657,9 +494,9 @@ def build_date_clause(expr: str, operator: str, value: str, value_secondary: str
     if operator == "lte":
         return f"{start_text} <= %s", [_norm_hi(raw)]
     if operator == "contains":
-        return f"lower(COALESCE({expr}, '')) LIKE %s", [f"%{raw.lower()}%"]
+        return f"lower({expr}) LIKE %s", [f"%{raw.lower()}%"]
     if operator == "starts_with":
-        return f"lower(COALESCE({expr}, '')) LIKE %s", [f"{raw.lower()}%"]
+        return f"lower({expr}) LIKE %s", [f"{raw.lower()}%"]
     if operator == "is_empty":
         return f"COALESCE({expr}, '') = ''", []
     if operator == "is_not_empty":
@@ -1015,68 +852,6 @@ def build_taxon_clause(operator: str, taxon_value, table_prefix: str = "m") -> T
     return "(" + " AND ".join(clauses) + ")", params
 
 
-def search_genome_ids_by_source_rule(conn, field: str, operator: str, value: str) -> List[str]:
-    if False: return []
-    column = "category_primary" if field == "category" else "product"
-    if operator == "is_empty":
-        rows = pg_query(conn, f"""
-            SELECT DISTINCT m.genome_id FROM bgc b
-            JOIN mag m ON m.mag_pk = b.mag_pk
-            JOIN bgc AS src ON src.bgc_name = b.bgc_name
-            WHERE COALESCE(src.{column}, '') = ''
-        """)
-    elif operator == "is_not_empty":
-        rows = pg_query(conn, f"""
-            SELECT DISTINCT m.genome_id FROM bgc b
-            JOIN mag m ON m.mag_pk = b.mag_pk
-            JOIN bgc AS src ON src.bgc_name = b.bgc_name
-            WHERE COALESCE(src.{column}, '') <> ''
-        """)
-    elif operator == "equals":
-        if field == "category":
-            clause, cp = build_case_insensitive_any_clause(f"src.{column}", expand_bigscape_type_aliases(value))
-            rows = pg_query(conn, f"""
-                SELECT DISTINCT m.genome_id FROM bgc b
-                JOIN mag m ON m.mag_pk = b.mag_pk
-                JOIN bgc AS src ON src.bgc_name = b.bgc_name
-                WHERE {clause}
-            """, cp)
-        else:
-            rows = pg_query(conn, f"""
-                SELECT DISTINCT m.genome_id FROM bgc b
-                JOIN mag m ON m.mag_pk = b.mag_pk
-                JOIN bgc AS src ON src.bgc_name = b.bgc_name
-                WHERE src.{column} ILIKE %s
-            """, ((value or "").strip(),))
-    else:
-        rows = pg_query(conn, f"""
-            SELECT DISTINCT m.genome_id FROM bgc b
-            JOIN mag m ON m.mag_pk = b.mag_pk
-            JOIN bgc AS src ON src.bgc_name = b.bgc_name
-            WHERE lower(COALESCE(src.{column}, '')) LIKE %s
-        """, (f"%{(value or '').strip().lower()}%",))
-    return [r["genome_id"] for r in rows]
-
-
-def search_bgc_names_by_source_rule(conn, field: str, operator: str, value: str) -> List[str]:
-    if False: return []
-    column_map = {"category": "category_primary", "product": "product", "bgc_id": "bgc_id", "gcf_id": "gcf_id"}
-    col = column_map.get(field, "product")
-    if operator == "is_empty":
-        rows = pg_query(conn, f"SELECT bgc_name FROM bgc WHERE COALESCE({col}, '') = ''")
-    elif operator == "is_not_empty":
-        rows = pg_query(conn, f"SELECT bgc_name FROM bgc WHERE COALESCE({col}, '') <> ''")
-    elif operator == "equals":
-        if field == "category":
-            clause, cp = build_case_insensitive_any_clause(col, expand_bigscape_type_aliases(value))
-            rows = pg_query(conn, f"SELECT bgc_name FROM bgc WHERE {clause}", cp)
-        else:
-            rows = pg_query(conn, f"SELECT bgc_name FROM bgc WHERE {col} ILIKE %s", ((value or "").strip(),))
-    else:
-        rows = pg_query(conn, f"SELECT bgc_name FROM bgc WHERE lower(COALESCE({col}, '')) LIKE %s",
-                        (f"%{(value or '').strip().lower()}%",))
-    return [r["bgc_name"] for r in rows]
-
 
 def build_source_match_clause(scope: str, field: str, operator: str, value: str) -> Tuple[str, List]:
     column_map = {"category": "category_primary", "product": "product", "bgc_id": "bgc_id", "gcf_id": "gcf_id"}
@@ -1165,7 +940,7 @@ def compile_filter_rule(node: dict, page_kind: str, conn) -> Tuple[str, List]:
     spec = kind_map.get(field)
     if not spec: return "1 = 1", []
     ftype, target = spec
-    if ftype == "text" or ftype == "biome_text": return build_text_clause(target, operator, str(value or ""))
+    if ftype == "text": return build_text_clause(target, operator, str(value or ""))
     if ftype == "bool":
         val = str(value or "").strip().lower()
         if val in ("true", "1", "yes"): return f"{target} IS TRUE", []
@@ -1529,7 +1304,7 @@ class SpireHandler(BaseHTTPRequestHandler):
                 rows = pg_query(conn, "SELECT DISTINCT category_primary FROM bgc WHERE category_primary ILIKE %s AND category_primary IS NOT NULL AND category_primary <> '' ORDER BY category_primary LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["category_primary"], "value": r["category_primary"]} for r in rows]
             elif stype == "gcf_id":
-                rows = pg_query(conn, "SELECT DISTINCT gcf_id::text AS gcf_text FROM gcf WHERE gcf_id::text LIKE %s ORDER BY gcf_text LIMIT %s", (f"%{q}%", limit))
+                rows = pg_query(conn, "SELECT gcf_id::text AS gcf_text FROM gcf WHERE gcf_id::text LIKE %s ORDER BY 1 LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["gcf_text"], "value": r["gcf_text"]} for r in rows]
             elif stype == "species":
                 rows = pg_query(conn, "SELECT DISTINCT species FROM mag WHERE species ILIKE %s AND species IS NOT NULL AND species <> '' ORDER BY species LIMIT %s", (f"%{q}%", limit))
@@ -1657,27 +1432,26 @@ class SpireHandler(BaseHTTPRequestHandler):
         if search:
             like = f"%{search}%"
             env_sample_ids = search_sample_ids_by_env_text(search)
-            sc = ("(lower(v.genome_id) LIKE %s OR lower(COALESCE(v.species, '')) LIKE %s OR "
-                  "lower(COALESCE(v.biome, '')) LIKE %s OR lower(v.sample_id) LIKE %s OR "
-                  "lower(COALESCE(m.phylum, '')) LIKE %s OR lower(COALESCE(m.class_name, '')) LIKE %s OR "
-                  "lower(COALESCE(m.genus, '')) LIKE %s OR lower(COALESCE(m.species, '')) LIKE %s OR "
-                  "lower(COALESCE(s.biome1, '')) LIKE %s OR lower(COALESCE(s.biome2, '')) LIKE %s OR "
-                  "lower(COALESCE(s.biome3, '')) LIKE %s OR "
-                  "lower(COALESCE(v.category_preview, '')) LIKE %s")
+            sc = ("(lower(v.genome_id) LIKE %s OR lower(v.species) LIKE %s OR "
+                  "lower(v.biome) LIKE %s OR lower(v.sample_id) LIKE %s OR "
+                  "lower(v.phylum) LIKE %s OR lower(v.class_name) LIKE %s OR "
+                  "lower(v.genus) LIKE %s OR "
+                  "lower(v.biome1) LIKE %s OR lower(v.biome2) LIKE %s OR "
+                  "lower(v.category_preview) LIKE %s")
             if env_sample_ids:
                 ec, ep = build_in_clauses("v.sample_id", env_sample_ids); sc += f" OR {ec}"
             else:
                 ep = []
             sc += ")"
             clauses.append(sc)
-            params.extend([like, like, like, like, like, like, like, like, like, like, like, like])
+            params.extend([like, like, like, like, like, like, like, like, like, like])
             params.extend(ep)
         if sample_id_filter: clauses.append("lower(v.sample_id) = lower(%s)"); params.append(sample_id_filter)
         if genome_id_filter: clauses.append("lower(v.genome_id) = lower(%s)"); params.append(genome_id_filter)
-        if phylum_filter: clauses.append("lower(COALESCE(m.phylum, '')) = %s"); params.append(phylum_filter.lower())
-        if class_filter: clauses.append("lower(COALESCE(m.class_name, '')) = %s"); params.append(class_filter.lower())
-        if genus_filter: clauses.append("lower(COALESCE(m.genus, '')) = %s"); params.append(genus_filter.lower())
-        if species_filter: clauses.append("lower(COALESCE(m.species, '')) = %s"); params.append(species_filter.lower())
+        if phylum_filter: clauses.append("lower(v.phylum) = %s"); params.append(phylum_filter.lower())
+        if class_filter: clauses.append("lower(v.class_name) = %s"); params.append(class_filter.lower())
+        if genus_filter: clauses.append("lower(v.genus) = %s"); params.append(genus_filter.lower())
+        if species_filter: clauses.append("lower(v.species) = %s"); params.append(species_filter.lower())
 
         if phylum_group_filter == "other_top20":
             top_phyla = [r["phylum"] for r in pg_query(conn, """
@@ -1685,7 +1459,7 @@ class SpireHandler(BaseHTTPRequestHandler):
             """)]
             if top_phyla:
                 phs = ",".join("%s" for _ in top_phyla)
-                clauses.append(f"COALESCE(NULLIF(m.phylum, ''), 'Unclassified') NOT IN ({phs})"); params.extend(top_phyla)
+                clauses.append(f"COALESCE(NULLIF(v.phylum, ''), 'Unclassified') NOT IN ({phs})"); params.extend(top_phyla)
         if filters:
             fc, fp = compile_filter_group(filters, "tax", conn)
             if fc: clauses.append(fc); params.extend(fp)
