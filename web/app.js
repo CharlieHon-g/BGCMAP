@@ -1391,18 +1391,6 @@ async function loadStats() {
 }
 
 function buildStandardControls(pageKey, placeholder) {
-  const searchInput = qs("#search-input");
-  if (searchInput) {
-    searchInput.value =
-    params.get("q") ||
-    params.get("sample_id") ||
-    params.get("sample_accession") ||
-    params.get("genome_id") ||
-    params.get("bgc_name") ||
-    params.get("gcf_id") ||
-    params.get(pageKey) ||
-    "";
-  }
   if (qs("#page-size")) qs("#page-size").value = params.get("page_size") || "10";
 }
 
@@ -1779,15 +1767,13 @@ function mountAdvancedFilters(pageKey, onApply) {
   `;
   tableCard.parentNode.insertBefore(section, tableCard);
   qs("#advanced-filter-apply", section).addEventListener("click", () => {
-    if (!serializeFilterState(pageKey) && !qs("#search-input")?.value.trim()) {
+    if (!serializeFilterState(pageKey)) {
       filterStates[pageKey] = makeGroup(pageKey);
       syncParams({ q: null, sample_id: null, sample_accession: null, genome_id: null, gcf_id: null, bgc_name: null, group1: null, map_filter: null, phylum: null, class_name: null, genus: null, species: null, bigscape_type: null, filters: null, page: 1 });
     }
     onApply(1);
   });
   qs("#advanced-filter-reset", section).addEventListener("click", () => {
-    const searchInput = qs("#search-input");
-    if (searchInput) searchInput.value = "";
     filterStates[pageKey] = makeGroup(pageKey);
     syncParams({ q: null, sample_id: null, sample_accession: null, genome_id: null, bgc_name: null, gcf_id: null, bigscape_type: null, group1: null, map_filter: null, filters: null, order_by: null, order_dir: null, page: null, page_size: null });
     renderFilterBuilder(pageKey, onApply);
@@ -2201,7 +2187,7 @@ function syncParams(newParams) {
 }
 
 async function loadSamples(page = Number(params.get("page") || 1)) {
-  const q = qs("#search-input")?.value.trim() || params.get("q") || "";
+  const q = params.get("q") || "";
   const pageSize = qs("#page-size")?.value || params.get("page_size") || "10";
   let sampleId = params.get("sample_id") || "";
   let sampleAccession = params.get("sample_accession") || "";
@@ -2259,7 +2245,7 @@ async function loadSamples(page = Number(params.get("page") || 1)) {
 }
 
 async function loadMags(page = Number(params.get("page") || 1)) {
-  const q = qs("#search-input")?.value.trim() || "";
+  const q = params.get("q") || "";
   const pageSize = qs("#page-size")?.value || "10";
   const orderBy = params.get("order_by") || "";
   const orderDir = params.get("order_dir") || "asc";
@@ -2357,7 +2343,7 @@ async function loadMags(page = Number(params.get("page") || 1)) {
 }
 
 async function loadBgcs(page = Number(params.get("page") || 1)) {
-  const q = qs("#search-input")?.value.trim() || "";
+  const q = params.get("q") || "";
   const pageSize = qs("#page-size")?.value || "10";
   let gcfIdBgc = "";
   const defaultOrderBy = gcfIdBgc ? "membership_value" : "bgc_id";
@@ -2405,7 +2391,7 @@ async function loadBgcs(page = Number(params.get("page") || 1)) {
           <td>${ellipsisText(row.np_pathway || "NA")}</td>
           <td>${ellipsisText(row.np_superclass || "NA")}</td>
           <td>${ellipsisText(row.np_class || "NA")}</td>
-          <td>${row.predicted_smiles ? `<code class="cell-ellipsis" title="${escapeHtml(row.predicted_smiles)}">${escapeHtml(row.predicted_smiles)}</code>` : '<span class="subtle">NA</span>'}</td>
+          <td>${row.predicted_smiles ? `<code class="cell-ellipsis" title="${escapeHtml(row.predicted_smiles)}">${escapeHtml(row.predicted_smiles)}</code>` : 'NA'}</td>
           <td>${formatNumber(row.length)}</td>
           <td>${row.contig_edge === true ? 'TRUE' : row.contig_edge === false ? 'FALSE' : 'NA'}</td>
           <td>${row.genome_url ? `<a class="cell-ellipsis cell-ellipsis-link" href="${row.genome_url}" target="_blank" rel="noreferrer" title="${escapeHtml(row.genome_id)}">${escapeHtml(row.genome_id)}</a>` : `<span class="cell-ellipsis subtle">${escapeHtml(row.genome_id)}</span>`}</td>
@@ -2435,8 +2421,8 @@ async function loadBgcs(page = Number(params.get("page") || 1)) {
 }
 
 async function loadGcfTable(page = Number(params.get("page") || 1)) {
-  const q = qs("#search-input").value.trim();
-  const pageSize = qs("#page-size").value;
+  const q = params.get("q") || "";
+  const pageSize = qs("#page-size")?.value || "10";
   syncParams({ q, page, page_size: pageSize });
   const meta = await getJSON(`/api/gcfs?q=${encodeURIComponent(q)}&page=${page}&page_size=${pageSize}`);
   updateEntriesLabel(meta, qs("#entries-label"));
@@ -2578,9 +2564,6 @@ function bindControls(loader) {
   qs("#filter-btn")?.addEventListener("click", () => loader(1));
   qs("#refresh-btn")?.addEventListener("click", () => loader(1));
   qs("#page-size")?.addEventListener("change", () => loader(1));
-  qs("#search-input")?.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") loader(1);
-  });
 }
 
 async function bootstrap() {

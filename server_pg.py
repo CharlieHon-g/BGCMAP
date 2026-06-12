@@ -1547,14 +1547,11 @@ class SpireHandler(BaseHTTPRequestHandler):
         if not user_ordered:
             if gcf_filter:
                 order_by = "membership_value"
-            elif not search:
+            else:
                 order_by = "bgc_id"
         if order_dir not in {"asc", "desc"}: order_dir = "asc"
-        if order_by in {"bgc_id", "gcf_id", "length", "membership_value"}:
-            order_map = {"bgc_id": "v.bgc_source_id", "gcf_id": "v.gcf_id", "length": "v.length", "membership_value": "v.membership_value"}
-            order = f"ORDER BY {order_map[order_by]} {order_dir.upper()}, v.bgc_pk ASC"
-        else:
-            order = ""
+        order_map = {"bgc_id": "v.bgc_source_id", "gcf_id": "v.gcf_id", "length": "v.length", "membership_value": "v.membership_value"}
+        order = f"ORDER BY {order_map[order_by]} {order_dir.upper()}, v.bgc_pk ASC"
 
         clauses = [c for c in clauses if c != "1 = 1"]
         has_filters = len(clauses) > 0

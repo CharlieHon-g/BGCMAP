@@ -436,6 +436,8 @@ CREATE INDEX IF NOT EXISTS idx_mv_mag_biome2_lower
     ON mv_mag_page (lower(biome2));
 CREATE INDEX IF NOT EXISTS idx_mv_mag_biome3_lower
     ON mv_mag_page (lower(biome));
+CREATE INDEX IF NOT EXISTS idx_mv_mag_sample_id_lower_genome_id
+    ON mv_mag_page (lower(sample_id), genome_id);
 
 -- BGC 页
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_bgc_page AS
@@ -509,6 +511,8 @@ CREATE INDEX IF NOT EXISTS idx_mv_bgc_category_lower_trgm ON mv_bgc_page USING g
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b1_src ON mv_bgc_page (lower(biome1), bgc_source_id);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b2_src ON mv_bgc_page (lower(biome2), bgc_source_id);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b3_src ON mv_bgc_page (lower(biome), bgc_source_id);
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_sid_lower_src_pk ON mv_bgc_page (lower(sample_id), bgc_source_id, bgc_pk);
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_gid_lower_src_pk ON mv_bgc_page (lower(genome_id), bgc_source_id, bgc_pk);
 
 -- GCF 页
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_gcf_page AS
