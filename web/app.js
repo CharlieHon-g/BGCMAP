@@ -2376,13 +2376,14 @@ async function loadBgcs(page = Number(params.get("page") || 1)) {
       { label: "BGC ID", sortKey: "bgc_id" },
       "Product",
       "Category",
+      { label: "GCF ID", sortKey: "gcf_id" },
+      { label: "Membership value", sortKey: "membership_value" },
       "NP Pathway",
       "NP Superclass",
       "NP Class",
+      "Smiles",
       { label: "Length", sortKey: "length" },
       "Contig edge",
-      { label: "GCF ID", sortKey: "gcf_id" },
-      { label: "Membership value", sortKey: "membership_value" },
       "Genome ID",
       "Species",
       "Biome1",
@@ -2399,20 +2400,21 @@ async function loadBgcs(page = Number(params.get("page") || 1)) {
           <td>${renderTaxonomyDisclosure(row, bgcLabel, bgcTarget)}</td>
           <td>${ellipsisText(row.product || "NA")}</td>
           <td>${ellipsisText(row.category || "NA")}</td>
+          <td>${row.gcf_url ? ellipsisLink(row.gcf_url, normalizeNumericIdLabel(row.gcf_id)) : '<span class="subtle">NA</span>'}</td>
+          <td>${makeMembershipBadge(row.membership_value, row.contig_edge, row.membership_status)}</td>
           <td>${ellipsisText(row.np_pathway || "NA")}</td>
           <td>${ellipsisText(row.np_superclass || "NA")}</td>
           <td>${ellipsisText(row.np_class || "NA")}</td>
+          <td>${row.predicted_smiles ? `<code class="cell-ellipsis" title="${escapeHtml(row.predicted_smiles)}">${escapeHtml(row.predicted_smiles)}</code>` : '<span class="subtle">NA</span>'}</td>
           <td>${formatNumber(row.length)}</td>
           <td>${row.contig_edge === true ? 'TRUE' : row.contig_edge === false ? 'FALSE' : 'NA'}</td>
-          <td>${row.gcf_url ? ellipsisLink(row.gcf_url, normalizeNumericIdLabel(row.gcf_id)) : '<span class="subtle">NA</span>'}</td>
-          <td>${makeMembershipBadge(row.membership_value, row.contig_edge, row.membership_status)}</td>
           <td>${row.genome_url ? `<a class="cell-ellipsis cell-ellipsis-link" href="${row.genome_url}" target="_blank" rel="noreferrer" title="${escapeHtml(row.genome_id)}">${escapeHtml(row.genome_id)}</a>` : `<span class="cell-ellipsis subtle">${escapeHtml(row.genome_id)}</span>`}</td>
           <td>${ellipsisText(row.species || "NA")}</td>
           <td>${ellipsisText(displayGroupLabel(row.biome1) || "NA")}</td>
           <td>${ellipsisText(displayGroupLabel(row.biome2) || "NA")}</td>
           <td>${ellipsisText(displayGroupLabel(row.biome3) || "NA")}</td>
         `,
-        detail: renderTaxonomyDetailRow(row, label, 12),
+        detail: renderTaxonomyDetailRow(row, label, 16),
       };
     },
     {
