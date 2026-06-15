@@ -368,12 +368,10 @@ def build_text_clause(expr: str, operator: str, value: str) -> Tuple[str, List]:
         return f"lower({expr}) = %s", [lowered]
     if operator == "not_equals":
         return f"lower({expr}) <> %s", [lowered]
-    if operator == "starts_with":
-        return f"lower({expr}) LIKE %s", [f"{lowered}%"]
-    if operator == "is_empty":
-        return f"COALESCE({expr}, '') = ''", []
-    if operator == "is_not_empty":
-        return f"COALESCE({expr}, '') <> ''", []
+    if operator == "is_null":
+        return f"lower({expr}) IS NULL", []
+    if operator == "is_not_null":
+        return f"lower({expr}) IS NOT NULL", []
     return "1 = 1", []
 
 
@@ -480,10 +478,6 @@ def build_date_clause(expr: str, operator: str, value: str, value_secondary: str
         lo = _norm_lo(raw)
         hi = _norm_hi(raw)
         return f"{start_text} <= %s AND {end_text} >= %s", [hi, lo]
-    if operator == "not_equals":
-        lo = _norm_lo(raw)
-        hi = _norm_hi(raw)
-        return f"NOT ({start_text} <= %s AND {end_text} >= %s)", [hi, lo]
     if operator == "gt":
         return f"{end_text} > %s", [_norm_hi(raw)]
     if operator == "gte":
@@ -494,11 +488,9 @@ def build_date_clause(expr: str, operator: str, value: str, value_secondary: str
         return f"{start_text} <= %s", [_norm_hi(raw)]
     if operator == "contains":
         return f"lower({expr}) LIKE %s", [f"%{raw.lower()}%"]
-    if operator == "starts_with":
-        return f"lower({expr}) LIKE %s", [f"{raw.lower()}%"]
-    if operator == "is_empty":
+    if operator == "is_null":
         return f"COALESCE({expr}, '') = ''", []
-    if operator == "is_not_empty":
+    if operator == "is_not_null":
         return f"COALESCE({expr}, '') <> ''", []
     return "1 = 1", []
 
@@ -520,6 +512,10 @@ def build_numeric_clause(expr: str, operator: str, value: str, value_secondary: 
         if lower is not None:
             return f"{expr} >= %s", [lower]
         return f"{expr} <= %s", [upper]
+    if operator == "is_null":
+        return f"COALESCE({expr}::text, '') = ''", []
+    if operator == "is_not_null":
+        return f"COALESCE({expr}::text, '') <> ''", []
     try:
         number = float(value)
     except (TypeError, ValueError):
@@ -536,13 +532,12 @@ def build_numeric_clause(expr: str, operator: str, value: str, value_secondary: 
 def matches_text_candidates(candidates: List[str], operator: str, value: str) -> bool:
     clean_candidates = [str(c or "").strip().lower() for c in candidates]
     term = (value or "").strip().lower()
-    if operator == "is_empty": return not any(clean_candidates)
-    if operator == "is_not_empty": return any(clean_candidates)
+    if operator == "is_null": return not any(clean_candidates)
+    if operator == "is_not_null": return any(clean_candidates)
     if not term: return False
     if operator == "contains": return any(term in c for c in clean_candidates if c)
     if operator == "equals": return any(term == c for c in clean_candidates if c)
     if operator == "not_equals": return all((not c) or term != c for c in clean_candidates)
-    if operator == "starts_with": return any(c.startswith(term) for c in clean_candidates if c)
     return False
 
 
@@ -572,10 +567,10 @@ def _all_map_sample_ids(kind: str) -> set[str]:
 
 def match_map_sample_ids(map_kind: str, operator: str, value: str) -> List[str]:
     expected_kind = "board" if map_kind == "map_region" else "country"
-    if operator == "is_empty":
+    if operator == "is_null":
         all_ids = _all_map_sample_ids(expected_kind)
         return sorted(_all_sample_ids() - all_ids)
-    if operator == "is_not_empty":
+    if operator == "is_not_null":
         return sorted(_all_map_sample_ids(expected_kind))
     matches: set[str] = set()
     for payload in load_map_filters().values():
@@ -589,10 +584,10 @@ def match_map_sample_ids(map_kind: str, operator: str, value: str) -> List[str]:
 
 
 def match_geo_region_ids(operator: str, value: str) -> List[str]:
-    if operator == "is_empty":
+    if operator == "is_null":
         all_geo = _all_map_sample_ids("board") | _all_map_sample_ids("country") | _all_map_sample_ids("ocean-range")
         return sorted(_all_sample_ids() - all_geo)
-    if operator == "is_not_empty":
+    if operator == "is_not_null":
         all_geo = _all_map_sample_ids("board") | _all_map_sample_ids("country") | _all_map_sample_ids("ocean-range")
         return sorted(all_geo)
     matches: set[str] = set()
@@ -620,6 +615,14 @@ def match_env_numeric_sample_ids(field_key: str, operator: str, value: str, valu
     matches: List[str] = []
     for sample_id, env in load_sample_env_lookup().items():
         raw = env.get(field_key)
+        if operator == "is_null":
+            if raw is None or str(raw).strip() == "":
+                matches.append(sample_id)
+            continue
+        if operator == "is_not_null":
+            if raw is not None and str(raw).strip() != "":
+                matches.append(sample_id)
+            continue
         if raw is None: continue
         try:
             number = float(raw)
@@ -636,7 +639,6 @@ def match_env_numeric_sample_ids(field_key: str, operator: str, value: str, valu
         elif lower is None:
             ok = False
         elif operator == "equals": ok = number == lower
-        elif operator == "not_equals": ok = number != lower
         elif operator == "gt": ok = number > lower
         elif operator == "gte": ok = number >= lower
         elif operator == "lt": ok = number < lower
@@ -830,9 +832,9 @@ def build_taxon_clause(operator: str, taxon_value, table_prefix: str = "m") -> T
         ("genus", f"{table_prefix}.genus"),
         ("species", f"{table_prefix}.species"),
     )
-    if operator == "is_empty":
+    if operator == "is_null":
         return "(" + " AND ".join(f"COALESCE({e}, '') = ''" for _, e in rank_targets) + ")", []
-    if operator == "is_not_empty":
+    if operator == "is_not_null":
         return "(" + " OR ".join(f"COALESCE({e}, '') <> ''" for _, e in rank_targets) + ")", []
     if not isinstance(taxon_value, dict):
         return "", []
@@ -876,7 +878,7 @@ def compile_filter_rule(node: dict, page_kind: str, conn) -> Tuple[str, List]:
     if operator == "between":
         if str(value or "").strip() == "" and str(value_secondary or "").strip() == "":
             return "", []
-    elif operator not in {"is_empty", "is_not_empty"} and str(value or "").strip() == "":
+    elif operator not in {"is_null", "is_not_null"} and str(value or "").strip() == "":
         if field == "taxon" and isinstance(node.get("taxon"), dict):
             if not any(str(node["taxon"].get(k) or "").strip() for k in ("domain", "phylum", "class_name", "order_name", "genus", "species")):
                 return "", []
@@ -990,9 +992,11 @@ def compile_filter_group(node: dict, page_kind: str, conn) -> Tuple[str, List]:
             params.extend(cp)
     if not compiled: return "", []
     combinator = (node.get("combinator") or "and").lower()
-    if combinator == "or": return "(" + " OR ".join(compiled) + ")", params
-    if combinator == "not": return "(NOT (" + " AND ".join(compiled) + "))", params
-    return "(" + " AND ".join(compiled) + ")", params
+    negated = node.get("negated", False)
+    if combinator == "or": result = "(" + " OR ".join(compiled) + ")"
+    else: result = "(" + " AND ".join(compiled) + ")"
+    if negated: result = "(NOT " + result + ")"
+    return result, params
 
 
 def extract_record_data(text: str) -> List[dict]:

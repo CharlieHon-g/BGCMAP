@@ -478,8 +478,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_mv_bgc_page_bgc_pk
     ON mv_bgc_page (bgc_pk);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_page_gcf_id
     ON mv_bgc_page (gcf_id);
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_page_product_lower
-    ON mv_bgc_page (lower(product));
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_page_membership_value
     ON mv_bgc_page (membership_value);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_page_bgc_source_id
@@ -500,17 +498,11 @@ CREATE INDEX IF NOT EXISTS idx_mv_bgc_product_lower ON mv_bgc_page (lower(produc
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_np_pathway_lower ON mv_bgc_page (lower(np_pathway));
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_np_superclass_lower ON mv_bgc_page (lower(np_superclass));
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_np_class_lower ON mv_bgc_page (lower(np_class));
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_np_pathway_lower_trgm ON mv_bgc_page USING gin (lower(np_pathway) gin_trgm_ops);
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_np_superclass_lower_trgm ON mv_bgc_page USING gin (lower(np_superclass) gin_trgm_ops);
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_np_class_lower_trgm ON mv_bgc_page USING gin (lower(np_class) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_contig_edge ON mv_bgc_page (contig_edge);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_genomeid_lower_trgm ON mv_bgc_page USING gin (lower(genome_id) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_sampleid_lower_trgm ON mv_bgc_page USING gin (lower(sample_id) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_product_lower_trgm ON mv_bgc_page USING gin (lower(product) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_category_lower_trgm ON mv_bgc_page USING gin (lower(category) gin_trgm_ops);
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b1_src ON mv_bgc_page (lower(biome1), bgc_source_id);
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b2_src ON mv_bgc_page (lower(biome2), bgc_source_id);
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b3_src ON mv_bgc_page (lower(biome), bgc_source_id);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_sid_lower_src_pk ON mv_bgc_page (lower(sample_id), bgc_source_id, bgc_pk);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_gid_lower_src_pk ON mv_bgc_page (lower(genome_id), bgc_source_id, bgc_pk);
 

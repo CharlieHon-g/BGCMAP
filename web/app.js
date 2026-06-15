@@ -517,10 +517,10 @@ function displayGroupLabel(label) {
   return String(label).replaceAll("_", " ");
 }
 
-const BIOME_DROPDOWN_OPERATORS = new Set(["contains", "equals", "not_equals", "starts_with"]);
-const GEO_DROPDOWN_OPERATORS = new Set(["equals", "not_equals"]);
-const GEO_ALL_OPERATORS = new Set(["equals", "not_equals", "is_empty", "is_not_empty"]);
-const TAXON_DROPDOWN_OPERATORS = new Set(["contains", "equals", "not_equals", "starts_with"]);
+const BIOME_DROPDOWN_OPERATORS = new Set(["contains", "equals"]);
+const GEO_DROPDOWN_OPERATORS = new Set(["equals"]);
+const GEO_ALL_OPERATORS = new Set(["equals", "not_equals", "is_null", "is_not_null"]);
+const TAXON_DROPDOWN_OPERATORS = new Set(["contains", "equals"]);
 const TAXON_LEVELS = [
   { key: "domain", label: "Domain" },
   { key: "phylum", label: "Phylum" },
@@ -1441,21 +1441,22 @@ const FILTER_FIELD_CONFIG = {
 
 const TEXT_OPERATORS = [
   { key: "contains", label: "contains" },
-  { key: "equals", label: "equals" },
-  { key: "not_equals", label: "not equals" },
-  { key: "starts_with", label: "starts with" },
-  { key: "is_empty", label: "is empty" },
-  { key: "is_not_empty", label: "is not empty" },
+  { key: "equals", label: "= " },
+  { key: "not_equals", label: "!=" },
+  { key: "is_null", label: "Is null" },
+  { key: "is_not_null", label: "Is not null" },
 ];
 
 const NUMBER_OPERATORS = [
-  { key: "equals", label: "=" },
-  { key: "not_equals", label: "≠" },
+  { key: "equals", label: "= " },
+  { key: "not_equals", label: "!=" },
   { key: "gt", label: ">" },
   { key: "gte", label: "≥" },
   { key: "lt", label: "<" },
   { key: "lte", label: "≤" },
-  { key: "between", label: "between" },
+  { key: "between", label: "Between" },
+  { key: "is_null", label: "Is null" },
+  { key: "is_not_null", label: "Is not null" },
 ];
 
 let filterNodeSeed = 0;
@@ -1503,15 +1504,17 @@ function makeGroup(pageKey) {
     type: "group",
     id: nextFilterId("group"),
     combinator: "and",
+    negated: false,
     rules: [makeRule(pageKey)],
   };
 }
 
-function makeCustomGroup(rules, combinator = "and") {
+function makeCustomGroup(rules, combinator = "and", negated = false) {
   return {
     type: "group",
     id: nextFilterId("group"),
     combinator,
+    negated,
     rules,
   };
 }
@@ -1643,6 +1646,7 @@ function hydrateFilterNode(pageKey, node) {
     type: "group",
     id: node.id || nextFilterId("group"),
     combinator: node.combinator || "and",
+    negated: !!node.negated,
     rules: Array.isArray(node.rules) && node.rules.length
       ? node.rules.map((child) => hydrateFilterNode(pageKey, child))
       : [makeRule(pageKey)],
@@ -1701,7 +1705,7 @@ function serializeFilterState(pageKey) {
   const rules = state.rules || [];
   for (const rule of rules) {
     if (rule.type !== "rule") continue;
-    if (rule.operator === "is_empty" || rule.operator === "is_not_empty") return JSON.stringify(state);
+    if (rule.operator === "is_null" || rule.operator === "is_not_null") return JSON.stringify(state);
     if (String(rule.value || "").trim()) return JSON.stringify(state);
     if (rule.taxon && taxonValueHasSelection(rule.taxon)) return JSON.stringify(state);
   }
@@ -1742,7 +1746,7 @@ function buildFilterSummary(node, pageKey) {
   if (!pieces.length) return "";
   const glue = node.combinator === "or" ? " OR " : " AND ";
   const combined = pieces.join(glue);
-  return node.combinator === "not" ? `NOT (${combined})` : `(${combined})`;
+  return node.negated ? `NOT (${combined})` : `(${combined})`;
 }
 
 function mountAdvancedFilters(pageKey, onApply) {
@@ -1897,7 +1901,7 @@ function renderFilterGroupNode(pageKey, group, depth, onApply) {
       <div class="filter-combinator" data-group-id="${group.id}">
         <button type="button" data-combinator="and" class="${group.combinator === "and" ? "is-active" : ""}">AND</button>
         <button type="button" data-combinator="or" class="${group.combinator === "or" ? "is-active" : ""}">OR</button>
-        <button type="button" data-combinator="not" class="${group.combinator === "not" ? "is-active" : ""}">NOT</button>
+        <button type="button" data-combinator="not" class="filter-not-toggle ${group.negated ? "is-active" : ""}">NOT</button>
       </div>
       <div class="filter-group-actions">
         <button type="button" class="secondary" data-action="add-rule" data-group-id="${group.id}">+ Rule</button>
@@ -1913,7 +1917,11 @@ function renderFilterGroupNode(pageKey, group, depth, onApply) {
   }
   qsa(".filter-combinator button", wrapper).forEach((button) => {
     button.addEventListener("click", () => {
-      group.combinator = button.dataset.combinator || "and";
+      if (button.dataset.combinator === "not") {
+        group.negated = !group.negated;
+      } else {
+        group.combinator = button.dataset.combinator || "and";
+      }
       renderFilterBuilder(pageKey, onApply);
     });
   });
@@ -2048,6 +2056,8 @@ function renderFilterRuleNode(pageKey, rule, onApply) {
               <input class="filter-value-min" type="${fieldMeta?.type === "date" ? "text" : "number"}" value="${escapeHtml(rule.value || "")}" placeholder="Min">
               <span class="filter-range-divider">to</span>
               <input class="filter-value-max" type="${fieldMeta?.type === "date" ? "text" : "number"}" value="${escapeHtml(rule.value_secondary || "")}" placeholder="Max">
+            ` : (rule.operator === "is_null" || rule.operator === "is_not_null") ? `
+              <span class="filter-value-placeholder">No value needed</span>
             ` : `
               <input class="filter-value" type="text" value="${escapeHtml(rule.value || "")}" placeholder="Enter value">
               ${showBiomeDropdown ? `
