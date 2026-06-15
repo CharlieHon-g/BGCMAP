@@ -44,7 +44,6 @@ PAGE_ROUTES = {
     "/stat.html": "stats.html",
     "/sample.html": "sample.html",
     "/tax.html": "tax.html",
-    "/mag.html": "tax.html",
     "/phylum-galaxy.html": "phylum_galaxy.html",
     "/phylum-archipelago.html": "phylum_archipelago.html",
     "/phylum-metro.html": "phylum_metro.html",

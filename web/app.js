@@ -2359,7 +2359,7 @@ async function loadBgcs(page = Number(params.get("page") || 1)) {
   renderTable(
     qs("#table-root"),
     [
-      { label: "BGC ID", sortKey: "bgc_id" },
+      "BGC ID",
       "Product",
       "Category",
       { label: "GCF ID", sortKey: "gcf_id" },
@@ -2394,7 +2394,7 @@ async function loadBgcs(page = Number(params.get("page") || 1)) {
           <td>${row.predicted_smiles ? `<code class="cell-ellipsis" title="${escapeHtml(row.predicted_smiles)}">${escapeHtml(row.predicted_smiles)}</code>` : 'NA'}</td>
           <td>${formatNumber(row.length)}</td>
           <td>${row.contig_edge === true ? 'TRUE' : row.contig_edge === false ? 'FALSE' : 'NA'}</td>
-          <td>${row.genome_url ? `<a class="cell-ellipsis cell-ellipsis-link" href="${row.genome_url}" target="_blank" rel="noreferrer" title="${escapeHtml(row.genome_id)}">${escapeHtml(row.genome_id)}</a>` : `<span class="cell-ellipsis subtle">${escapeHtml(row.genome_id)}</span>`}</td>
+          <td>${row.genome_url ? `<a class="cell-ellipsis cell-ellipsis-link" href="${row.genome_url}" title="${escapeHtml(row.genome_id)}">${escapeHtml(row.genome_id)}</a>` : `<span class="cell-ellipsis subtle">${escapeHtml(row.genome_id)}</span>`}</td>
           <td>${ellipsisText(row.species || "NA")}</td>
           <td>${ellipsisText(displayGroupLabel(row.biome1) || "NA")}</td>
           <td>${ellipsisText(displayGroupLabel(row.biome2) || "NA")}</td>
@@ -2585,17 +2585,20 @@ async function bootstrap() {
     await ensureBiomeOptions();
     await ensureBiomeCatalog("tax");
     await ensureGeoOptions();
-    ensureTaxonOptions().then(() => renderFilterBuilder("tax", loadMags));
+    await ensureTaxonOptions();
     mountAdvancedFilters("tax", loadMags);
     bindControls(loadMags);
     return loadMags(Number(params.get("page") || 1));
   }
   if (page === "bgc") {
     buildStandardControls("q");
+    const initialPage = Number(params.get("page") || 1);
+    await ensureBiomeOptions();
+    ensureGeoOptions();
+    ensureBiomeCatalog("bgc");
+    await ensureCategoryOptions();
     mountAdvancedFilters("bgc", loadBgcs);
     bindControls(loadBgcs);
-    const initialPage = Number(params.get("page") || 1);
-    ensureBiomeOptions().then(() => { ensureGeoOptions(); ensureBiomeCatalog("bgc"); ensureCategoryOptions(); renderFilterBuilder("bgc", loadBgcs); });
     loadGcfDetail();
     return loadBgcs(initialPage);
   }
