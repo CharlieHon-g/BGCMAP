@@ -1302,7 +1302,7 @@ async function loadHome() {
   if (qs("#release-date")) qs("#release-date").textContent = payload.release.released_on || "NA";
   if (qs("#hero-summary")) {
     qs("#hero-summary").textContent =
-      "GEM-BGC Resource is a hierarchical database for exploring biosynthetic gene clusters together with their genome-resolved, taxonomic, and ecological context. It links each BGC to its source metagenome-assembled genome (MAG), and further connects each MAG to sample provenance, collection habitat, and taxonomic annotation, enabling users to trace biosynthetic potential from globally collected samples to genomes, gene clusters, and clustered gene families (GCFs). Built upon SPIRE-derived MAGs and associated metagenomic datasets, GEM-BGC predicts BGCs from MAGs using antiSMASH 8.0 and groups them into GCFs with BiG-SLiCE 2.0.";
+      "BGCMAP Resource is a hierarchical database for exploring biosynthetic gene clusters together with their genome-resolved, taxonomic, and ecological context. It links each BGC to its source metagenome-assembled genome (MAG), and further connects each MAG to sample provenance, collection habitat, and taxonomic annotation, enabling users to trace biosynthetic potential from globally collected samples to genomes, gene clusters, and clustered gene families (GCFs). Built upon SPIRE-derived MAGs and associated metagenomic datasets, BGCMAP predicts BGCs from MAGs using antiSMASH 8.0 and groups them into GCFs with BiG-SLiCE 2.0.";
   }
   initHomeCarousel();
   initHomeSearch();
@@ -1387,7 +1387,7 @@ async function loadStats() {
   renderPieChart(qs("#bgc-type-chart"), bgcTypes);
 
   qs("#stats-intro-text").textContent =
-    "This statistics module summarizes the current GEM-BGC release using real database- and source-derived measurements, arranged as paired panels for collection time and biome, MAG quality, BGC type abundance, and GCF size structure.";
+    "This statistics module summarizes the current BGCMAP release using real database- and source-derived measurements, arranged as paired panels for collection time and biome, MAG quality, BGC type abundance, and GCF size structure.";
 }
 
 function buildStandardControls(pageKey, placeholder) {

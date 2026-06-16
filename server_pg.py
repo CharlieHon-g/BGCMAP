@@ -38,8 +38,8 @@ MAP_FILTERS_PATHS = (
     ROOT / "config" / "sample_global_distribution_filters.json",
 )
 PAGE_ROUTES = {
-    "/": "index.html",
-    "/index.html": "index.html",
+    "/": "BGCMAP.html",
+    "/BGCMAP.html": "BGCMAP.html",
     "/stats.html": "stats.html",
     "/stat.html": "stats.html",
     "/sample.html": "sample.html",
