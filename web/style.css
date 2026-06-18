@@ -782,7 +782,7 @@ table {
 .tax-table-fixed td:first-child {
   width: 260px;
   text-align: left;
-  padding-left: 50px;
+  padding-left: 30px;
 }
 
 .tax-table-fixed td:nth-child(2),
@@ -1051,7 +1051,7 @@ tr:hover td {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 170px;
+  max-width: 176px;
 }
 
 .taxonomy-toggle {
