@@ -827,7 +827,7 @@ table {
 }
 
 .sample-table-fixed {
-  min-width: 1760px;
+  min-width: 1880px;
 }
 .sample-table-fixed td:nth-child(1),
 .sample-table-fixed th:nth-child(1) {
@@ -847,7 +847,7 @@ table {
 .sample-table-fixed th:nth-child(5),
 .sample-table-fixed td:nth-child(6),
 .sample-table-fixed th:nth-child(6) {
-  width: 160px;
+  width: 180px;
 }
 .sample-table-fixed td:nth-child(7),
 .sample-table-fixed th:nth-child(7),
@@ -863,7 +863,7 @@ table {
 }
 .sample-table-fixed td:nth-child(11),
 .sample-table-fixed th:nth-child(11) {
-  width: 120px;
+  width: 180px;
 }
 
 .bgc-table-fixed {
