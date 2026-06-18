@@ -773,12 +773,14 @@ table {
 }
 
 .tax-table-fixed {
-  min-width: 1920px;
+  min-width: 2000px;
 }
 
-.tax-table-fixed td:first-child,
 .tax-table-fixed th:first-child {
-  width: 180px;
+  width: 260px;
+}
+.tax-table-fixed td:first-child {
+  width: 260px;
   text-align: left;
 }
 
