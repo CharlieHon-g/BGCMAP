@@ -257,8 +257,6 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_sample_page AS
 SELECT
     s.sample_pk,
     s.sample_id,
-    s.biosample_accession,
-    s.primary_sample_accession,
     COALESCE(
         string_agg(DISTINCT sp.bioproject_accession, '，' ORDER BY sp.bioproject_accession)
             FILTER (WHERE sp.bioproject_accession IS NOT NULL AND btrim(sp.bioproject_accession) <> ''),
@@ -272,38 +270,35 @@ SELECT
     s.collection_date_raw AS collection_time,
     s.biome1,
     s.biome2,
-    s.biome3 AS biome,
+    s.biome3,
     s.latitude AS lat,
     s.longitude AS lon,
     s.geo_region,
-    ROW_NUMBER() OVER (
-        ORDER BY
-            CASE
-                WHEN (sp_agg.project IS NOT NULL AND sp_agg.project LIKE 'PRJ%')
-                     AND (s.sample_id ~ '^(SAMN|SAMEA|SAMD)')
-                     AND s.biome1 IS NOT NULL AND s.latitude IS NOT NULL
-                     AND s.collection_date_raw IS NOT NULL AND s.collection_date_raw <> '' THEN 0
-                WHEN (sp_agg.project IS NOT NULL AND sp_agg.project LIKE 'PRJ%')
-                     AND (s.sample_id ~ '^(SAMN|SAMEA|SAMD)')
-                     AND s.biome1 IS NOT NULL AND s.latitude IS NOT NULL THEN 1
-                WHEN (sp_agg.project IS NOT NULL AND sp_agg.project LIKE 'PRJ%')
-                     AND (s.sample_id ~ '^(SAMN|SAMEA|SAMD)')
-                     AND s.biome1 IS NOT NULL THEN 2
-                WHEN (sp_agg.project IS NOT NULL AND sp_agg.project LIKE 'PRJ%')
-                     AND (s.sample_id ~ '^(SAMN|SAMEA|SAMD)') THEN 3
-                WHEN s.biome1 IS NOT NULL AND s.latitude IS NOT NULL
-                     AND s.collection_date_raw IS NOT NULL AND s.collection_date_raw <> '' THEN 4
-                WHEN s.biome1 IS NOT NULL AND s.latitude IS NOT NULL THEN 5
-                WHEN s.biome1 IS NOT NULL THEN 6
-                WHEN s.collection_date_raw IS NOT NULL AND s.collection_date_raw <> '' THEN 7
-                ELSE 8
-            END,
-            s.sample_id
-    ) AS display_order,
     count(DISTINCT m.mag_pk) AS mag_count,
     count(DISTINCT b.bgc_pk) AS bgc_count,
-    count(DISTINCT sp.bioproject_accession) AS project_count,
-    count(DISTINCT sr.run_accession) AS run_count
+    ROW_NUMBER() OVER (
+        ORDER BY
+            CASE WHEN sp_agg.project IS NOT NULL AND sp_agg.project LIKE 'PRJ%'
+                      AND s.sample_id ~ '^(SAMN|SAMEA|SAMD)'
+                      AND s.biome1 IS NOT NULL AND s.latitude IS NOT NULL
+                      AND s.collection_date_raw IS NOT NULL AND s.collection_date_raw <> '' THEN 0
+                 WHEN sp_agg.project IS NOT NULL AND sp_agg.project LIKE 'PRJ%'
+                      AND s.sample_id ~ '^(SAMN|SAMEA|SAMD)'
+                      AND s.biome1 IS NOT NULL AND s.latitude IS NOT NULL THEN 1
+                 WHEN sp_agg.project IS NOT NULL AND sp_agg.project LIKE 'PRJ%'
+                      AND s.sample_id ~ '^(SAMN|SAMEA|SAMD)'
+                      AND s.biome1 IS NOT NULL THEN 2
+                 WHEN sp_agg.project IS NOT NULL AND sp_agg.project LIKE 'PRJ%'
+                      AND s.sample_id ~ '^(SAMN|SAMEA|SAMD)' THEN 3
+                 WHEN s.biome1 IS NOT NULL AND s.latitude IS NOT NULL
+                      AND s.collection_date_raw IS NOT NULL AND s.collection_date_raw <> '' THEN 4
+                 WHEN s.biome1 IS NOT NULL AND s.latitude IS NOT NULL THEN 5
+                 WHEN s.biome1 IS NOT NULL THEN 6
+                 WHEN s.collection_date_raw IS NOT NULL AND s.collection_date_raw <> '' THEN 7
+                 ELSE 8
+            END,
+            s.sample_id
+    ) AS display_order
 FROM sample s
 LEFT JOIN sample_project sp ON sp.sample_pk = s.sample_pk
 LEFT JOIN mag m ON m.sample_pk = s.sample_pk
@@ -317,8 +312,6 @@ LEFT JOIN LATERAL (
 GROUP BY
     s.sample_pk,
     s.sample_id,
-    s.biosample_accession,
-    s.primary_sample_accession,
     s.collection_date_raw,
     s.biome1,
     s.biome2,
@@ -330,10 +323,12 @@ GROUP BY
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_mv_sample_page_sample_pk
     ON mv_sample_page (sample_pk);
+CREATE INDEX IF NOT EXISTS idx_mv_sample_page_display_order
+    ON mv_sample_page (display_order);
 CREATE INDEX IF NOT EXISTS idx_mv_sample_biome_lower
-    ON mv_sample_page (lower(biome));
+    ON mv_sample_page (lower(biome3));
 CREATE INDEX IF NOT EXISTS idx_mv_sample_biome_lower_trgm
-    ON mv_sample_page USING gin (lower(biome) gin_trgm_ops);
+    ON mv_sample_page USING gin (lower(biome3) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_mv_sample_biome1_lower
     ON mv_sample_page (lower(biome1));
 CREATE INDEX IF NOT EXISTS idx_mv_sample_biome1_lower_trgm
@@ -346,8 +341,6 @@ CREATE INDEX IF NOT EXISTS idx_mv_sample_page_project_lower
     ON mv_sample_page (lower(project));
 CREATE INDEX IF NOT EXISTS idx_mv_sample_page_category_lower
     ON mv_sample_page (lower(category));
-CREATE INDEX IF NOT EXISTS idx_mv_sample_page_display_order
-    ON mv_sample_page (display_order);
 CREATE INDEX IF NOT EXISTS idx_mv_sample_sample_id_lower
     ON mv_sample_page (lower(sample_id));
 CREATE INDEX IF NOT EXISTS idx_mv_sample_sampleid_lower_trgm
@@ -420,6 +413,7 @@ CREATE INDEX IF NOT EXISTS idx_mv_mag_biome1_lower_trgm
     ON mv_mag_page USING gin (lower(biome1) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_mv_mag_biome2_lower_trgm
     ON mv_mag_page USING gin (lower(biome2) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_mag_genome_id ON mv_mag_page (genome_id);
 CREATE INDEX IF NOT EXISTS idx_mv_mag_genome_id_lower
     ON mv_mag_page (lower(genome_id));
 CREATE INDEX IF NOT EXISTS idx_mv_mag_genomeid_lower_trgm
@@ -498,9 +492,6 @@ CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b2_src ON mv_bgc_page (lower(biome2)
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b3_src ON mv_bgc_page (lower(biome), bgc_source_id);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_category_lower ON mv_bgc_page (lower(category));
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_product_lower ON mv_bgc_page (lower(product));
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_np_pathway_lower ON mv_bgc_page (lower(np_pathway));
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_np_superclass_lower ON mv_bgc_page (lower(np_superclass));
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_np_class_lower ON mv_bgc_page (lower(np_class));
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_contig_edge ON mv_bgc_page (contig_edge);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_genomeid_lower_trgm ON mv_bgc_page USING gin (lower(genome_id) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_sampleid_lower_trgm ON mv_bgc_page USING gin (lower(sample_id) gin_trgm_ops);
@@ -543,3 +534,23 @@ CREATE INDEX IF NOT EXISTS idx_mv_gcf_page_mean_membership_value
     ON mv_gcf_page (mean_membership_value);
 
 COMMIT;
+
+-- NP 页
+CREATE MATERIALIZED VIEW IF NOT EXISTS mv_np_page AS
+SELECT
+    b.bgc_source_id,
+    b.predicted_smiles,
+    b.np_classifier_pathway AS np_pathway,
+    b.np_classifier_superclass AS np_superclass,
+    b.np_classifier_class AS np_class,
+    bgm.gcf_id,
+    bgm.membership_value
+FROM bgc b
+LEFT JOIN bgc_gcf_membership bgm ON bgm.bgc_pk = b.bgc_pk
+WHERE b.np_classifier_pathway IS NOT NULL
+   OR b.np_classifier_superclass IS NOT NULL
+   OR b.np_classifier_class IS NOT NULL
+   OR b.predicted_smiles IS NOT NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_mv_np_page_bgc_source_id
+    ON mv_np_page (bgc_source_id);

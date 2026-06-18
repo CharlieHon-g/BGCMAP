@@ -327,6 +327,7 @@ def load_release_and_assets(conn) -> int:
         INSERT INTO release_version
         (release_name, release_label, released_on, is_current, antismash_version, bigslice_version, bgc_membership_threshold, description)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT (release_name) DO UPDATE SET release_id = release_version.release_id
         RETURNING release_id
         """,
         (
@@ -632,7 +633,7 @@ def enrich_samples_from_sample_env_new(conn) -> None:
                 sample_id,
                 {"biome1": None, "biome2": None, "biome3": None, "latitude": None, "longitude": None, "has_coordinates": False},
             )
-            for source_key, dest_key in (("group1", "biome1"), ("group2", "biome2"), ("group3", "biome3")):
+            for source_key, dest_key in (("biome1", "biome1"), ("biome2", "biome2"), ("biome3", "biome3")):
                 value = clean_text(row.get(source_key))
                 if value:
                     value = value.replace("_", " ")
@@ -851,25 +852,17 @@ def enrich_bgc_from_full_scape(conn) -> None:
 
     # Drop old staging table if exists
     cur.execute("DROP TABLE IF EXISTS _full_scape_raw")
-    # Create staging table with all 61 columns from the TSV (all TEXT for fast COPY)
+    # Create staging table matching the 31-column TSV
     cur.execute("""
         CREATE TEMP TABLE _full_scape_raw (
-            genome_id TEXT, record_id TEXT, region TEXT, start TEXT, "end" TEXT,
-            contig_edge_raw TEXT, product TEXT, KCB_hit TEXT, KCB_acc TEXT, KCB_sim TEXT,
-            record_desc TEXT, category TEXT, bigscape_type TEXT, spire_cluster TEXT,
-            spire_cluster_assignment TEXT, genome_size TEXT, genome_size_est TEXT,
-            gs_est_ratio TEXT, n_contigs TEXT, n50 TEXT, max_contig_length TEXT,
-            translation_table TEXT, completeness TEXT, contamination TEXT, drep TEXT,
-            n_genes TEXT, gunc_taxlevel TEXT, clade_separation_score TEXT,
-            gunc_contamination TEXT, reference_representation_score TEXT,
-            gunc_pass TEXT, gunc_pass_5 TEXT, classification TEXT, domain TEXT,
-            phylum TEXT, class TEXT, "order" TEXT, family TEXT, genus TEXT, species TEXT,
-            red_value TEXT, derived_from_sample TEXT, Habitat2_metalog TEXT,
-            Habitat3_metalog TEXT, Habitat4_metalog TEXT, group2 TEXT, group1 TEXT,
-            group3 TEXT, Habitat_new_1 TEXT, Habitat_new_2 TEXT, Habitat1_metalog TEXT,
-            Spire_tag TEXT, Sample_id TEXT, MAGs TEXT, Lat TEXT, Lon TEXT,
-            Lat_metalog TEXT, Lon_metalog TEXT, env_level_1 TEXT, env_level_2 TEXT,
-            row_number TEXT
+            bgc_source_id TEXT, genome_id TEXT, record_id TEXT, region TEXT,
+            start TEXT, "end" TEXT, contig_edge_raw TEXT, product TEXT,
+            bigscape_type TEXT, spire_cluster TEXT, spire_cluster_assignment TEXT,
+            genome_size TEXT, genome_size_est TEXT, completeness TEXT,
+            contamination TEXT, classification TEXT, domain TEXT, phylum TEXT,
+            class TEXT, "order" TEXT, family TEXT, genus TEXT, species TEXT,
+            derived_from_sample TEXT, group2 TEXT, group1 TEXT, group3 TEXT,
+            Lat TEXT, Lon TEXT, Lat_metalog TEXT, Lon_metalog TEXT
         )
     """)
 
@@ -1058,7 +1051,10 @@ def enrich_bgc_npclassifier(conn) -> None:
     cur.execute("""
         CREATE TEMP TABLE _np_raw (
             Origin_file TEXT,
+            Rank TEXT,
             Predicted_SMILES TEXT,
+            Predicted_score TEXT,
+            Consensus_count TEXT,
             Pathway TEXT,
             Superclass TEXT,
             Class TEXT
@@ -1077,9 +1073,9 @@ def enrich_bgc_npclassifier(conn) -> None:
         SELECT
             TRIM(Origin_file) AS name,
             NULLIF(TRIM(Predicted_SMILES), '') AS smiles,
-            NULLIF(TRIM(Pathway), '') AS pathway,
-            CASE WHEN UPPER(TRIM(Superclass)) = 'NA' THEN NULL ELSE NULLIF(TRIM(Superclass), '') END AS superclass,
-            CASE WHEN UPPER(TRIM(Class)) = 'NA' THEN NULL ELSE NULLIF(TRIM(Class), '') END AS cls
+            CASE WHEN UPPER(TRIM(Pathway)) IN ('NA', '-') THEN NULL ELSE NULLIF(TRIM(Pathway), '') END AS pathway,
+            CASE WHEN UPPER(TRIM(Superclass)) IN ('NA', '-') THEN NULL ELSE NULLIF(TRIM(Superclass), '') END AS superclass,
+            CASE WHEN UPPER(TRIM(Class)) IN ('NA', '-') THEN NULL ELSE NULLIF(TRIM(Class), '') END AS cls
         FROM _np_raw
         WHERE Origin_file IS NOT NULL AND TRIM(Origin_file) <> ''
     """)

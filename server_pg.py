@@ -51,6 +51,7 @@ PAGE_ROUTES = {
     "/phylum-concepts.html": "phylum_concepts.html",
     "/bgc.html": "bgc.html",
     "/download.html": "download.html",
+    "/np.html": "np.html",
     "/help.html": "help.html",
 }
 VALID_PAGE_SIZES = {10, 50, 100}
@@ -683,8 +684,12 @@ def load_biome_selector_options() -> dict:
     }
 
 
-@lru_cache(maxsize=1)
+_taxon_cache: Optional[dict] = None
+
 def load_taxon_selector_options() -> dict:
+    global _taxon_cache
+    if _taxon_cache is not None:
+        return _taxon_cache
     rank_values: dict[str, set[str]] = {
         "domain": set(), "phylum": set(), "class_name": set(),
         "order_name": set(), "genus": set(), "species": set(),
@@ -765,6 +770,7 @@ def load_taxon_selector_options() -> dict:
         key: {parent: sorted(values, key=sorter) for parent, values in sorted(m.items(), key=lambda it: sorter(it[0]))}
         for key, m in relations.items()
     })
+    _taxon_cache = payload
     return payload
 
 
@@ -1067,7 +1073,7 @@ try:
 except Exception:
     CATALOG = build_antismash_catalog()
 # Pre-warm taxon cache at startup so first user doesn't wait
-_ = load_taxon_selector_options()
+load_taxon_selector_options()
 BIOSAMPLE_URL_OVERRIDES = load_biosample_overrides()
 
 
@@ -1090,6 +1096,8 @@ def antismash_mag_url(genome_id: Optional[str]) -> Optional[str]:
 
 
 def serve_file(handler, target: Path, *, download_name: Optional[str] = None) -> None:
+    if not hasattr(serve_file, '_gzip_cache'):
+        serve_file._gzip_cache = {}
     if not target.exists() or not target.is_file():
         handler.send_error(HTTPStatus.NOT_FOUND, "File not found")
         return
@@ -1100,8 +1108,11 @@ def serve_file(handler, target: Path, *, download_name: Optional[str] = None) ->
     if not download_name and 'gzip' in handler.headers.get('Accept-Encoding', ''):
         if target.suffix in ('.html','.css','.js','.json','.svg','.xml','.csv','.tsv'):
             import gzip as _gz
-            body = target.read_bytes()
-            compressed = _gz.compress(body, 6)
+            key = str(target)
+            cache = serve_file._gzip_cache
+            if key not in cache:
+                cache[key] = _gz.compress(target.read_bytes(), 6)
+            compressed = cache[key]
             handler.send_response(HTTPStatus.OK)
             handler.send_header("Content-Type", ctype)
             handler.send_header("Content-Encoding", "gzip")
@@ -1185,6 +1196,7 @@ class SpireHandler(BaseHTTPRequestHandler):
         if path == "/api/bgcs": return self.api_bgcs(query)
         if path == "/api/gcfs": return self.api_gcfs(query)
         if path == "/api/gcf-detail": return self.api_gcf_detail(query)
+        if path == "/api/nps": return self.api_nps(query)
         if path == "/api/downloads": return self.api_downloads()
         if path == "/api/biome-options": return self.api_biome_options()
         if path == "/api/geo-options": return self.api_geo_options()
@@ -1386,7 +1398,7 @@ class SpireHandler(BaseHTTPRequestHandler):
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
         if order_by not in {"lat", "lon", "mag_count", "bgc_count"}:
             order_by, order_dir = "display_order", "asc"
-        order_sql = f"ORDER BY {order_by} {order_dir.upper()}, sample_id ASC"
+        order_sql = f"ORDER BY {order_by} {order_dir.upper()}"
 
         total = cached_count(conn, f"SELECT count(*) AS cnt FROM mv_sample_page {where}", list(params))
         if total == 0:
@@ -1404,10 +1416,9 @@ class SpireHandler(BaseHTTPRequestHandler):
             env = env_lookup.get(item.get("sample_id"), {})
             item["biome1"] = env.get("biome1") or item.get("biome1")
             item["biome2"] = env.get("biome2") or item.get("biome2")
-            item["biome3"] = env.get("biome3") or item.get("biome")
+            item["biome3"] = env.get("biome3") or item.get("biome3")
             item["lat"] = env.get("lat") if env.get("lat") is not None else item.get("lat")
             item["lon"] = env.get("lon") if env.get("lon") is not None else item.get("lon")
-            item["biome"] = item["biome3"]
             item["ncbi_url"] = ncbi_url(item["sample_id"], item.get("biosample_accession"), item.get("primary_sample_accession"))
             item["mag_url"] = f"/tax.html?sample_id={quote(item['sample_id'])}"
             item["bgc_url"] = f"/bgc.html?sample_id={quote(item['sample_id'])}"
@@ -1493,7 +1504,7 @@ class SpireHandler(BaseHTTPRequestHandler):
             env = env_lookup.get(item.get("sample_id"), {})
             item["biome1"] = env.get("biome1") or item.get("biome1")
             item["biome2"] = env.get("biome2") or item.get("biome2")
-            item["biome3"] = env.get("biome3") or item.get("biome3") or item.get("biome")
+            item["biome3"] = env.get("biome3") or item.get("biome3")
             item["sample_url"] = f"/sample.html?sample_id={quote(item['sample_id'])}"
             item["sample_ncbi_url"] = ncbi_url(item["sample_id"], item.get("biosample_accession"), item.get("primary_sample_accession"))
             item["bgc_url"] = f"/bgc.html?genome_id={quote(item['genome_id'])}"
@@ -1558,6 +1569,9 @@ class SpireHandler(BaseHTTPRequestHandler):
 
         clauses = [c for c in clauses if c != "1 = 1"]
         has_filters = len(clauses) > 0
+        cur = conn.cursor()
+        cur.execute("SET enable_seqscan = off")
+        cur.close()
         total = cached_count(conn, f"""
             SELECT count(*) AS cnt FROM mv_bgc_page v
             {where}
@@ -1623,6 +1637,24 @@ class SpireHandler(BaseHTTPRequestHandler):
         if summary is None: conn.close(); return send_json(self, {"error": "GCF not found"})
         conn.close()
         send_json(self, {"summary": row_to_dict(summary)})
+
+    def api_nps(self, query: dict) -> None:
+        page = safe_page(query.get("page", ["1"])[0])
+        page_size = safe_page_size(query.get("page_size", ["10"])[0])
+        conn = open_db()
+        total = cached_count(conn, "SELECT count(*) AS cnt FROM mv_np_page", [])
+        if total == 0:
+            conn.close()
+            send_json(self, page_payload(0, page, page_size, []))
+            return
+        rows = pg_query(conn, "SELECT * FROM mv_np_page ORDER BY bgc_source_id LIMIT %s OFFSET %s",
+                        [page_size, (page - 1) * page_size])
+        conn.close()
+        payload_rows = []
+        for row in rows:
+            item = row_to_dict(row)
+            payload_rows.append(item)
+        send_json(self, page_payload(total, page, page_size, payload_rows))
 
     def api_downloads(self) -> None:
         conn = open_db()

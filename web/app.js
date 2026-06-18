@@ -1411,8 +1411,8 @@ const FILTER_FIELD_CONFIG = {
   ],
   tax: [
     { key: "taxon", label: "Taxon", type: "taxon" },
-    { key: "sample_id", label: "Sample ID", type: "text" },
     { key: "genome_id", label: "Genome ID", type: "text" },
+    { key: "sample_id", label: "Sample ID", type: "text" },
     { key: "biome1", label: "Biome1", type: "text" },
     { key: "biome2", label: "Biome2", type: "text" },
     { key: "biome3", label: "Biome3", type: "text" },
@@ -1432,15 +1432,11 @@ const FILTER_FIELD_CONFIG = {
     { key: "biome3", label: "Biome3", type: "text" },
     { key: "length", label: "Length", type: "number" },
     { key: "membership_value", label: "Membership value", type: "number" },
-    { key: "np_pathway", label: "NP Pathway", type: "text" },
-    { key: "np_superclass", label: "NP Superclass", type: "text" },
-    { key: "np_class", label: "NP Class", type: "text" },
     { key: "contig_edge", label: "Contig Edge", type: "text" },
   ],
 };
 
 const TEXT_OPERATORS = [
-  { key: "contains", label: "contains" },
   { key: "equals", label: "= " },
   { key: "not_equals", label: "!=" },
   { key: "is_null", label: "Is null" },
@@ -1756,33 +1752,10 @@ function mountAdvancedFilters(pageKey, onApply) {
   section.className = "card advanced-filter-card";
   section.id = "advanced-filter-card";
   section.innerHTML = `
-    <div class="advanced-filter-head">
-      <div>
-        <h2>Advanced filter</h2>
-        <p></p>
-      </div>
-      <div class="advanced-filter-actions">
-        <button type="button" class="secondary" id="advanced-filter-reset">Reset</button>
-        <button type="button" id="advanced-filter-apply">Apply filters</button>
-      </div>
-    </div>
     <div id="advanced-filter-root"></div>
     <div class="advanced-filter-query"><span>Query logic:</span> <code id="advanced-filter-query-text">None</code></div>
   `;
   tableCard.parentNode.insertBefore(section, tableCard);
-  qs("#advanced-filter-apply", section).addEventListener("click", () => {
-    if (!serializeFilterState(pageKey)) {
-      filterStates[pageKey] = makeGroup(pageKey);
-      syncParams({ q: null, sample_id: null, sample_accession: null, genome_id: null, gcf_id: null, bgc_name: null, group1: null, map_filter: null, phylum: null, class_name: null, genus: null, species: null, bigscape_type: null, filters: null, page: 1 });
-    }
-    onApply(1);
-  });
-  qs("#advanced-filter-reset", section).addEventListener("click", () => {
-    filterStates[pageKey] = makeGroup(pageKey);
-    syncParams({ q: null, sample_id: null, sample_accession: null, genome_id: null, bgc_name: null, gcf_id: null, bigscape_type: null, group1: null, map_filter: null, filters: null, order_by: null, order_dir: null, page: null, page_size: null });
-    renderFilterBuilder(pageKey, onApply);
-    onApply(1);
-  });
   renderFilterBuilder(pageKey, onApply);
 }
 
@@ -1792,6 +1765,19 @@ function renderFilterBuilder(pageKey, onApply) {
   const state = getFilterState(pageKey);
   root.innerHTML = "";
   root.appendChild(renderFilterGroupNode(pageKey, state, 0, onApply));
+  qs("#advanced-filter-apply")?.addEventListener("click", () => {
+    if (!serializeFilterState(pageKey)) {
+      filterStates[pageKey] = makeGroup(pageKey);
+      syncParams({ q: null, sample_id: null, sample_accession: null, genome_id: null, gcf_id: null, bgc_name: null, group1: null, map_filter: null, phylum: null, class_name: null, genus: null, species: null, bigscape_type: null, filters: null, page: 1 });
+    }
+    onApply(1);
+  });
+  qs("#advanced-filter-reset")?.addEventListener("click", () => {
+    filterStates[pageKey] = makeGroup(pageKey);
+    syncParams({ q: null, sample_id: null, sample_accession: null, genome_id: null, bgc_name: null, gcf_id: null, bigscape_type: null, group1: null, map_filter: null, filters: null, order_by: null, order_dir: null, page: null, page_size: null });
+    renderFilterBuilder(pageKey, onApply);
+    onApply(1);
+  });
   updateFilterSummary(pageKey);
 }
 
@@ -1897,7 +1883,7 @@ function renderFilterGroupNode(pageKey, group, depth, onApply) {
   wrapper.className = `filter-group depth-${depth}`;
   const isRoot = depth === 0;
   wrapper.innerHTML = `
-    <div class="filter-group-toolbar">
+      <div class="filter-group-toolbar">
       <div class="filter-combinator" data-group-id="${group.id}">
         <button type="button" data-combinator="and" class="${group.combinator === "and" ? "is-active" : ""}">AND</button>
         <button type="button" data-combinator="or" class="${group.combinator === "or" ? "is-active" : ""}">OR</button>
@@ -1906,8 +1892,13 @@ function renderFilterGroupNode(pageKey, group, depth, onApply) {
       <div class="filter-group-actions">
         <button type="button" class="secondary" data-action="add-rule" data-group-id="${group.id}">+ Rule</button>
         <button type="button" class="secondary" data-action="add-group" data-group-id="${group.id}">+ Group</button>
-        ${isRoot ? "" : `<button type="button" class="ghost-danger" data-action="remove-group" data-group-id="${group.id}">Remove</button>`}
+        ${isRoot ? "" : `<button type="button" class="ghost-danger" data-action="remove-group" data-group-id="${group.id}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="trash-icon"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>`}
       </div>
+      ${isRoot ? `
+      <div class="advanced-filter-actions">
+        <button type="button" class="secondary" id="advanced-filter-reset">Reset</button>
+        <button type="button" id="advanced-filter-apply">Apply filters</button>
+      </div>` : ""}
     </div>
     <div class="filter-group-body"></div>
   `;
@@ -1994,7 +1985,7 @@ function renderFilterRuleNode(pageKey, rule, onApply) {
         </select>
       </label>
       <label class="filter-value-wrap ${rule.operator.startsWith("is_") ? "is-hidden" : ""}">
-        <span>${showTaxonGrid ? "Taxon" : "Value"}</span>
+        <span class="${showTaxonGrid ? "is-hidden" : ""}">Value</span>
         ${showTaxonGrid ? `
           <div class="filter-taxon-grid">
             ${TAXON_LEVELS.map((level) => {
@@ -2081,7 +2072,7 @@ function renderFilterRuleNode(pageKey, rule, onApply) {
           </div>
         `}
       </label>
-      <button type="button" class="ghost-danger filter-remove">Remove</button>
+      <button type="button" class="ghost-danger filter-remove"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="trash-icon"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
     </div>
   `;
   qs(".filter-field", wrapper).addEventListener("change", (event) => {
@@ -2232,7 +2223,7 @@ async function loadSamples(page = Number(params.get("page") || 1)) {
       <td>${(() => { const t = row.collection_time || 'NA'; const y = parseInt(t); return (!isNaN(y) && y > 2024) ? `<span style=\"color:#aaa;font-style:italic\" title=\"Possibly incorrect future date\">${escapeHtml(t)}</span>` : escapeHtml(t); })()}</td>
       <td>${ellipsisText(displayGroupLabel(row.group1 || row.biome1) || "NA")}</td>
       <td>${ellipsisText(displayGroupLabel(row.group2 || row.biome2) || "NA")}</td>
-      <td>${ellipsisText(displayGroupLabel(row.group3 || row.biome3 || row.biome) || "NA")}</td>
+      <td>${ellipsisText(displayGroupLabel(row.group3 || row.biome3) || "NA")}</td>
       <td>${row.lat != null ? Number(row.lat).toFixed(4) : "NA"}</td>
       <td>${row.lon != null ? Number(row.lon).toFixed(4) : "NA"}</td>
       <td>${makeLocalLink(row.mag_url, formatNumber(row.mag_count))}</td>
@@ -2286,26 +2277,26 @@ async function loadMags(page = Number(params.get("page") || 1)) {
     `/api/mags?q=${encodeURIComponent(q)}&order_by=${encodeURIComponent(orderBy)}&order_dir=${encodeURIComponent(orderDir)}&filters=${encodeURIComponent(filters)}&page=${page}&page_size=${pageSize}`
   );
   updateEntriesLabel(meta, qs("#entries-label"));
-  const firstHeader = taxMode === "phylum" ? "Phylum" : taxMode === "class" ? "Class" : taxMode === "genus" ? "Genus" : "Species";
-  renderTable(
-    qs("#table-root"),
-    [
-      firstHeader,
-      "Genome ID",
-      { label: "BGC", sortKey: "bgc_count" },
-      "Category",
-      { label: "Completeness", sortKey: "completeness" },
-      { label: "Contamination", sortKey: "contamination" },
-      { label: "Genome size", sortKey: "genome_size" },
-      { label: "Gene count", sortKey: "gene_count" },
-      "Sample ID",
-      "Biome1",
-      "Biome2",
-      "Biome3",
-    ],
-    meta.rows,
-    (row) => {
-      const label =
+   const firstHeader = taxMode === "phylum" ? "Phylum" : taxMode === "class" ? "Class" : taxMode === "genus" ? "Genus" : "Species";
+   renderTable(
+     qs("#table-root"),
+     [
+       firstHeader,
+       "Genome ID",
+       { label: "BGC", sortKey: "bgc_count" },
+       "Category",
+       { label: "Completeness", sortKey: "completeness" },
+       { label: "Contamination", sortKey: "contamination" },
+       { label: "Genome size", sortKey: "genome_size" },
+       { label: "Gene count", sortKey: "gene_count" },
+       "Sample ID",
+       "Biome1",
+       "Biome2",
+       "Biome3",
+     ],
+     meta.rows,
+     (row) => {
+       const label =
         taxMode === "phylum"
           ? row.phylum || "Unclassified"
           : taxMode === "class"
@@ -2374,10 +2365,6 @@ async function loadBgcs(page = Number(params.get("page") || 1)) {
       "Category",
       { label: "GCF ID", sortKey: "gcf_id" },
       { label: "Membership value", sortKey: "membership_value" },
-      "NP Pathway",
-      "NP Superclass",
-      "NP Class",
-      "Smiles",
       { label: "Length", sortKey: "length" },
       "Contig edge",
       "Genome ID",
@@ -2398,10 +2385,7 @@ async function loadBgcs(page = Number(params.get("page") || 1)) {
           <td>${ellipsisText(row.category || "NA")}</td>
           <td>${row.gcf_url ? ellipsisLink(row.gcf_url, normalizeNumericIdLabel(row.gcf_id)) : '<span class="subtle">NA</span>'}</td>
           <td>${makeMembershipBadge(row.membership_value, row.contig_edge, row.membership_status)}</td>
-          <td>${ellipsisText(row.np_pathway || "NA")}</td>
-          <td>${ellipsisText(row.np_superclass || "NA")}</td>
-          <td>${ellipsisText(row.np_class || "NA")}</td>
-          <td>${row.predicted_smiles ? `<code class="cell-ellipsis" title="${escapeHtml(row.predicted_smiles)}">${escapeHtml(row.predicted_smiles)}</code>` : 'NA'}</td>
+
           <td>${formatNumber(row.length)}</td>
           <td>${row.contig_edge === true ? 'TRUE' : row.contig_edge === false ? 'FALSE' : 'NA'}</td>
           <td>${row.genome_url ? `<a class="cell-ellipsis cell-ellipsis-link" href="${row.genome_url}" title="${escapeHtml(row.genome_id)}">${escapeHtml(row.genome_id)}</a>` : `<span class="cell-ellipsis subtle">${escapeHtml(row.genome_id)}</span>`}</td>
@@ -2410,7 +2394,7 @@ async function loadBgcs(page = Number(params.get("page") || 1)) {
           <td>${ellipsisText(displayGroupLabel(row.biome2) || "NA")}</td>
           <td>${ellipsisText(displayGroupLabel(row.biome3) || "NA")}</td>
         `,
-        detail: renderTaxonomyDetailRow(row, label, 16),
+        detail: renderTaxonomyDetailRow(row, label, 12),
       };
     },
     {
@@ -2576,6 +2560,33 @@ function bindControls(loader) {
   qs("#page-size")?.addEventListener("change", () => loader(1));
 }
 
+async function loadNps(page = Number(params.get("page") || 1)) {
+  const pageSize = qs("#page-size")?.value || "25";
+  showLoading(qs("#entries-label"));
+  syncParams({ page, page_size: pageSize });
+  const meta = await getJSON(`/api/nps?page=${page}&page_size=${pageSize}`);
+  updateEntriesLabel(meta, qs("#entries-label"));
+  renderTable(
+    qs("#table-root"),
+    ["BGC ID", "SMILES", "NP Pathway", "NP Superclass", "NP Class", "GCF ID", "Membership value"],
+    meta.rows,
+    (row) => ({
+      cells: `
+        <td>${row.bgc_source_id || "NA"}</td>
+        <td>${row.predicted_smiles ? `<code class="cell-ellipsis" title="${escapeHtml(row.predicted_smiles)}">${escapeHtml(row.predicted_smiles)}</code>` : "NA"}</td>
+        <td>${ellipsisText(row.np_pathway || "NA")}</td>
+        <td>${ellipsisText(row.np_superclass || "NA")}</td>
+        <td>${ellipsisText(row.np_class || "NA")}</td>
+        <td>${row.gcf_id ? makeLocalLink(`/gcf.html?gcf_id=${encodeURIComponent(row.gcf_id)}`, row.gcf_id) : "NA"}</td>
+        <td>${makeMembershipBadge(row.membership_value)}</td>
+      `,
+      detail: "",
+    }),
+    { tableClass: "generic-table-fixed" }
+  );
+  renderPager(meta, qs("#pager-root"), loadNps);
+}
+
 async function bootstrap() {
   setActiveNav();
   const page = document.body.dataset.page;
@@ -2595,7 +2606,7 @@ async function bootstrap() {
     await ensureBiomeOptions();
     await ensureBiomeCatalog("tax");
     await ensureGeoOptions();
-    await ensureTaxonOptions();
+    ensureTaxonOptions().then(() => renderFilterBuilder("tax", loadMags));
     mountAdvancedFilters("tax", loadMags);
     bindControls(loadMags);
     return loadMags(Number(params.get("page") || 1));
@@ -2611,6 +2622,9 @@ async function bootstrap() {
     bindControls(loadBgcs);
     loadGcfDetail();
     return loadBgcs(initialPage);
+  }
+  if (page === "np") {
+    return loadNps(Number(params.get("page") || 1));
   }
   if (page === "download") {
     return loadDownloads();
