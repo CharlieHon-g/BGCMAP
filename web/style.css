@@ -827,15 +827,15 @@ table {
 }
 
 .sample-table-fixed {
-  min-width: 1880px;
+  min-width: 1830px;
 }
 .sample-table-fixed td:nth-child(1),
 .sample-table-fixed th:nth-child(1) {
-  width: 150px;
+  width: 120px;
 }
 .sample-table-fixed td:nth-child(2),
 .sample-table-fixed th:nth-child(2) {
-  width: 160px;
+  width: 120px;
 }
 .sample-table-fixed td:nth-child(3),
 .sample-table-fixed th:nth-child(3) {
@@ -847,19 +847,17 @@ table {
 .sample-table-fixed th:nth-child(5),
 .sample-table-fixed td:nth-child(6),
 .sample-table-fixed th:nth-child(6) {
-  width: 180px;
+  width: 160px;
 }
 .sample-table-fixed td:nth-child(7),
 .sample-table-fixed th:nth-child(7),
 .sample-table-fixed td:nth-child(8),
-.sample-table-fixed th:nth-child(8) {
-  width: 90px;
-}
+.sample-table-fixed th:nth-child(8),
 .sample-table-fixed td:nth-child(9),
 .sample-table-fixed th:nth-child(9),
 .sample-table-fixed td:nth-child(10),
 .sample-table-fixed th:nth-child(10) {
-  width: 70px;
+  width: 80px;
 }
 .sample-table-fixed td:nth-child(11),
 .sample-table-fixed th:nth-child(11) {
@@ -885,24 +883,10 @@ table {
 }
 
 .bgc-table-fixed td:nth-child(4),
-.bgc-table-fixed th:nth-child(4) {
-  width: 120px;
-}
-
-.bgc-table-fixed td:nth-child(5),
-.bgc-table-fixed td:nth-child(6),
-.bgc-table-fixed td:nth-child(7),
-.bgc-table-fixed th:nth-child(5),
-.bgc-table-fixed th:nth-child(6),
-.bgc-table-fixed th:nth-child(7) {
-  width: 160px;
-}
-
-.bgc-table-fixed td:nth-child(4),
-.bgc-table-fixed td:nth-child(5),
-.bgc-table-fixed td:nth-child(6),
 .bgc-table-fixed th:nth-child(4),
+.bgc-table-fixed td:nth-child(5),
 .bgc-table-fixed th:nth-child(5),
+.bgc-table-fixed td:nth-child(6),
 .bgc-table-fixed th:nth-child(6) {
   width: 180px;
 }
@@ -913,16 +897,18 @@ table {
 }
 
 .bgc-table-fixed td:nth-child(8),
-.bgc-table-fixed td:nth-child(9),
 .bgc-table-fixed td:nth-child(10),
 .bgc-table-fixed td:nth-child(11),
 .bgc-table-fixed td:nth-child(12),
 .bgc-table-fixed th:nth-child(8),
-.bgc-table-fixed th:nth-child(9),
 .bgc-table-fixed th:nth-child(10),
 .bgc-table-fixed th:nth-child(11),
 .bgc-table-fixed th:nth-child(12) {
   width: 160px;
+}
+.bgc-table-fixed td:nth-child(9),
+.bgc-table-fixed th:nth-child(9) {
+  width: 200px;
 }
 
 .download-table-fixed {

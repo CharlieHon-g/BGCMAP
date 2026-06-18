@@ -2044,7 +2044,7 @@ function renderFilterRuleNode(pageKey, rule, onApply) {
                 <span class="filter-select-shell">
                   <select class="filter-value-select" aria-label="${escapeHtml(fieldMeta?.label || "biome")} dropdown">
                     <option value="">Choose ${escapeHtml(fieldMeta?.label || "biome")}</option>
-                    ${biomeOptionsWithCounts(rule.field, biomeOptions, pageKey).map((opt) => `
+                    ${biomeOptionsWithCounts(rule.field, biomeOptions).map((opt) => `
                 <option value="${escapeHtml(opt.label)}" ${rule.value === opt.label ? "selected" : ""}>${escapeHtml(opt.label)}</option>`).join("")}
                   </select>
                 </span>

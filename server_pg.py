@@ -235,15 +235,6 @@ def load_map_filters() -> Dict[str, dict]:
     return {}
 
 
-@lru_cache(maxsize=1)
-def load_group1_sample_filters() -> Dict[str, List[str]]:
-    buckets: Dict[str, set[str]] = {}
-    for sample_id, env in load_sample_env_lookup().items():
-        biome1 = (env.get("biome1") or "").strip()
-        if not sample_id or not biome1:
-            continue
-        buckets.setdefault(biome1, set()).add(sample_id)
-    return {key: sorted(values) for key, values in buckets.items()}
 
 
 @lru_cache(maxsize=1)
