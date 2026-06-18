@@ -783,7 +783,7 @@ table {
 }
 .tax-table-fixed th:first-child {
   width: 180px;
-  text-align: left;
+  text-align: center;
   padding-left: 0;
 }
 
