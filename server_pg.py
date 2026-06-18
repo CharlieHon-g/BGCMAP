@@ -1108,7 +1108,7 @@ def serve_file(handler, target: Path, *, download_name: Optional[str] = None) ->
     if not download_name and 'gzip' in handler.headers.get('Accept-Encoding', ''):
         if target.suffix in ('.html','.css','.js','.json','.svg','.xml','.csv','.tsv'):
             import gzip as _gz
-            key = str(target)
+            key = str(target) + str(target.stat().st_mtime)
             cache = serve_file._gzip_cache
             if key not in cache:
                 cache[key] = _gz.compress(target.read_bytes(), 6)
@@ -1374,13 +1374,8 @@ class SpireHandler(BaseHTTPRequestHandler):
         if sample_id_filter: clauses.append("sample_id = %s"); params.append(sample_id_filter)
         if sample_accession_filter: clauses.append("(primary_sample_accession = %s OR biosample_accession = %s)"); params.extend([sample_accession_filter, sample_accession_filter])
         if group1_filter:
-            
-            g1f = load_group1_sample_filters()
-            sample_ids = g1f.get(group1_filter) or []
-            if sample_ids:
-                ic, ip = build_in_clauses("sample_id", sample_ids); clauses.append(ic); params.extend(ip)
-            else:
-                clauses.append("1 = 0")
+            clauses.append("lower(biome1) = %s")
+            params.append(group1_filter.lower())
         if map_filter:
             mf = load_map_filters()
             fp = mf.get(map_filter) or {}
