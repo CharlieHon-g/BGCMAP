@@ -29,14 +29,18 @@
     <div class="container">
       <section class="table-card">
         <div class="table-header">
-          <h2>Sample records</h2>
-          <select id="page-size">
+          <div class="table-title-row">
+            <h2>Sample records</h2>
+          </div>
+          <div class="table-header-actions">
+            <select id="page-size">
               <option value="10">10</option>
               <option value="25" selected>25</option>
               <option value="50">50</option>
               <option value="100">100</option>
             </select>
             <div id="entries-label" class="table-meta">Showing 0 to 0 of 0 entries</div>
+          </div>
         </div>
         <div id="table-root" class="table-wrap"></div>
         <div id="pager-root"></div>

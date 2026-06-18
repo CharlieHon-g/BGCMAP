@@ -829,6 +829,42 @@ table {
 .sample-table-fixed {
   min-width: 1760px;
 }
+.sample-table-fixed td:nth-child(1),
+.sample-table-fixed th:nth-child(1) {
+  width: 150px;
+}
+.sample-table-fixed td:nth-child(2),
+.sample-table-fixed th:nth-child(2) {
+  width: 160px;
+}
+.sample-table-fixed td:nth-child(3),
+.sample-table-fixed th:nth-child(3) {
+  width: 120px;
+}
+.sample-table-fixed td:nth-child(4),
+.sample-table-fixed th:nth-child(4),
+.sample-table-fixed td:nth-child(5),
+.sample-table-fixed th:nth-child(5),
+.sample-table-fixed td:nth-child(6),
+.sample-table-fixed th:nth-child(6) {
+  width: 160px;
+}
+.sample-table-fixed td:nth-child(7),
+.sample-table-fixed th:nth-child(7),
+.sample-table-fixed td:nth-child(8),
+.sample-table-fixed th:nth-child(8) {
+  width: 90px;
+}
+.sample-table-fixed td:nth-child(9),
+.sample-table-fixed th:nth-child(9),
+.sample-table-fixed td:nth-child(10),
+.sample-table-fixed th:nth-child(10) {
+  width: 70px;
+}
+.sample-table-fixed td:nth-child(11),
+.sample-table-fixed th:nth-child(11) {
+  width: 120px;
+}
 
 .bgc-table-fixed {
   min-width: 1910px;
@@ -1048,11 +1084,13 @@ tr:hover td {
 
 .taxon-head .taxon-chip {
   flex: 0 0 auto;
-  justify-content: center;
+}
+.taxon-chip-text {
+  display: block;
+  max-width: 176px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 176px;
 }
 
 .taxonomy-toggle {
