@@ -293,9 +293,10 @@ function buildTaxonomyInline(row) {
 function renderTaxonomyDisclosure(row, label, target) {
   const rowKey = row.bgc_name || row.genome_id || `${row.sample_id || "sample"}-${label}`;
   const expanded = taxExpandAll || taxExpandedRows.has(rowKey);
+  const chipText = `<span class="taxon-chip-text" title="${escapeHtml(label)}">${escapeHtml(label)}</span>`;
   const chip = target
-    ? `<a class="taxon-chip" href="${target}" target="_blank" rel="noreferrer">${escapeHtml(label)}</a>`
-    : `<span class="taxon-chip">${escapeHtml(label)}</span>`;
+    ? `<a class="taxon-chip" href="${target}" target="_blank" rel="noreferrer">${chipText}</a>`
+    : `<span class="taxon-chip">${chipText}</span>`;
   return `
     <div class="taxon-disclosure ${expanded ? "is-open" : ""}" data-tax-row="${escapeHtml(rowKey)}">
       <div class="taxon-head">
@@ -546,18 +547,6 @@ let biomeOptionsCache = {
   biome3_by_biome2: {},
 };
 let biomeOptionsPromise = null;
-let biomeCatalogCache = { sample: { biome1: [], biome2: [], biome3: [] }, tax: {}, bgc: {} };
-let biomeCatalogPromises = {};
-
-function ensureBiomeCatalog(pageKey) {
-  if (!pageKey) pageKey = "sample";
-  if (!biomeCatalogPromises[pageKey]) {
-    biomeCatalogPromises[pageKey] = getJSON(`/api/biome-options-catalog?page=${encodeURIComponent(pageKey)}`)
-      .then((data) => { biomeCatalogCache[pageKey] = data; return data; })
-      .catch(() => biomeCatalogCache[pageKey] || {});
-  }
-  return biomeCatalogPromises[pageKey];
-}
 let taxonOptionsCache = {
   domain_all: [],
   phylum_all: [],
@@ -2056,7 +2045,7 @@ function renderFilterRuleNode(pageKey, rule, onApply) {
                   <select class="filter-value-select" aria-label="${escapeHtml(fieldMeta?.label || "biome")} dropdown">
                     <option value="">Choose ${escapeHtml(fieldMeta?.label || "biome")}</option>
                     ${biomeOptionsWithCounts(rule.field, biomeOptions, pageKey).map((opt) => `
-                <option value="${escapeHtml(opt.label)}" ${rule.value === opt.label ? "selected" : ""}>${escapeHtml(opt.label)}${opt.count != null ? ' (' + formatNumber(opt.count) + ')' : ''}</option>`).join("")}
+                <option value="${escapeHtml(opt.label)}" ${rule.value === opt.label ? "selected" : ""}>${escapeHtml(opt.label)}</option>`).join("")}
                   </select>
                 </span>
               ` : showCategoryDropdown ? `
@@ -2064,7 +2053,7 @@ function renderFilterRuleNode(pageKey, rule, onApply) {
                   <select class="filter-value-select" aria-label="Category dropdown">
                     <option value="">Choose Category</option>
                     ${(categoryOptionsCache || []).map((c) => `
-                <option value="${escapeHtml(c.label)}" ${rule.value === c.label ? "selected" : ""}>${escapeHtml(c.label)} (${formatNumber(c.value)})</option>`).join("")}
+                <option value="${escapeHtml(c.label)}" ${rule.value === c.label ? "selected" : ""}>${escapeHtml(c.label)}</option>`).join("")}
                   </select>
                 </span>
               ` : ""}
@@ -2463,12 +2452,8 @@ function renderListBars(target, rows) {
     .join("");
 }
 
-function biomeOptionsWithCounts(fieldKey, options, pageKey) {
-  const catalog = (biomeCatalogCache[pageKey] || biomeCatalogCache.sample || {});
-  const fieldData = catalog[fieldKey] || [];
-  const countMap = {};
-  fieldData.forEach((c) => { countMap[c.label] = c.value; });
-  return options.map((label) => ({ label, count: countMap[label] }));
+function biomeOptionsWithCounts(fieldKey, options) {
+  return options.map((label) => ({ label }));
 }
 
 function findFilterRule(node, fieldKey) {
@@ -2582,7 +2567,7 @@ async function loadNps(page = Number(params.get("page") || 1)) {
       `,
       detail: "",
     }),
-    { tableClass: "generic-table-fixed" }
+    { tableClass: "np-table-fixed" }
   );
   const pager = buildPager(meta, loadNps);
   if (qs("#pager-root")) qs("#pager-root").innerHTML = ""; qs("#pager-root")?.appendChild(pager);
@@ -2603,7 +2588,6 @@ async function bootstrap() {
   if (page === "sample") {
     buildStandardControls("q");
     await ensureBiomeOptions();
-    await ensureBiomeCatalog("sample");
     await ensureGeoOptions();
     mountAdvancedFilters("sample", loadSamples);
     bindControls(loadSamples);
@@ -2612,7 +2596,6 @@ async function bootstrap() {
   if (page === "tax" || page === "mag") {
     buildStandardControls("q");
     await ensureBiomeOptions();
-    await ensureBiomeCatalog("tax");
     await ensureGeoOptions();
     ensureTaxonOptions().then(() => renderFilterBuilder("tax", loadMags));
     mountAdvancedFilters("tax", loadMags);
@@ -2624,7 +2607,6 @@ async function bootstrap() {
     const initialPage = Number(params.get("page") || 1);
     await ensureBiomeOptions();
     ensureGeoOptions();
-    ensureBiomeCatalog("bgc");
     await ensureCategoryOptions();
     mountAdvancedFilters("bgc", loadBgcs);
     bindControls(loadBgcs);

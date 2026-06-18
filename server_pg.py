@@ -71,9 +71,6 @@ def cached_count(conn, sql: str, params: list) -> int:
     return cnt
 
 
-# ── Biome catalog cache (MV is read-only, counts never change) ──
-_biome_catalog_cache: dict = {}
-
 def open_db() -> psycopg2.extensions.connection:
     conn = get_conn(autocommit=True, cursor_factory=psycopg2.extras.RealDictCursor)
     cur = conn.cursor()
@@ -1202,7 +1199,6 @@ class SpireHandler(BaseHTTPRequestHandler):
         if path == "/api/geo-options": return self.api_geo_options()
         if path == "/api/taxon-options": return self.api_taxon_options()
         if path == "/api/taxon-options-catalog": return self.api_taxon_catalog()
-        if path == "/api/biome-options-catalog": return self.api_biome_catalog()
         if path == "/api/category-options": return self.api_category_options()
         if path == "/api/search-suggest": return self.api_search_suggest(query)
         if path == "/api/health": return self.api_health()
@@ -1277,30 +1273,6 @@ class SpireHandler(BaseHTTPRequestHandler):
         conn.close()
         send_json(self, {"categories": [row_to_dict(r) for r in rows]})
 
-    def api_biome_catalog(self) -> None:
-        qs = parse_qs(urlparse(self.path).query)
-        page = (qs.get("page", [""])[0] or "").strip()
-        if page in _biome_catalog_cache:
-            send_json(self, _biome_catalog_cache[page])
-            return
-        conn = open_db()
-        if page == "bgc":
-            view, b1, b2, b3 = "mv_bgc_page", "biome1", "biome2", "biome"
-        elif page == "tax" or page == "mag":
-            view, b1, b2, b3 = "mv_mag_page", "biome1", "biome2", "biome"
-        else:
-            view, b1, b2, b3 = "mv_sample_page", "biome1", "biome2", "biome"
-        biome1 = pg_query(conn, f"SELECT {b1} AS label, count(*) AS value FROM {view} WHERE {b1} IS NOT NULL GROUP BY 1 ORDER BY value DESC")
-        biome2 = pg_query(conn, f"SELECT {b2} AS label, count(*) AS value FROM {view} WHERE {b2} IS NOT NULL GROUP BY 1 ORDER BY value DESC")
-        biome3 = pg_query(conn, f"SELECT {b3} AS label, count(*) AS value FROM {view} WHERE {b3} IS NOT NULL GROUP BY 1 ORDER BY value DESC")
-        conn.close()
-        result = {
-            "biome1": [row_to_dict(r) for r in biome1],
-            "biome2": [row_to_dict(r) for r in biome2],
-            "biome3": [row_to_dict(r) for r in biome3],
-        }
-        _biome_catalog_cache[page] = result
-        send_json(self, result)
 
     def api_search_suggest(self, query: dict) -> None:
         stype = (query.get("type", [""])[0] or "").strip()
