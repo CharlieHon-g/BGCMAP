@@ -758,6 +758,7 @@ input {
 .sort-arrow {
   font-size: 0.8rem;
   line-height: 1;
+  vertical-align: middle;
 }
 
 .table-wrap {
@@ -772,12 +773,14 @@ table {
 }
 
 .tax-table-fixed {
-  min-width: 2000px;
+  min-width: 1920px;
 }
 
 .tax-table-fixed td:first-child,
 .tax-table-fixed th:first-child {
-  width: 260px;
+  width: 180px;
+  text-align: center;
+  padding-left: 0;
 }
 
 .tax-table-fixed td:nth-child(2),
@@ -825,11 +828,13 @@ table {
 }
 
 .bgc-table-fixed {
-  min-width: 2040px;
+  min-width: 1910px;
 }
 .bgc-table-fixed td:first-child,
 .bgc-table-fixed th:first-child {
   width: 150px;
+  text-align: center;
+  padding-left: 0;
 }
 
 .bgc-table-fixed td:nth-child(2),
@@ -839,7 +844,21 @@ table {
 
 .bgc-table-fixed td:nth-child(3),
 .bgc-table-fixed th:nth-child(3) {
-  width: 200px;
+  width: 180px;
+}
+
+.bgc-table-fixed td:nth-child(4),
+.bgc-table-fixed th:nth-child(4) {
+  width: 120px;
+}
+
+.bgc-table-fixed td:nth-child(5),
+.bgc-table-fixed td:nth-child(6),
+.bgc-table-fixed td:nth-child(7),
+.bgc-table-fixed th:nth-child(5),
+.bgc-table-fixed th:nth-child(6),
+.bgc-table-fixed th:nth-child(7) {
+  width: 160px;
 }
 
 .bgc-table-fixed td:nth-child(4),
@@ -919,6 +938,11 @@ td {
 .generic-table-fixed th,
 .generic-table-fixed td {
   overflow: hidden;
+}
+
+.np-table-fixed td:first-child,
+.np-table-fixed th:first-child {
+  width: 100px;
 }
 
 tr:hover td {
@@ -1026,6 +1050,9 @@ tr:hover td {
   flex: 0 0 auto;
   justify-content: center;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
 }
 
 .taxonomy-toggle {
