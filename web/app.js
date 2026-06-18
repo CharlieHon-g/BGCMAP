@@ -399,7 +399,7 @@ function membershipDisplay(value, contigEdge, fallbackStatus = "") {
 
   if (numeric !== null && !Number.isNaN(numeric)) {
     if (numeric >= 0.4) {
-      label = "putative";
+      label = "peripheral";
       klass = "warn";
     } else if (edge === 0) {
       label = "core";
@@ -409,7 +409,7 @@ function membershipDisplay(value, contigEdge, fallbackStatus = "") {
       klass = "info";
     } else if (fallbackStatus) {
       label = fallbackStatus;
-      klass = fallbackStatus.toLowerCase().includes("putative") ? "warn" : fallbackStatus.toLowerCase().includes("assigned") ? "info" : "good";
+      klass = fallbackStatus.toLowerCase().includes("peripheral") ? "warn" : fallbackStatus.toLowerCase().includes("assigned") ? "info" : "good";
     }
   }
 
@@ -1391,7 +1391,7 @@ async function loadStats() {
 }
 
 function buildStandardControls(pageKey, placeholder) {
-  if (qs("#page-size")) qs("#page-size").value = params.get("page_size") || "10";
+  if (qs("#page-size")) qs("#page-size").value = params.get("page_size") || "25";
 }
 
 const FILTER_FIELD_CONFIG = {
@@ -2189,7 +2189,7 @@ function syncParams(newParams) {
 
 async function loadSamples(page = Number(params.get("page") || 1)) {
   const q = params.get("q") || "";
-  const pageSize = qs("#page-size")?.value || params.get("page_size") || "10";
+  const pageSize = qs("#page-size")?.value || "25";
   let sampleId = params.get("sample_id") || "";
   let sampleAccession = params.get("sample_accession") || "";
   let group1 = params.get("group1") || "";
@@ -2247,7 +2247,7 @@ async function loadSamples(page = Number(params.get("page") || 1)) {
 
 async function loadMags(page = Number(params.get("page") || 1)) {
   const q = params.get("q") || "";
-  const pageSize = qs("#page-size")?.value || "10";
+  const pageSize = qs("#page-size")?.value || "25";
   const orderBy = params.get("order_by") || "";
   const orderDir = params.get("order_dir") || "asc";
   const filters = serializeFilterState("tax");
@@ -2345,7 +2345,7 @@ async function loadMags(page = Number(params.get("page") || 1)) {
 
 async function loadBgcs(page = Number(params.get("page") || 1)) {
   const q = params.get("q") || "";
-  const pageSize = qs("#page-size")?.value || "10";
+  const pageSize = qs("#page-size")?.value || "25";
   let gcfIdBgc = "";
   const defaultOrderBy = gcfIdBgc ? "membership_value" : "bgc_id";
   const orderBy = qs("#bgc-sort-field")?.value || params.get("order_by") || defaultOrderBy;
@@ -2416,7 +2416,7 @@ async function loadBgcs(page = Number(params.get("page") || 1)) {
 
 async function loadGcfTable(page = Number(params.get("page") || 1)) {
   const q = params.get("q") || "";
-  const pageSize = qs("#page-size")?.value || "10";
+  const pageSize = qs("#page-size")?.value || "25";
   syncParams({ q, page, page_size: pageSize });
   const meta = await getJSON(`/api/gcfs?q=${encodeURIComponent(q)}&page=${page}&page_size=${pageSize}`);
   updateEntriesLabel(meta, qs("#entries-label"));
@@ -2570,21 +2570,29 @@ async function loadNps(page = Number(params.get("page") || 1)) {
     qs("#table-root"),
     ["BGC ID", "SMILES", "NP Pathway", "NP Superclass", "NP Class", "GCF ID", "Membership value"],
     meta.rows,
-    (row) => ({
-      cells: `
-        <td>${row.bgc_source_id || "NA"}</td>
-        <td>${row.predicted_smiles ? `<code class="cell-ellipsis" title="${escapeHtml(row.predicted_smiles)}">${escapeHtml(row.predicted_smiles)}</code>` : "NA"}</td>
-        <td>${ellipsisText(row.np_pathway || "NA")}</td>
-        <td>${ellipsisText(row.np_superclass || "NA")}</td>
-        <td>${ellipsisText(row.np_class || "NA")}</td>
-        <td>${row.gcf_id ? makeLocalLink(`/gcf.html?gcf_id=${encodeURIComponent(row.gcf_id)}`, row.gcf_id) : "NA"}</td>
-        <td>${makeMembershipBadge(row.membership_value)}</td>
+     (row) => ({
+       cells: `
+         <td>${row.bgc_url ? makeLocalLink(row.bgc_url, row.bgc_source_id || "NA") : (row.bgc_source_id || "NA")}</td>
+         <td>${row.predicted_smiles ? `<span class="smiles-cell"><code class="cell-ellipsis" title="${escapeHtml(row.predicted_smiles)}">${escapeHtml(row.predicted_smiles)}</code><button class="ghost-btn copy-btn" data-smiles="${escapeHtml(row.predicted_smiles)}">📋</button></span>` : "NA"}</td>
+         <td>${ellipsisText(row.np_pathway || "NA")}</td>
+         <td>${ellipsisText(row.np_superclass || "NA")}</td>
+         <td>${ellipsisText(row.np_class || "NA")}</td>
+         <td>${row.gcf_url ? makeLocalLink(row.gcf_url, row.gcf_id) : (row.gcf_id || "NA")}</td>
+         <td>${makeMembershipBadge(row.membership_value, row.contig_edge, row.membership_status)}</td>
       `,
       detail: "",
     }),
     { tableClass: "generic-table-fixed" }
   );
-  renderPager(meta, qs("#pager-root"), loadNps);
+  const pager = buildPager(meta, loadNps);
+  if (qs("#pager-root")) qs("#pager-root").innerHTML = ""; qs("#pager-root")?.appendChild(pager);
+  qs("#table-root")?.addEventListener("click", (e) => {
+    const btn = e.target.closest(".copy-btn");
+    if (btn) {
+      const smiles = btn.dataset.smiles;
+      if (smiles) navigator.clipboard.writeText(smiles).then(() => { btn.textContent = "✓"; setTimeout(() => { btn.textContent = "📋"; }, 1500); });
+    }
+  });
 }
 
 async function bootstrap() {
@@ -2624,6 +2632,9 @@ async function bootstrap() {
     return loadBgcs(initialPage);
   }
   if (page === "np") {
+    buildStandardControls("q");
+    mountAdvancedFilters("bgc", loadNps);
+    bindControls(loadNps);
     return loadNps(Number(params.get("page") || 1));
   }
   if (page === "download") {

@@ -54,7 +54,7 @@ PAGE_ROUTES = {
     "/np.html": "np.html",
     "/help.html": "help.html",
 }
-VALID_PAGE_SIZES = {10, 50, 100}
+VALID_PAGE_SIZES = {10, 25, 50, 100}
 NCBI_BIOSAMPLE_RE = re.compile(r"^(SAMN|SAMEA|SAMD)")
 NCBI_SRA_RE = re.compile(r"^(SRR|ERR|DRR|SRX|ERX|DRX|SRS|ERS|DRS|SRP|ERP|DRP)")
 
@@ -175,8 +175,8 @@ def safe_page_size(raw: str) -> int:
     try:
         value = int(raw)
     except (TypeError, ValueError):
-        return 10
-    return value if value in VALID_PAGE_SIZES else 10
+        return 25
+    return value if value in VALID_PAGE_SIZES else 25
 
 
 def safe_page(raw: str) -> int:
@@ -1352,7 +1352,7 @@ class SpireHandler(BaseHTTPRequestHandler):
         order_by = (query.get("order_by", [""])[0] or "").strip()
         order_dir = normalize_order_dir(query.get("order_dir", ["asc"])[0] or "asc")
         page = safe_page(query.get("page", ["1"])[0])
-        page_size = safe_page_size(query.get("page_size", ["10"])[0])
+        page_size = safe_page_size(query.get("page_size", ["25"])[0])
 
         clauses = []; params: List = []
         if search:
@@ -1439,7 +1439,7 @@ class SpireHandler(BaseHTTPRequestHandler):
         order_by = (query.get("order_by", [""])[0] or "").strip()
         order_dir = normalize_order_dir(query.get("order_dir", ["asc"])[0] or "asc")
         page = safe_page(query.get("page", ["1"])[0])
-        page_size = safe_page_size(query.get("page_size", ["10"])[0])
+        page_size = safe_page_size(query.get("page_size", ["25"])[0])
 
         clauses = []; params: List = []
         conn = open_db()
@@ -1525,7 +1525,7 @@ class SpireHandler(BaseHTTPRequestHandler):
         order_by = (query.get("order_by", [""])[0] or "").strip()
         order_dir = (query.get("order_dir", ["asc"])[0] or "asc").strip().lower()
         page = safe_page(query.get("page", ["1"])[0])
-        page_size = safe_page_size(query.get("page_size", ["10"])[0])
+        page_size = safe_page_size(query.get("page_size", ["25"])[0])
 
         clauses = []; params: List = []
         conn = open_db()
@@ -1607,7 +1607,7 @@ class SpireHandler(BaseHTTPRequestHandler):
     def api_gcfs(self, query: dict) -> None:
         search = (query.get("q", [""])[0] or "").strip().lower()
         page = safe_page(query.get("page", ["1"])[0])
-        page_size = safe_page_size(query.get("page_size", ["10"])[0])
+        page_size = safe_page_size(query.get("page_size", ["25"])[0])
         where = ""; params: List = []
         if search:
             like = f"%{search}%"
@@ -1640,7 +1640,7 @@ class SpireHandler(BaseHTTPRequestHandler):
 
     def api_nps(self, query: dict) -> None:
         page = safe_page(query.get("page", ["1"])[0])
-        page_size = safe_page_size(query.get("page_size", ["10"])[0])
+        page_size = safe_page_size(query.get("page_size", ["25"])[0])
         conn = open_db()
         total = cached_count(conn, "SELECT count(*) AS cnt FROM mv_np_page", [])
         if total == 0:
@@ -1653,6 +1653,13 @@ class SpireHandler(BaseHTTPRequestHandler):
         payload_rows = []
         for row in rows:
             item = row_to_dict(row)
+            item["bgc_url"] = f"/bgc.html?bgc_id={item['bgc_source_id']}"
+            item["gcf_url"] = f"/bgc.html?gcf_id={item['gcf_id']}" if item.get("gcf_id") is not None else None
+            mv = item.get("membership_value")
+            if mv is not None:
+                item["membership_status"] = "backbone" if mv <= 0.1 else ("core" if mv <= 0.4 else "peripheral")
+            else:
+                item["membership_status"] = None
             payload_rows.append(item)
         send_json(self, page_payload(total, page, page_size, payload_rows))
 

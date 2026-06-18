@@ -543,6 +543,7 @@ SELECT
     b.np_classifier_pathway AS np_pathway,
     b.np_classifier_superclass AS np_superclass,
     b.np_classifier_class AS np_class,
+    b.contig_edge,
     bgm.gcf_id,
     bgm.membership_value
 FROM bgc b

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sample · BGCMAP</title>
-  <link rel="stylesheet" href="/static/style.css?v=20260609">
+  <link rel="stylesheet" href="/static/style.css?v=20260618">
 </head>
 <body data-page="sample">
   <header class="site-header">
@@ -30,7 +30,13 @@
       <section class="table-card">
         <div class="table-header">
           <h2>Sample records</h2>
-          <div id="entries-label" class="table-meta">Showing 0 to 0 of 0 entries</div>
+          <select id="page-size">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+            <div id="entries-label" class="table-meta">Showing 0 to 0 of 0 entries</div>
         </div>
         <div id="table-root" class="table-wrap"></div>
         <div id="pager-root"></div>
@@ -38,6 +44,6 @@
       <div id="page-error" class="footer-note"></div>
     </div>
   </main>
-  <script src="/static/app.js?v=20260612"></script>
+  <script src="/static/app.js?v=20260618"></script>
 </body>
 </html>
