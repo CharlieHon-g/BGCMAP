@@ -779,6 +779,7 @@ table {
 .tax-table-fixed td:first-child,
 .tax-table-fixed th:first-child {
   width: 180px;
+  text-align: left;
 }
 
 .tax-table-fixed td:nth-child(2),
@@ -905,8 +906,7 @@ th:first-child {
 }
 
 td:first-child {
-  text-align: left;
-  padding-left: 18px;
+  text-align: center;
 }
 
 th {
