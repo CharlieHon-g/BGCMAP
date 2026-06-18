@@ -776,10 +776,14 @@ table {
   min-width: 1920px;
 }
 
-.tax-table-fixed td:first-child,
+.tax-table-fixed td:first-child {
+  width: 180px;
+  text-align: left;
+  padding-left: 0;
+}
 .tax-table-fixed th:first-child {
   width: 180px;
-  text-align: center;
+  text-align: left;
   padding-left: 0;
 }
 
@@ -830,10 +834,14 @@ table {
 .bgc-table-fixed {
   min-width: 1910px;
 }
-.bgc-table-fixed td:first-child,
+.bgc-table-fixed td:first-child {
+  width: 150px;
+  text-align: left;
+  padding-left: 0;
+}
 .bgc-table-fixed th:first-child {
   width: 150px;
-  text-align: center;
+  text-align: left;
   padding-left: 0;
 }
 
