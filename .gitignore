@@ -7,3 +7,4 @@ __pycache__/
 antismash_results/
 outputs/
 local_site/
+web/stats_cache.json

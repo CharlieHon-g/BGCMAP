@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS sample (
     biosample_accession TEXT,
     primary_sample_accession TEXT,
     sample_name TEXT,
+    project TEXT,
     biome3 TEXT,
     biome2 TEXT,
     biome1 TEXT,
@@ -257,11 +258,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_sample_page AS
 SELECT
     s.sample_pk,
     s.sample_id,
-    COALESCE(
-        string_agg(DISTINCT sp.bioproject_accession, '，' ORDER BY sp.bioproject_accession)
-            FILTER (WHERE sp.bioproject_accession IS NOT NULL AND btrim(sp.bioproject_accession) <> ''),
-        NULL
-    ) AS project,
+    s.project,
     COALESCE(
         string_agg(DISTINCT b.category_primary, '，' ORDER BY b.category_primary)
             FILTER (WHERE b.category_primary IS NOT NULL AND btrim(b.category_primary) <> ''),
@@ -278,17 +275,17 @@ SELECT
     count(DISTINCT b.bgc_pk) AS bgc_count,
     ROW_NUMBER() OVER (
         ORDER BY
-            CASE WHEN sp_agg.project IS NOT NULL AND sp_agg.project LIKE 'PRJ%'
+            CASE WHEN s.project IS NOT NULL AND s.project LIKE 'PRJ%'
                       AND s.sample_id ~ '^(SAMN|SAMEA|SAMD)'
                       AND s.biome1 IS NOT NULL AND s.latitude IS NOT NULL
                       AND s.collection_date_raw IS NOT NULL AND s.collection_date_raw <> '' THEN 0
-                 WHEN sp_agg.project IS NOT NULL AND sp_agg.project LIKE 'PRJ%'
+                 WHEN s.project IS NOT NULL AND s.project LIKE 'PRJ%'
                       AND s.sample_id ~ '^(SAMN|SAMEA|SAMD)'
                       AND s.biome1 IS NOT NULL AND s.latitude IS NOT NULL THEN 1
-                 WHEN sp_agg.project IS NOT NULL AND sp_agg.project LIKE 'PRJ%'
+                 WHEN s.project IS NOT NULL AND s.project LIKE 'PRJ%'
                       AND s.sample_id ~ '^(SAMN|SAMEA|SAMD)'
                       AND s.biome1 IS NOT NULL THEN 2
-                 WHEN sp_agg.project IS NOT NULL AND sp_agg.project LIKE 'PRJ%'
+                 WHEN s.project IS NOT NULL AND s.project LIKE 'PRJ%'
                       AND s.sample_id ~ '^(SAMN|SAMEA|SAMD)' THEN 3
                  WHEN s.biome1 IS NOT NULL AND s.latitude IS NOT NULL
                       AND s.collection_date_raw IS NOT NULL AND s.collection_date_raw <> '' THEN 4
@@ -300,26 +297,19 @@ SELECT
             s.sample_id
     ) AS display_order
 FROM sample s
-LEFT JOIN sample_project sp ON sp.sample_pk = s.sample_pk
 LEFT JOIN mag m ON m.sample_pk = s.sample_pk
 LEFT JOIN bgc b ON b.sample_pk = s.sample_pk
-LEFT JOIN sample_run sr ON sr.sample_pk = s.sample_pk
-LEFT JOIN LATERAL (
-    SELECT MIN(sp_inner.bioproject_accession) AS project
-    FROM sample_project sp_inner
-    WHERE sp_inner.sample_pk = s.sample_pk
-) sp_agg ON TRUE
 GROUP BY
     s.sample_pk,
     s.sample_id,
+    s.project,
     s.collection_date_raw,
     s.biome1,
     s.biome2,
     s.biome3,
     s.latitude,
     s.longitude,
-    s.geo_region,
-    sp_agg.project;
+    s.geo_region;
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_mv_sample_page_sample_pk
     ON mv_sample_page (sample_pk);
@@ -349,6 +339,10 @@ CREATE INDEX IF NOT EXISTS idx_mv_sample_category_lower_trgm
     ON mv_sample_page USING gin (lower(category) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_mv_sample_project_lower_trgm
     ON mv_sample_page USING gin (lower(project) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_sample_mag_count
+    ON mv_sample_page (mag_count);
+CREATE INDEX IF NOT EXISTS idx_mv_sample_bgc_count
+    ON mv_sample_page (bgc_count);
 
 -- MAG 页
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_mag_page AS
@@ -432,6 +426,14 @@ CREATE INDEX IF NOT EXISTS idx_mv_mag_biome3_lower
     ON mv_mag_page (lower(biome));
 CREATE INDEX IF NOT EXISTS idx_mv_mag_sample_id_lower_genome_id
     ON mv_mag_page (lower(sample_id), genome_id);
+CREATE INDEX IF NOT EXISTS idx_mv_mag_completeness
+    ON mv_mag_page (completeness);
+CREATE INDEX IF NOT EXISTS idx_mv_mag_contamination
+    ON mv_mag_page (contamination);
+CREATE INDEX IF NOT EXISTS idx_mv_mag_bgc_count
+    ON mv_mag_page (bgc_count);
+CREATE INDEX IF NOT EXISTS idx_mv_mag_cat_preview_lower
+    ON mv_mag_page (lower(category_preview));
 
 -- BGC 页
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_bgc_page AS
@@ -499,6 +501,7 @@ CREATE INDEX IF NOT EXISTS idx_mv_bgc_product_lower_trgm ON mv_bgc_page USING gi
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_category_lower_trgm ON mv_bgc_page USING gin (lower(category) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_sid_lower_src_pk ON mv_bgc_page (lower(sample_id), bgc_source_id, bgc_pk);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_gid_lower_src_pk ON mv_bgc_page (lower(genome_id), bgc_source_id, bgc_pk);
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_length ON mv_bgc_page (length);
 
 -- GCF 页
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_gcf_page AS

@@ -175,6 +175,7 @@ def parse_coord_from_fields(*values: str) -> Optional[float]:
 def drop_and_init_schema(conn) -> None:
     """Drop all tables/views and run the schema DDL."""
     cur = conn.cursor()
+    cur.execute("SET search_path TO gem, public;")
     # Drop materialized views first
     cur.execute("""
         DROP MATERIALIZED VIEW IF EXISTS mv_gcf_page CASCADE;
@@ -182,6 +183,7 @@ def drop_and_init_schema(conn) -> None:
         DROP MATERIALIZED VIEW IF EXISTS mv_mag_page CASCADE;
         DROP MATERIALIZED VIEW IF EXISTS mv_sample_page CASCADE;
         DROP MATERIALIZED VIEW IF EXISTS mv_home_stats CASCADE;
+        DROP MATERIALIZED VIEW IF EXISTS mv_np_page CASCADE;
     """)
     # Drop tables in reverse dependency order
     cur.execute("""
@@ -196,6 +198,8 @@ def drop_and_init_schema(conn) -> None:
         DROP TABLE IF EXISTS download_asset CASCADE;
         DROP TABLE IF EXISTS release_version CASCADE;
     """)
+    # Also drop the staging table
+    cur.execute("DROP TABLE IF EXISTS gcf_stage CASCADE")
     conn.commit()
     cur.close()
 
@@ -221,6 +225,7 @@ def build_sample_seed() -> Dict[str, Dict[str, Optional[str]]]:
                 "biosample_accession": sample_id if is_ncbi_biosample(sample_id) else None,
                 "primary_sample_accession": None,
                 "sample_name": None,
+                "project": None,
                 "biome3": None,
                 "biome2": None,
                 "biome1": None,
@@ -245,6 +250,9 @@ def build_sample_seed() -> Dict[str, Dict[str, Optional[str]]]:
             sra_samples = split_pipe(row.get("primary_sample_accession"))
             sample_names = split_pipe(row.get("identifier_sample_name"))
             raw = clean_text(row.get("collection_date"))
+            prj = split_pipe(row.get("PRJ"), {"no_id"})
+            if prj and not record["project"]:
+                record["project"] = prj[0]
             if biosample:
                 record["biosample_accession"] = biosample
             if sra_samples and not record["primary_sample_accession"]:
@@ -283,6 +291,7 @@ def load_samples(conn) -> Dict[str, int]:
             info["biosample_accession"],
             info["primary_sample_accession"],
             info["sample_name"],
+            info["project"],
             info["biome3"],
             info["biome2"],
             info["biome1"],
@@ -303,6 +312,7 @@ def load_samples(conn) -> Dict[str, int]:
         """
         INSERT INTO sample (
             sample_id, biosample_accession, primary_sample_accession, sample_name,
+            project,
             biome3, biome2, biome1, collection_date_raw, collection_date_start,
             collection_date_end, collection_year, latitude, longitude,
             has_coordinates, is_ncbi_biosample
@@ -375,6 +385,7 @@ def load_release_and_assets(conn) -> int:
         INSERT INTO download_asset
         (release_id, asset_key, module_name, title, file_format, file_path, md5, bytes, description, is_public)
         VALUES %s
+        ON CONFLICT (asset_key) DO NOTHING
         """,
         asset_rows,
     )
@@ -1145,7 +1156,8 @@ def enrich_geo_region_from_map_filters(conn) -> None:
 def refresh_materialized_views(conn) -> None:
     print("Refreshing materialized views...")
     cur = conn.cursor()
-    for view in ["mv_home_stats", "mv_sample_page", "mv_mag_page", "mv_bgc_page", "mv_gcf_page"]:
+    cur.execute("REFRESH MATERIALIZED VIEW mv_home_stats")
+    for view in ["mv_sample_page", "mv_mag_page", "mv_bgc_page", "mv_gcf_page", "mv_np_page"]:
         cur.execute(f"REFRESH MATERIALIZED VIEW CONCURRENTLY {view}")
     conn.commit()
     cur.close()
@@ -1224,30 +1236,27 @@ def build_stats_json(conn) -> None:
     import json as _json
 
     cur = conn.cursor()
+    cur.execute("SET search_path TO gem, public;")
 
-    group1_rows = [{"label": r["g"], "value": r["c"]} for r in cur.execute(
-        "SELECT biome1 AS g, COUNT(*) AS c FROM sample WHERE biome1 IS NOT NULL AND biome1 <> '' GROUP BY biome1 ORDER BY c DESC"
-    ).fetchall()]
-    group2_rows = [{"label": r["g"], "value": r["c"]} for r in cur.execute(
-        "SELECT biome2 AS g, COUNT(*) AS c FROM sample WHERE biome2 IS NOT NULL AND biome2 <> '' GROUP BY biome2 ORDER BY c DESC"
-    ).fetchall()]
-    group3_rows = [{"label": r["g"], "value": r["c"]} for r in cur.execute(
-        "SELECT biome3 AS g, COUNT(*) AS c FROM sample WHERE biome3 IS NOT NULL AND biome3 <> '' GROUP BY biome3 ORDER BY c DESC"
-    ).fetchall()]
+    cur.execute("SELECT biome1 AS g, COUNT(*) AS c FROM sample WHERE biome1 IS NOT NULL AND biome1 <> '' GROUP BY biome1 ORDER BY c DESC")
+    group1_rows = [{"label": r["g"], "value": r["c"]} for r in cur.fetchall()]
+    cur.execute("SELECT biome2 AS g, COUNT(*) AS c FROM sample WHERE biome2 IS NOT NULL AND biome2 <> '' GROUP BY biome2 ORDER BY c DESC")
+    group2_rows = [{"label": r["g"], "value": r["c"]} for r in cur.fetchall()]
+    cur.execute("SELECT biome3 AS g, COUNT(*) AS c FROM sample WHERE biome3 IS NOT NULL AND biome3 <> '' GROUP BY biome3 ORDER BY c DESC")
+    group3_rows = [{"label": r["g"], "value": r["c"]} for r in cur.fetchall()]
 
     links_12 = []
     links_23 = []
-    for row in cur.execute(
-        "SELECT biome1, biome2, biome3 FROM sample WHERE biome1 IS NOT NULL AND biome2 IS NOT NULL AND biome3 IS NOT NULL"
-    ).fetchall():
+    cur.execute("SELECT biome1, biome2, biome3 FROM sample WHERE biome1 IS NOT NULL AND biome2 IS NOT NULL AND biome3 IS NOT NULL")
+    for row in cur.fetchall():
         links_12.append({"source": row["biome1"], "target": row["biome2"]})
         links_23.append({"source": row["biome2"], "target": row["biome3"]})
 
     dst = ROOT / "web" / "stats_cache.json"
+    cur.execute("SELECT category_primary AS c, COUNT(*) AS cnt FROM bgc WHERE category_primary IS NOT NULL AND category_primary <> '' GROUP BY category_primary ORDER BY cnt DESC")
+    bgc_type_rows = [{"label": r["c"], "value": r["cnt"]} for r in cur.fetchall()]
     _json.dump({
-        "bgc_type_rows": [{"label": r["c"], "value": r["cnt"]} for r in cur.execute(
-            "SELECT category_primary AS c, COUNT(*) AS cnt FROM bgc WHERE category_primary IS NOT NULL AND category_primary <> '' GROUP BY category_primary ORDER BY cnt DESC"
-        ).fetchall()],
+        "bgc_type_rows": bgc_type_rows,
         "group1_rows": group1_rows,
         "group2_rows": group2_rows,
         "group3_rows": group3_rows,

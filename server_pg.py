@@ -71,6 +71,36 @@ def cached_count(conn, sql: str, params: list) -> int:
     return cnt
 
 
+def estimated_count(conn, sql: str, params: list) -> int:
+    key = ("est", sql, tuple(params))
+    if key in _count_cache:
+        return _count_cache[key]
+    import json
+    row = pg_query_one(conn, f"EXPLAIN (FORMAT JSON) {sql}", params)
+    raw = row["QUERY PLAN"]
+    if isinstance(raw, str):
+        raw = json.loads(raw)
+
+    def find_scan_rows(node):
+        nt = node.get("Node Type", "")
+        if nt in {"Seq Scan", "Index Scan", "Index Only Scan", "Bitmap Index Scan",
+                   "Bitmap Heap Scan", "Parallel Seq Scan", "Parallel Index Scan",
+                   "Parallel Index Only Scan", "Parallel Bitmap Heap Scan"}:
+            return int(node.get("Plan Rows", 0))
+        for child in node.get("Plans", []):
+            r = find_scan_rows(child)
+            if r:
+                return r
+        return int(node.get("Plan Rows", 0))
+
+    plan = raw[0]["Plan"]
+    cnt = find_scan_rows(plan)
+    if cnt < 1:
+        cnt = int(plan.get("Plan Rows", 0))
+    _count_cache[key] = cnt
+    return cnt
+
+
 def open_db() -> psycopg2.extensions.connection:
     conn = get_conn(autocommit=True, cursor_factory=psycopg2.extras.RealDictCursor)
     cur = conn.cursor()
@@ -910,6 +940,7 @@ def compile_filter_rule(node: dict, page_kind: str, conn) -> Tuple[str, List]:
             "biome2": ("text", "v.biome2"),
             "biome3": ("text", "v.biome"),
             "category": ("text", "COALESCE(v.category_preview, '')"),
+            "bgc_count": ("number", "v.bgc_count"),
             "completeness": ("number", "v.completeness"),
             "contamination": ("number", "v.contamination"),
         },
@@ -930,11 +961,28 @@ def compile_filter_rule(node: dict, page_kind: str, conn) -> Tuple[str, List]:
             "np_class": ("text", "v.np_class"),
             "contig_edge": ("bool", "v.contig_edge"),
         },
+        "nps": {
+            "bgc_id": ("number", "v.bgc_source_id"),
+            "np_pathway": ("text", "v.np_pathway"),
+            "np_superclass": ("text", "v.np_superclass"),
+            "np_class": ("text", "v.np_class"),
+            "gcf_id": ("number", "v.gcf_id"),
+            "membership_value": ("number", "v.membership_value"),
+        },
     }
     kind_map = field_maps.get(page_kind, {})
     spec = kind_map.get(field)
     if not spec: return "1 = 1", []
     ftype, target = spec
+    if ftype == "text" and operator == "equals":
+        contains_fields = {
+            "sample": {"sample_id", "project", "category"},
+            "tax": {"sample_id", "category"},
+            "bgc": {"product", "sample_id"},
+            "nps": {"np_pathway", "np_superclass", "np_class"},
+        }
+        if field in contains_fields.get(page_kind, set()):
+            operator = "contains"
     if ftype == "text": return build_text_clause(target, operator, str(value or ""))
     if ftype == "bool":
         val = str(value or "").strip().lower()
@@ -1465,6 +1513,10 @@ class SpireHandler(BaseHTTPRequestHandler):
             item["biome3"] = env.get("biome3") or item.get("biome3")
             item["sample_url"] = f"/sample.html?sample_id={quote(item['sample_id'])}"
             item["sample_ncbi_url"] = ncbi_url(item["sample_id"], item.get("biosample_accession"), item.get("primary_sample_accession"))
+            gid = (item.get("genome_id") or "")
+            if gid.startswith("spire_"):
+                gid = gid[6:]
+            item["genome_id_display"] = gid
             item["bgc_url"] = f"/bgc.html?genome_id={quote(item['genome_id'])}"
             item["portal_url"] = f"/tax.html?genome_id={quote(item['genome_id'])}"
             item["antismash_url"] = antismash_mag_url(item["genome_id"])
@@ -1527,9 +1579,6 @@ class SpireHandler(BaseHTTPRequestHandler):
 
         clauses = [c for c in clauses if c != "1 = 1"]
         has_filters = len(clauses) > 0
-        cur = conn.cursor()
-        cur.execute("SET enable_seqscan = off")
-        cur.close()
         total = cached_count(conn, f"""
             SELECT count(*) AS cnt FROM mv_bgc_page v
             {where}
@@ -1553,6 +1602,10 @@ class SpireHandler(BaseHTTPRequestHandler):
             item = row_to_dict(row)
             item["bgc_source_id"] = item.get("bgc_source_id") or ""
             item["gcf_id"] = item.get("gcf_id") or ""
+            gid = (item.get("genome_id") or "")
+            if gid.startswith("spire_"):
+                gid = gid[6:]
+            item["genome_id_display"] = gid
             item["sample_url"] = f"/sample.html?sample_id={quote(item['sample_id'])}"
             item["sample_ncbi_url"] = ncbi_url(item["sample_id"], item.get("biosample_accession"), item.get("primary_sample_accession"))
             item["genome_url"] = f"/tax.html?genome_id={quote(item['genome_id'])}"
@@ -1597,16 +1650,24 @@ class SpireHandler(BaseHTTPRequestHandler):
         send_json(self, {"summary": row_to_dict(summary)})
 
     def api_nps(self, query: dict) -> None:
+        filters = parse_filters((query.get("filters", [""])[0] or "").strip())
         page = safe_page(query.get("page", ["1"])[0])
         page_size = safe_page_size(query.get("page_size", ["25"])[0])
         conn = open_db()
-        total = cached_count(conn, "SELECT count(*) AS cnt FROM mv_np_page", [])
+
+        clauses = []; params: List = []
+        if filters:
+            fc, fp = compile_filter_group(filters, "nps", conn)
+            if fc: clauses.append(fc); params.extend(fp)
+        where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+
+        total = cached_count(conn, f"SELECT count(*) AS cnt FROM mv_np_page v {where}", list(params))
         if total == 0:
             conn.close()
             send_json(self, page_payload(0, page, page_size, []))
             return
-        rows = pg_query(conn, "SELECT * FROM mv_np_page ORDER BY bgc_source_id LIMIT %s OFFSET %s",
-                        [page_size, (page - 1) * page_size])
+        rows = pg_query(conn, f"SELECT * FROM mv_np_page v {where} ORDER BY v.bgc_source_id LIMIT %s OFFSET %s",
+                        params + [page_size, (page - 1) * page_size])
         conn.close()
         payload_rows = []
         for row in rows:

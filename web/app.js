@@ -518,10 +518,10 @@ function displayGroupLabel(label) {
   return String(label).replaceAll("_", " ");
 }
 
-const BIOME_DROPDOWN_OPERATORS = new Set(["contains", "equals"]);
+const BIOME_DROPDOWN_OPERATORS = new Set(["equals"]);
 const GEO_DROPDOWN_OPERATORS = new Set(["equals"]);
 const GEO_ALL_OPERATORS = new Set(["equals", "not_equals", "is_null", "is_not_null"]);
-const TAXON_DROPDOWN_OPERATORS = new Set(["contains", "equals"]);
+const TAXON_DROPDOWN_OPERATORS = new Set(["equals"]);
 const TAXON_LEVELS = [
   { key: "domain", label: "Domain" },
   { key: "phylum", label: "Phylum" },
@@ -1388,7 +1388,7 @@ const FILTER_FIELD_CONFIG = {
     { key: "sample_id", label: "Sample ID", type: "text" },
     { key: "project", label: "Project", type: "text" },
     { key: "collection_time", label: "Collection time", type: "date" },
-    { key: "category", label: "Category", type: "text" },
+    { key: "category", label: "BGC Category", type: "text" },
     { key: "biome1", label: "Biome1", type: "text" },
     { key: "biome2", label: "Biome2", type: "text" },
     { key: "biome3", label: "Biome3", type: "text" },
@@ -1405,7 +1405,8 @@ const FILTER_FIELD_CONFIG = {
     { key: "biome1", label: "Biome1", type: "text" },
     { key: "biome2", label: "Biome2", type: "text" },
     { key: "biome3", label: "Biome3", type: "text" },
-    { key: "category", label: "Category", type: "text" },
+    { key: "category", label: "BGC Category", type: "text" },
+    { key: "bgc_count", label: "BGC count", type: "number" },
     { key: "completeness", label: "Completeness", type: "number" },
     { key: "contamination", label: "Contamination", type: "number" },
   ],
@@ -1422,6 +1423,14 @@ const FILTER_FIELD_CONFIG = {
     { key: "length", label: "Length", type: "number" },
     { key: "membership_value", label: "Membership value", type: "number" },
     { key: "contig_edge", label: "Contig Edge", type: "text" },
+  ],
+  nps: [
+    { key: "bgc_id", label: "BGC ID", type: "number" },
+    { key: "np_pathway", label: "NP Pathway", type: "text" },
+    { key: "np_superclass", label: "NP Superclass", type: "text" },
+    { key: "np_class", label: "NP Class", type: "text" },
+    { key: "gcf_id", label: "GCF ID", type: "number" },
+    { key: "membership_value", label: "Membership value", type: "number" },
   ],
 };
 
@@ -1468,7 +1477,7 @@ function defaultOperatorForField(pageKey, fieldKey) {
   }
   if (meta?.type === "date") return "between";
   if (meta?.type === "geo") return "equals";
-  return "contains";
+  return "equals";
 }
 
 function makeRule(pageKey) {
@@ -1924,7 +1933,10 @@ function renderFilterRuleNode(pageKey, rule, onApply) {
   wrapper.className = "filter-rule";
   const fieldMeta = getFieldMeta(pageKey, rule.field);
   const isRangeType = fieldMeta?.type === "number" || fieldMeta?.type === "date";
-  const operators = (rule.field === "gcf_id" || rule.field === "bgc_id") ? [NUMBER_OPERATORS.find((o) => o.key === "equals")] : (isRangeType ? NUMBER_OPERATORS : (isGeoField(rule.field) ? TEXT_OPERATORS.filter((o) => GEO_ALL_OPERATORS.has(o.key)) : TEXT_OPERATORS));
+  const equalsOnly = rule.field === "gcf_id" || rule.field === "bgc_id";
+  const noNullNumber = isRangeType && fieldMeta?.type === "number" && !(pageKey === "sample" && (rule.field === "lat" || rule.field === "lon"));
+  const noNullText = !isRangeType && !isGeoField(rule.field) && (rule.field === "sample_id" || rule.field === "genome_id");
+  const operators = equalsOnly ? [TEXT_OPERATORS.find((o) => o.key === "equals") || NUMBER_OPERATORS.find((o) => o.key === "equals")] : (noNullNumber ? NUMBER_OPERATORS.filter((o) => o.key !== "is_null" && o.key !== "is_not_null") : (noNullText ? TEXT_OPERATORS.filter((o) => o.key !== "is_null" && o.key !== "is_not_null") : (isRangeType ? NUMBER_OPERATORS : (isGeoField(rule.field) ? TEXT_OPERATORS.filter((o) => GEO_ALL_OPERATORS.has(o.key)) : TEXT_OPERATORS))));
   const showRangeInputs = isRangeType && rule.operator === "between";
   const showBiomeDropdown = isBiomeField(rule.field) && BIOME_DROPDOWN_OPERATORS.has(rule.operator);
   const showCategoryDropdown = isCategoryField(rule.field) && BIOME_DROPDOWN_OPERATORS.has(rule.operator) && pageKey === "bgc";
@@ -2203,7 +2215,7 @@ async function loadSamples(page = Number(params.get("page") || 1)) {
       { label: "Lon", sortKey: "lon" },
       { label: "MAG", sortKey: "mag_count" },
       { label: "BGC", sortKey: "bgc_count" },
-      "Category",
+      "BGC Category",
     ],
     meta.rows,
     (row) => `
@@ -2221,6 +2233,7 @@ async function loadSamples(page = Number(params.get("page") || 1)) {
     `,
     {
       tableClass: "sample-table-fixed",
+      columnWidths: [120, 120, 120, 160, 160, 160, 80, 80, 80, 80, 180],
       sortState: orderBy ? { field: orderBy, dir: orderDir } : null,
       onSort: (field, dir) => {
         syncParams({ order_by: field, order_dir: dir, page: 1 });
@@ -2273,13 +2286,13 @@ async function loadMags(page = Number(params.get("page") || 1)) {
        firstHeader,
        "Genome ID",
        { label: "BGC", sortKey: "bgc_count" },
-       "Category",
-       { label: "Completeness", sortKey: "completeness" },
-       { label: "Contamination", sortKey: "contamination" },
-       { label: "Genome size", sortKey: "genome_size" },
-       { label: "Gene count", sortKey: "gene_count" },
-       "Sample ID",
-       "Biome1",
+        "BGC Category",
+        { label: "Completeness", sortKey: "completeness" },
+        { label: "Contamination", sortKey: "contamination" },
+        { label: "Genome size", sortKey: "genome_size" },
+        { label: "Gene count", sortKey: "gene_count" },
+        "Sample ID",
+        "Biome1",
        "Biome2",
        "Biome3",
      ],
@@ -2301,7 +2314,7 @@ async function loadMags(page = Number(params.get("page") || 1)) {
       return {
         cells: `
           <td>${renderTaxonomyDisclosure(row, label, target)}</td>
-          <td>${row.antismash_url || row.portal_url ? `<a class="cell-ellipsis cell-ellipsis-link" href="${row.antismash_url || row.portal_url}" target="_blank" rel="noreferrer" title="${escapeHtml(row.genome_id)}">${escapeHtml(row.genome_id)}</a>` : `<span class="cell-ellipsis subtle">${escapeHtml(row.genome_id)}</span>`}</td>
+          <td>${row.antismash_url || row.portal_url ? `<a class="cell-ellipsis cell-ellipsis-link" href="${row.antismash_url || row.portal_url}" target="_blank" rel="noreferrer" title="${escapeHtml(row.genome_id)}">${escapeHtml(row.genome_id_display || row.genome_id)}</a>` : `<span class="cell-ellipsis subtle">${escapeHtml(row.genome_id_display || row.genome_id)}</span>`}</td>
           <td>${Number(row.bgc_count) > 0 ? makeLocalLink(row.bgc_url, formatNumber(row.bgc_count)) : '<span class="subtle">0</span>'}</td>
           <td>${ellipsisText(row.category_preview || "NA")}</td>
           <td>${escapeHtml(row.completeness ?? "NA")}</td>
@@ -2357,6 +2370,7 @@ async function loadBgcs(page = Number(params.get("page") || 1)) {
       { label: "Length", sortKey: "length" },
       "Contig edge",
       "Genome ID",
+      "Sample ID",
       "Species",
       "Biome1",
       "Biome2",
@@ -2377,13 +2391,14 @@ async function loadBgcs(page = Number(params.get("page") || 1)) {
 
           <td>${formatNumber(row.length)}</td>
           <td>${row.contig_edge === true ? 'TRUE' : row.contig_edge === false ? 'FALSE' : 'NA'}</td>
-          <td>${row.genome_url ? `<a class="cell-ellipsis cell-ellipsis-link" href="${row.genome_url}" title="${escapeHtml(row.genome_id)}">${escapeHtml(row.genome_id)}</a>` : `<span class="cell-ellipsis subtle">${escapeHtml(row.genome_id)}</span>`}</td>
+          <td>${row.genome_url ? `<a class="cell-ellipsis cell-ellipsis-link" href="${row.genome_url}" title="${escapeHtml(row.genome_id)}">${escapeHtml(row.genome_id_display || row.genome_id.replace(/^spire_/, ''))}</a>` : `<span class="cell-ellipsis subtle">${escapeHtml(row.genome_id_display || row.genome_id.replace(/^spire_/, ''))}</span>`}</td>
+          <td>${ellipsisLink(row.sample_url, row.sample_id)}</td>
           <td>${ellipsisText(row.species || "NA")}</td>
           <td>${ellipsisText(displayGroupLabel(row.biome1) || "NA")}</td>
           <td>${ellipsisText(displayGroupLabel(row.biome2) || "NA")}</td>
           <td>${ellipsisText(displayGroupLabel(row.biome3) || "NA")}</td>
         `,
-        detail: renderTaxonomyDetailRow(row, label, 12),
+        detail: renderTaxonomyDetailRow(row, label, 13),
       };
     },
     {
@@ -2547,9 +2562,10 @@ function bindControls(loader) {
 
 async function loadNps(page = Number(params.get("page") || 1)) {
   const pageSize = qs("#page-size")?.value || "25";
+  const filters = serializeFilterState("nps");
   showLoading(qs("#entries-label"));
-  syncParams({ page, page_size: pageSize });
-  const meta = await getJSON(`/api/nps?page=${page}&page_size=${pageSize}`);
+  syncParams({ page, page_size: pageSize, filters: filters || null });
+  const meta = await getJSON(`/api/nps?filters=${encodeURIComponent(filters)}&page=${page}&page_size=${pageSize}`);
   updateEntriesLabel(meta, qs("#entries-label"));
   renderTable(
     qs("#table-root"),
@@ -2567,7 +2583,7 @@ async function loadNps(page = Number(params.get("page") || 1)) {
       `,
       detail: "",
     }),
-    { tableClass: "np-table-fixed" }
+    { tableClass: "np-table-fixed", columnWidths: [100, 300, 200, 180, 180, 100, 130] }
   );
   const pager = buildPager(meta, loadNps);
   if (qs("#pager-root")) qs("#pager-root").innerHTML = ""; qs("#pager-root")?.appendChild(pager);
@@ -2615,7 +2631,7 @@ async function bootstrap() {
   }
   if (page === "np") {
     buildStandardControls("q");
-    mountAdvancedFilters("bgc", loadNps);
+    mountAdvancedFilters("nps", loadNps);
     bindControls(loadNps);
     return loadNps(Number(params.get("page") || 1));
   }
