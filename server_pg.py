@@ -104,7 +104,7 @@ def estimated_count(conn, sql: str, params: list) -> int:
 def open_db() -> psycopg2.extensions.connection:
     conn = get_conn(autocommit=True, cursor_factory=psycopg2.extras.RealDictCursor)
     cur = conn.cursor()
-    cur.execute("SET search_path TO gem, public")
+    cur.execute("SET search_path TO bgcmap, public")
     cur.close()
     return conn
 
@@ -1240,6 +1240,8 @@ class SpireHandler(BaseHTTPRequestHandler):
         if path == "/api/taxon-options-catalog": return self.api_taxon_catalog()
         if path == "/api/category-options": return self.api_category_options()
         if path == "/api/search-suggest": return self.api_search_suggest(query)
+        if path == "/api/np-hierarchy": return self.api_np_hierarchy()
+        if path == "/api/stats-charts": return self.api_stats_charts()
         if path == "/api/health": return self.api_health()
         self.send_error(HTTPStatus.NOT_FOUND, "Route not found")
 
@@ -1271,6 +1273,8 @@ class SpireHandler(BaseHTTPRequestHandler):
     def api_home(self) -> None:
         conn = open_db()
         stats = row_to_dict(pg_query_one(conn, "SELECT * FROM mv_home_stats"))
+        np_cnt = pg_query_one(conn, "SELECT count(*) AS cnt FROM mv_np_page WHERE np_pathway IS NOT NULL")["cnt"]
+        stats["np_count"] = int(np_cnt)
         release = row_to_dict(pg_query_one(conn, "SELECT * FROM release_version WHERE is_current = TRUE LIMIT 1"))
         conn.close()
         stats["antismash_result_count"] = len(CATALOG.html_urls)
@@ -1693,6 +1697,74 @@ class SpireHandler(BaseHTTPRequestHandler):
             item["download_url"] = f"/download-asset/{item['asset_key']}"
             payload_rows.append(item)
         send_json(self, {"rows": payload_rows, "release": row_to_dict(release)})
+
+    def api_np_hierarchy(self) -> None:
+        conn = open_db()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT np_pathway AS pathway, NULL::text AS superclass, NULL::text AS class, count(*) AS cnt
+            FROM mv_np_page WHERE np_pathway IS NOT NULL
+            GROUP BY np_pathway
+            UNION ALL
+            SELECT np_pathway, np_superclass, NULL::text, count(*)
+            FROM mv_np_page WHERE np_pathway IS NOT NULL AND np_superclass IS NOT NULL
+            GROUP BY np_pathway, np_superclass
+            UNION ALL
+            SELECT np_pathway, np_superclass, np_class, count(*)
+            FROM mv_np_page WHERE np_pathway IS NOT NULL AND np_superclass IS NOT NULL AND np_class IS NOT NULL
+            GROUP BY np_pathway, np_superclass, np_class
+            ORDER BY pathway, superclass, class
+        """)
+        rows = cur.fetchall()
+        conn.close()
+        import json
+        send_json(self, {"rows": [dict(r) for r in rows]})
+
+    def api_stats_charts(self) -> None:
+        conn = open_db()
+        phylum_rows = pg_query(conn, """
+            SELECT COALESCE(NULLIF(phylum, ''), 'Unclassified') AS phylum, COUNT(*) AS cnt
+            FROM mag GROUP BY phylum ORDER BY cnt DESC
+        """)
+        gcf_rows = pg_query(conn, """
+            SELECT CASE WHEN membership_value <= 0.1 THEN 'backbone'
+                        WHEN membership_value <= 0.4 THEN 'core'
+                        ELSE 'peripheral' END AS grp,
+                   COUNT(*) AS cnt
+            FROM bgc_gcf_membership GROUP BY grp
+        """)
+        biome_rows = pg_query(conn, """
+            SELECT COALESCE(NULLIF(biome1, ''), 'Unknown') AS g, COUNT(*) AS c
+            FROM sample WHERE biome1 IS NOT NULL AND biome1 <> ''
+            GROUP BY 1 ORDER BY c DESC
+        """)
+        bgc_rows = pg_query(conn, """
+            SELECT COALESCE(NULLIF(category_primary, ''), 'Unknown') AS g, COUNT(*) AS c
+            FROM bgc WHERE category_primary IS NOT NULL AND category_primary <> ''
+            GROUP BY 1 ORDER BY c DESC LIMIT 8
+        """)
+        gcf_size = pg_query_one(conn, """
+            SELECT SUM(CASE WHEN bgc_count=1 THEN 1 ELSE 0 END) AS c1,
+                   SUM(CASE WHEN bgc_count BETWEEN 2 AND 4 THEN 1 ELSE 0 END) AS c2_4,
+                   SUM(CASE WHEN bgc_count BETWEEN 5 AND 8 THEN 1 ELSE 0 END) AS c5_8,
+                   SUM(CASE WHEN bgc_count BETWEEN 9 AND 30 THEN 1 ELSE 0 END) AS c9_30,
+                   SUM(CASE WHEN bgc_count BETWEEN 31 AND 50 THEN 1 ELSE 0 END) AS c31_50,
+                   SUM(CASE WHEN bgc_count>50 THEN 1 ELSE 0 END) AS c50p
+            FROM mv_gcf_page
+        """)
+        conn.close()
+        import json
+        phyla = [{"name": r["phylum"], "cnt": int(r["cnt"])} for r in phylum_rows]
+        gcf = [{"type": r["grp"], "cnt": int(r["cnt"])} for r in gcf_rows]
+        biome = [{"name": r["g"].replace(" Environment", "").replace(" environment", ""), "cnt": int(r["c"])} for r in biome_rows]
+        bgc = [{"name": r["g"], "cnt": int(r["c"])} for r in bgc_rows]
+        gs = [{"label": "1", "cnt": int(gcf_size["c1"])},
+              {"label": "2-4", "cnt": int(gcf_size["c2_4"])},
+              {"label": "5-8", "cnt": int(gcf_size["c5_8"])},
+              {"label": "9-30", "cnt": int(gcf_size["c9_30"])},
+              {"label": "31-50", "cnt": int(gcf_size["c31_50"])},
+              {"label": ">50", "cnt": int(gcf_size["c50p"])}]
+        send_json(self, {"phylum": phyla, "gcf_membership": gcf, "biome": biome, "bgc_type": bgc, "gcf_size": gs})
 
 
 def main() -> None:

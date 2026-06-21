@@ -4,15 +4,34 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Help · BGCMAP</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/style.css?v=20260630">
+  <style>
+    .help-section{max-width:1000px;margin:0 auto}
+    .help-card{background:#fff;border:1px solid #dbe6f8;border-radius:14px;padding:24px 28px;margin-bottom:20px}
+    .help-card h2{font-size:1.1rem;color:#2b6eb0;margin:0 0 10px;font-weight:700}
+    .help-card p{font-size:0.92rem;color:#4a6075;line-height:1.7;margin:0}
+    .help-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:0 auto}
+    .faq-section{margin-top:24px}
+    .faq-section>h2{font-size:1.05rem;color:#2b6eb0;margin:0 0 16px;font-weight:700;padding-bottom:8px;border-bottom:2px solid #dbe6f8}
+    .faq-group{margin-bottom:6px;border:1px solid #dee8f4;border-radius:10px;overflow:hidden;background:#fff}
+    .faq-q{display:flex;align-items:center;gap:10px;padding:13px 18px;cursor:pointer;user-select:none;transition:background .15s}
+    .faq-q:hover{background:#f5f9ff}
+    .faq-q .arrow{flex-shrink:0;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#8aaac8;transition:transform .25s}
+    .faq-q .q-text{font-size:0.92rem;color:#2b3e55;font-weight:600;line-height:1.4}
+    .faq-q .tag{font-size:0.7rem;color:#fff;background:#7a9eb1;border-radius:4px;padding:1px 8px;margin-left:auto;flex-shrink:0;font-weight:600}
+    .faq-a{padding:0 18px 0 48px;max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease;color:#4a6075;font-size:0.9rem;line-height:1.7}
+    .faq-a.open{max-height:600px;padding:0 18px 16px 48px}
+    .faq-q.open .arrow{transform:rotate(90deg)}
+    .faq-a code{background:#eef2f6;padding:1px 5px;border-radius:3px;font-size:0.85rem;color:#2b6eb0}
+    .faq-a ul{margin:6px 0;padding-left:20px}
+    .faq-a li{margin:3px 0}
+    @media(max-width:700px){.help-grid{grid-template-columns:1fr}}
+  </style>
 </head>
 <body data-page="help">
   <header class="site-header">
     <div class="site-header-inner">
-      <a class="brand-title" href="/BGCMAP.html">
-        <span class="brand-mark"><span class="diamond-icon"></span><strong>BGCMAP</strong></span>
-        <span>Help and release notes</span>
-      </a>
+      <a class="brand-title" href="/BGCMAP.html"><span class="brand-mark"><span class="diamond-icon"></span><strong>BGCMAP</strong></span><span>Help &amp; Documentation</span></a>
       <nav class="top-nav">
         <a data-page="home" href="/BGCMAP.html">Home</a>
         <a data-page="sample" href="/sample.html">Sample</a>
@@ -25,24 +44,293 @@
       </nav>
     </div>
   </header>
-  <main class="page-shell">
-    <div class="container">
-      <section class="panel-grid">
-        <article class="card">
-          <h2>What is the BGCMAP Database?</h2>
-          <p class="intro-text">BGCs are central to microbial specialized metabolism and natural product discovery. The BGCMAP Database was developed to organize biosynthetic information across linked biological layers, from source samples to reconstructed genomes, predicted gene clusters, and clustered families. Rather than presenting BGCs as isolated records, the database emphasizes traceability across Sample, MAG, BGC, and GCF levels.</p>
-        </article>
-        <article class="card">
-          <h2>Release information</h2>
-          <div class="detail-grid">
-            <div class="mini-stat"><div class="subtle">Current release</div><strong>v1.0</strong></div>
-            <div class="mini-stat"><div class="subtle">Last updated</div><strong>2026.4.10</strong></div>
-          </div>
-        </article>
-      </section>
-      <div id="page-error" class="footer-note"></div>
-    </div>
-  </main>
+  <main class="page-shell"><div class="container">
+    <section class="help-section">
+
+      <div class="help-card">
+        <h2>What is the BGCMAP Database?</h2>
+        <p>The BGCMAP database (Biosynthetic Gene Cluster Mapping and Analysis Portal) organizes biosynthetic information across four interconnected levels: <strong>Sample</strong> → <strong>MAG</strong> (Metagenome-Assembled Genome) → <strong>BGC</strong> (Biosynthetic Gene Cluster) → <strong>GCF</strong> (Gene Cluster Family). Each level carries extensive metadata, allowing users to trace from environmental context through taxonomic classification, specific biosynthetic gene clusters, and their evolutionary families. The database integrates data from published metagenomic studies and includes antiSMASH-derived annotations, NPClassifier natural product predictions, and BiG-SLiCE clustering.</p>
+      </div>
+
+      <div class="help-card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div><h2 style="margin:0">Release information</h2><p style="margin:4px 0 0;font-size:0.88rem">Current release: <strong>v1.0</strong> &middot; Last updated: <strong>2026.4.10</strong></p></div>
+        <div style="text-align:right;font-size:0.82rem;color:#667b8f">antiSMASH 8.0 &middot; BiG-SLiCE 2.0 &middot; NPClassifier</div>
+      </div>
+
+      <div class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        <div id="faq-list"></div>
+      </div>
+
+    </section>
+  </div></main>
+  <script>
+    var faq = [
+
+      // ── 入门引导 ──
+      {q:"I'm new here. How do I start exploring the database?",
+       a:"Start from the <b>Home page</b> for an overview of database statistics and the global sample distribution map. "
+       +"From there, you can navigate to individual pages:<br><br>"
+       +"<b>Sample → Taxon → BGC → NP</b> follows the natural data hierarchy. Each page has a filter panel on the left, "
+       +"a data table in the center, and clickable rows that link to detail views.<br><br>"
+       +"A quick workflow: find samples from an environment of interest → see which MAGs were recovered → "
+       +"explore their BGCs → check GCF families → look at predicted natural products."},
+
+      {q:"How do I navigate between pages and keep my context?",
+       a:"Each page is independent — filters and pagination are not shared between pages. "
+       +"However, when you click a <b>Sample ID</b> on the Taxon page, it opens the Sample page filtered to that sample. "
+       +"Similarly, clicking a <b>BGC ID</b> or <b>GCF ID</b> opens the BGC page scrolled to that entry. "
+       +"Use the top navigation bar to jump between pages at any time."},
+
+      // ── 样本操作 ──
+      {q:"How do I find samples from a specific environment type?",
+       a:"Go to the <b>Sample page</b> and use the filter panel on the left. Click the <b>+ Add rule</b> button, "
+       +"select <b>Biome1</b> (broad category like Aquatic, Terrestrial, Host-Associated), "
+       +"and choose the environment you want. "
+       +"For more specific environments, add additional rules for <b>Biome2</b> or <b>Biome3</b>. "
+       +"The results table will update automatically with matching samples."},
+
+      {q:"How do I use the global map on the Sample page?",
+       a:"The map shows all geocoded samples as dots. Each dot is clickable — it opens the Sample page "
+       +"filtered to that specific sample. You can zoom and pan the map. "
+       +"Samples without coordinates are still accessible via the table below the map. "
+       +"Only samples with valid latitude/longitude are plotted (approximately <b>60,000 geocoded samples</b>)."},
+
+      {q:"What are the BGC categories shown on the Sample page?",
+       a:"The <b>BGC Category</b> column on the Sample page shows the most common BGC type found in MAGs "
+       +"from that sample (e.g., 'RiPPs', 'Terpene', 'NRPS'). "
+       +"This is pre-computed from the sample's MAGs and their BGC annotations. "
+       +"You can filter samples by category to find those rich in specific BGC types."},
+
+      // ── MAG ──
+      {q:"How do I find high-quality MAGs for my analysis?",
+       a:"Use the <b>Taxon page</b> and add filter rules for quality metrics:<br><br>"
+       +"<ul><li>Set <b>Completeness ≥ 90</b> for near-complete genomes</li>"
+       +"<li>Set <b>Contamination ≤ 5</b> for low-contamination genomes</li>"
+       +"<li>Optionally filter by <b>BGC Count ≥ 1</b> to find MAGs with detected BGCs</li></ul>"
+       +"These are standard thresholds used in metagenomics (MIMAG standards). "
+       +"Medium-quality MAGs typically have completeness ≥ 50 and contamination < 10."},
+
+      {q:"How is MAG completeness and contamination calculated?",
+       a:"Both metrics come from <b>CheckM</b>, a tool that estimates genome quality by analyzing "
+       +"lineage-specific marker genes:<br><br>"
+       +"<b>Completeness</b> — percentage of marker genes present. A complete MAG has ≥ 90%. "
+       +"Values over 100 may indicate redundancy or strain heterogeneity.<br><br>"
+       +"<b>Contamination</b> — percentage of marker genes found in multiple copies (indicating "
+       +"the assembly may contain sequences from multiple organisms). < 5% is considered clean."},
+
+      {q:"I want to find MAGs from a specific species. How?",
+       a:"On the <b>Taxon page</b>, use the <b>Species</b> filter. You can type a partial name — "
+       +"the filter uses <b>contains</b> (LIKE) matching, so typing 'E. coli' will match "
+       +"all entries with that text in the species field. "
+       +"You can also use the <b>Taxon</b> cascading dropdown to navigate: "
+       +"select Domain → Phylum → ... → Species. "
+       +"The autocomplete search bar on the Home page can also find species directly."},
+
+      // ── BGC ──
+      {q:"How do I find all BGCs of a specific type (e.g., all NRPS clusters)?",
+       a:"Go to the <b>BGC page</b> and add a filter rule: select <b>Category</b> = <b>contains</b> = 'NRPS'. "
+       +"This will return all BGCs whose primary category matches NRPS, including both pure NRPS "
+       +"and NRPS-like clusters. You can also filter by <b>Product</b> for more specific antiSMASH annotations.<br><br>"
+       +"For broader searches, the <b>equals</b> operator automatically behaves as <b>contains</b> "
+       +"for the Product field on the BGC page."},
+
+      {q:"What does the Contig Edge flag mean for my analysis?",
+       a:"<b>Contig Edge = TRUE</b> means the BGC is located at the breakpoint of an assembled contig. "
+       +"This typically means the BGC may be <b>incomplete</b> — part of the cluster could be missing "
+       +"due to assembly fragmentation.<br><br>"
+       +"<b>Best practice:</b> For downstream analysis (biosynthesis prediction, gene cluster comparison), "
+       +"filter for <b>Contig Edge = FALSE</b> to work with complete BGCs. "
+       +"About <b>25% of BGCs</b> in the database are on contig edges."},
+
+      {q:"How can I view the full antiSMASH results for a BGC?",
+       a:"When antiSMASH HTML output is available (for BGCs with local antiSMASH data), "
+       +"the BGC page table shows a clickable link in the BGC ID column. "
+       +"Clicking opens the full antiSMASH report in a new tab, including:<br>"
+       +"<ul><li>Gene cluster schematic with predicted CDS features</li>"
+       +"<li>Domain architecture (PFAM, TIGRFAM, etc.)</li>"
+       +"<li>Known cluster BLAST matches</li>"
+       +"<li>Secondary metabolite predictions</li></ul>"
+       +"Not all BGCs have local antiSMASH results — only those where the source MAG's "
+       +"antiSMASH output was available during database building."},
+
+      // ── GCF ──
+      {q:"What exactly is a GCF and how is it created?",
+       a:"A <b>GCF</b> (Gene Cluster Family) is a group of BGCs that share significant sequence similarity. "
+       +"GCFs are computed by <b>BiG-SLiCE 2.0</b>, which clusters BGCs based on their full gene content "
+       +"using a distance-based approach.<br><br>"
+       +"Think of it like this: if BGCs are individual genes, GCFs are gene families. "
+       +"BGCs in the same GCF likely produce similar or related compounds. "
+       +"The database contains ~<b>61,500 GCFs</b> grouping ~3.34 million BGCs."},
+
+      {q:"How do I find all BGCs belonging to a specific GCF?",
+       a:"On the <b>BGC page</b>, add a filter: select <b>GCF ID</b> = <b>equals</b> and enter the GCF number. "
+       +"This will return all BGCs in that family. You can also click the GCF ID link in any BGC table row "
+       +"to navigate to the GCF detail view, which shows summary statistics for that GCF."},
+
+      {q:"What do the three membership types (backbone/core/peripheral) mean practically?",
+       a:"<b>Backbone</b> (membership_value ≤ 0.1) — BGCs that define the core of the GCF. "
+       +"These are highly similar and likely produce identical or very similar compounds. "
+       +"Each GCF typically has a few backbone BGCs.<br><br>"
+       +"<b>Core</b> (≤ 0.4) — BGCs with moderate similarity to the GCF core. "
+       +"These share key biosynthetic genes but may have variations.<br><br>"
+       +"<b>Peripheral</b> (> 0.4) — Distant members at the edge of the GCF. "
+       +"They share some similarity but likely produce different compounds.<br><br>"
+       +"<b>Practical use:</b> If you want to find BGCs most similar to a query BGC, focus on backbone members. "
+       +"For diversity within a family, include core and peripheral members."},
+
+      {q:"How do I find the largest GCFs in the database?",
+       a:"Go to the <b>Statistics page</b> and look at the <b>GCF Size Distribution</b> chart. "
+       +"It shows how many GCFs have 1, 2-4, 5-8, 9-30, 31-50, or >50 BGCs. "
+       +"Most GCFs (the majority) contain a single BGC, while a small number of "
+       +"'super-GCFs' contain hundreds of BGCs. "
+       +"You can sort the GCF table by BGC count to find the largest families."},
+
+      // ── NP ──
+      {q:"How do I find BGCs predicted to produce specific types of natural products?",
+       a:"Go to the <b>NP page</b>. Use the filter panel and select <b>Pathway</b> = <b>contains</b> "
+       +"and enter the pathway name (e.g., 'Alkaloids', 'Terpenoids', 'Polyketides'). "
+       +"You can also filter by <b>Superclass</b> for more specific chemical classes. "
+       +"The <b>sunburst chart</b> at the top of the page provides a visual way to browse — "
+       +"just click on a pathway segment to drill down."},
+
+      {q:"How reliable are the NPClassifier predictions?",
+       a:"<b>NPClassifier</b> is a deep learning model trained on a large corpus of known natural products. "
+       +"It predicts the most likely pathway, superclass, and class for the natural product "
+       +"encoded by a BGC's predicted SMILES. Accuracy varies by compound type — well-characterized "
+       +"classes like terpenoids and alkaloids tend to have higher confidence. "
+       +"Some BGCs may have multiple pathway assignments (semicolon-separated in the data), "
+       +"indicating ambiguity in the prediction. Always verify predictions with domain analysis."},
+
+      {q:"How does the NP sunburst chart work and how do I use it?",
+       a:"The sunburst chart has <b>two levels</b>:<br><br>"
+       +"<b>Level 1 (outer ring):</b> Shows 7 pathway categories (Alkaloids, Amino Acids, "
+       +"Carbohydrates, Fatty Acids, Polyketides, Shikimates, Terpenoids). "
+       +"Each petal's size reflects the number of BGCs in that pathway.<br><br>"
+       +"<b>Level 2 (inner):</b> Click any pathway petal to drill down into its superclass breakdown. "
+       +"Hover over segments to see counts. Click the center 'NP' to go back.<br><br>"
+       +"You can click any segment to <b>jump to the NP table</b> filtered to that category."},
+
+      // ── 筛选技巧 ──
+      {q:"Why is my filter returning no results?",
+       a:"Common reasons:<br><br>"
+       +"<ul><li><b>Case sensitivity:</b> Text filters are case-insensitive (e.g., 'terpene' matches 'Terpene')</li>"
+       +"<li><b>Empty/Null values:</b> If a field is empty for many records, using <b>equals</b> won't match them. "
+       +"Use <b>is_null</b> to find records where no value was recorded.</li>"
+       +"<li><b>AND logic:</b> When you add multiple rules, ALL must match. Use fewer rules to broaden the search.</li>"
+       +"<li><b>Page refresh:</b> The count badge shows matching records. If it says 0, try clearing all filters.</li></ul>"},
+
+      {q:"How do I use the NOT toggle in filters?",
+       a:"Each filter rule has a <b>NOT</b> toggle (a checkbox labeled 'not'). "
+       +"When enabled, it negates the rule. For example: <b>NOT Category equals RiPPs</b> "
+       +"returns everything except RiPPs. You can combine normal and NOT rules, e.g.: "
+       +"<b>Category contains Terpene</b> AND <b>NOT Contig Edge = TRUE</b> — "
+       +"this finds non-truncated terpene BGCs."},
+
+      {q:"What's the difference between 'equals' and 'contains' for text search?",
+       a:"<b>Equals</b> — exact match (after converting to lowercase). "
+       +"For several commonly used fields (Sample ID, Project, Category, Product, Pathway), "
+       +"the system automatically treats 'equals' as 'contains' for convenience.<br><br>"
+       +"<b>Contains</b> — searches for the text anywhere in the field (SQL LIKE %value%). "
+       +"Use this for partial matches, e.g., 'alkaloid' will match 'Alkaloids', "
+       +"'Alkaloids;Polyketides', etc.<br><br>"
+       +"<b>Not equals</b> — excludes exact matches. Useful for removing specific values."},
+
+      {q:"How do I filter by numeric ranges (e.g., BGC length between 10K and 50K)?",
+       a:"Add a filter rule, select the numeric field (e.g., <b>Length</b>), "
+       +"choose the <b>between</b> operator, and enter the range values: "
+       +"<b>10000</b> and <b>50000</b>. "
+       +"Other numeric operators: <code>≥</code> (greater or equal), <code>≤</code> (less or equal), "
+       +"<code>&gt;</code> (strictly greater), <code>&lt;</code> (strictly less). "
+       +"Numeric operators are available for Length, Completeness, Contamination, "
+       +"Membership Value, MAG Count, BGC Count, and similar fields."},
+
+      // ── 数据理解 ──
+      {q:"How large is the database and what are the key numbers?",
+       a:"Current database metrics:<br><br>"
+       +"<ul><li><b>Samples:</b> ~73,600 from diverse environments worldwide</li>"
+       +"<li><b>MAGs:</b> ~1.16 million metagenome-assembled genomes</li>"
+       +"<li><b>BGCs:</b> ~3.34 million biosynthetic gene clusters</li>"
+       +"<li><b>GCFs:</b> ~61,500 gene cluster families</li>"
+       +"<li><b>NPs:</b> ~767,000 BGCs with NPClassifier pathway annotations</li>"
+       +"<li><b>Geocoded samples:</b> ~60,000 with latitude/longitude</li></ul>"
+       +"The Statistics page provides updated counts and distribution charts."},
+
+      {q:"What software tools were used to generate this data?",
+       a:"The database pipeline uses several established bioinformatics tools:<br><br>"
+       +"<ul><li><b>antiSMASH 8.0</b> — BGC detection and annotation from genome sequences</li>"
+       +"<li><b>BiG-SLiCE 2.0</b> — BGC clustering into GCFs based on sequence similarity</li>"
+       +"<li><b>BiG-SCAPE</b> — BGC product and category classification</li>"
+       +"<li><b>NPClassifier</b> — deep learning-based natural product class prediction</li>"
+       +"<li><b>CheckM</b> — MAG completeness and contamination estimation</li></ul>"},
+
+      {q:"Where does the data come from?",
+       a:"The data is derived from published metagenomic studies. "
+       +"Source data files include:<br><br>"
+       +"<ul><li><b>gem_sra.tsv</b> — sample metadata and SRA sequencing information</li>"
+       +"<li><b>spire_v1_genome_metadata.tsv</b> — MAG assembly metrics and taxonomy</li>"
+       +"<li><b>spire_full_scape_env.tsv</b> — BGC product annotations</li>"
+       +"<li><b>spire_gcf_sorted.tsv</b> — BGC-to-GCF membership data</li>"
+       +"<li><b>sample_env_new.csv</b> — curated sample environment assignments</li>"
+       +"<li><b>merged_with_npclassifier_final.tsv</b> — NPClassifier predictions</li></ul>"},
+
+      // ── 下载与导出 ──
+      {q:"Can I download data from the database?",
+       a:"Yes. Go to the <b>Download page</b> where you can download various data assets. "
+       +"Available downloads include source data files in TSV format. "
+       +"File sizes and descriptions are listed on the download page. "
+       +"For ad-hoc data export, you can also copy data from the table views on each page."},
+
+      {q:"How do I cite the BGCMAP database in my publication?",
+       a:"Citation information is available on the <b>Download page</b> and in the release card on the <b>Help page</b>. "
+       +"The current release is <b>v1.0</b>, released April 10, 2026. "
+       +"Please cite the database release and the individual tools used (antiSMASH, BiG-SLiCE, NPClassifier) "
+       +"as applicable to your analysis."},
+
+      // ── 问题排查 ──
+      {q:"Why are some fields empty/NULL in the data?",
+       a:"Empty values occur when the source data didn't contain that information:<br><br>"
+       +"<ul><li><b>Missing taxonomy:</b> Some MAGs lack confident species-level classification</li>"
+       +"<li><b>Missing coordinates:</b> Some samples don't have recorded latitude/longitude</li>"
+       +"<li><b>Missing NP data:</b> Only ~767K of 3.3M BGCs have NPClassifier predictions</li>"
+       +"<li><b>Missing antiSMASH:</b> Local antiSMASH HTML is only available for a subset</li></ul>"
+       +"You can use the <b>is_null</b> / <b>is_not_null</b> filter operators to find records "
+       +"with or without specific data."},
+
+      {q:"The page seems slow. What can I do?",
+       a:"The database contains millions of records, so large unfiltered queries can take time. "
+       +"Tips for faster browsing:<br><br>"
+       +"<ul><li>Use <b>filters</b> to narrow results before paginating</li>"
+       +"<li>Reduce <b>page size</b> from 25 to 10 for faster loads</li>"
+       +"<li>Use the <b>search bar</b> on the Home page for direct lookups</li>"
+       +"<li>BGC page queries are the heaviest — filter by GCF ID or Category for faster results</li></ul>"},
+    ];
+
+    var html = '';
+    for(var i=0;i<faq.length;i++){
+      var f=faq[i];
+      html += '<div class="faq-group">'
+        + '<div class="faq-q" onclick="toggleFaq(this)">'
+        + '<span class="arrow">▶</span>'
+        + '<span class="q-text">'+f.q+'</span>'
+        + '</div>'
+        + '<div class="faq-a">'+f.a+'</div>'
+        + '</div>';
+    }
+    document.getElementById('faq-list').innerHTML = html;
+
+    function toggleFaq(el){
+      var a=el.nextElementSibling;
+      var isOpen=a.classList.contains('open');
+      // close all
+      var allA=document.querySelectorAll('.faq-a.open');
+      for(var i=0;i<allA.length;i++){allA[i].classList.remove('open')}
+      var allQ=document.querySelectorAll('.faq-q.open');
+      for(var i=0;i<allQ.length;i++){allQ[i].classList.remove('open')}
+      // toggle current
+      if(!isOpen){a.classList.add('open');el.classList.add('open')}
+    }
+  </script>
   <script src="/static/app.js?v=20260630"></script>
 </body>
 </html>

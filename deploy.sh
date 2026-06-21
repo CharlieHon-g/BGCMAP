@@ -1,60 +1,34 @@
 #!/usr/bin/env bash
-# ─────────────────────────────────────────────
-# Spire BGC Portal — PostgreSQL Deployment
-# ─────────────────────────────────────────────
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+# ── 1. 本地：导出最新数据 ──
+pg_dump -h /tmp -U charlie -Fc -d gem_portal -n gem --no-owner -f bgcmap.dump
 
-# ── 1. Environment check ─────────────────────
-echo ">>> Checking environment..."
-if ! command -v python3 &>/dev/null; then
-    echo "ERROR: python3 not found"
-    exit 1
-fi
+# ── 2. 传到远程服务器 ──
+REMOTE="user@192.168.24.7"
+scp bgcmap.dump "$REMOTE":/tmp/bgcmap.dump
 
-# Check required env vars
-REQUIRED_VARS=("PGHOST" "PGPORT" "PGDATABASE" "PGUSER" "PGPASSWORD")
-MISSING=()
-for VAR in "${REQUIRED_VARS[@]}"; do
-    if [ -z "${!VAR:-}" ]; then
-        MISSING+=("$VAR")
-    fi
-done
+# ── 3. 远程部署 ──
+ssh "$REMOTE" << 'EOF'
+set -euo pipefail
 
-if [ ${#MISSING[@]} -gt 0 ]; then
-    echo "❌ Missing required environment variables: ${MISSING[*]}"
-    echo ""
-    echo "Set them before running:"
-    echo "  export PGHOST=your-pg-host"
-    echo "  export PGPORT=5432"
-    echo "  export PGDATABASE=spire_portal"
-    echo "  export PGUSER=postgres"
-    echo "  export PGPASSWORD=your-password"
-    exit 1
-fi
+# 删旧库，建新库
+sudo -u postgres psql -c "DROP DATABASE IF EXISTS bgcmap;"
+sudo -u postgres psql -c "CREATE DATABASE bgcmap;"
 
-echo "  PGHOST=$PGHOST"
-echo "  PGPORT=$PGPORT"
-echo "  PGDATABASE=$PGDATABASE"
-echo "  PGUSER=$PGUSER"
+# 创建 trgm 扩展
+sudo -u postgres psql -d bgcmap -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
 
-# ── 2. Install dependencies ──────────────────
-echo ""
-echo ">>> Installing Python dependencies..."
-pip3 install -r requirements.txt
+# 导入数据
+sudo -u postgres pg_restore -d bgcmap -Fc -n gem --no-owner /tmp/bgcmap.dump
 
-# ── 3. Build database ────────────────────────
-echo ""
-echo ">>> Building PostgreSQL database..."
-python3 db/build_spire_pg_db.py
+# 安装依赖（如果还没有）
+pip3 install -r /opt/spire/requirements.txt
 
-# ── 4. Start server ──────────────────────────
-HOST="${SPIRE_HOST:-0.0.0.0}"
-PORT="${SPIRE_PORT:-8000}"
+# 启动服务
+cd /opt/spire
+PGHOST=/tmp PGDATABASE=bgcmap PGUSER=charlie \
+  nohup python3 server_pg.py --host 0.0.0.0 --port 8000 > /tmp/pg_srv.log 2>&1 &
 
-echo ""
-echo ">>> Starting Spire BGC Portal..."
-echo "    http://$HOST:$PORT"
-python3 server_pg.py --host "$HOST" --port "$PORT"
+echo "部署完成，访问 http://192.168.24.7:8000"
+EOF

@@ -10,10 +10,10 @@
     .kpi-box { flex:0 1 180px; background:#fbfdff; border:1px solid #d4dfef; border-radius:14px; padding:18px 20px; text-align:center; }
     .kpi-box .num { font-size:1.8rem; font-weight:800; color:#3b6fb2; }
     .kpi-box .label { font-size:0.82rem; color:#667b8f; margin-top:4px; }
-    .chart-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:1240px; margin:0 auto; }
-    .chart-card { background:#fff; border:1px solid #dbe6f8; border-radius:14px; padding:20px; text-align:center; display:flex; flex-direction:column; align-items:center; }
-    .chart-card h2 { font-size:0.95rem; color:#42586b; margin:0 0 14px; font-weight:700; }
-    .chart-card img { width:600px; max-width:100%; height:auto; }
+    .chart-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:18px; max-width:1440px; margin:0 auto; }
+    .chart-card { background:#fff; border:1px solid #dbe6f8; border-radius:14px; padding:16px 12px; display:flex; flex-direction:column; align-items:center; }
+    .chart-card h2 { font-size:0.92rem; color:#42586b; margin:0 0 10px; font-weight:700; text-align:center; width:100%; flex-shrink:0; }
+    .chart-card .chart-wrap { flex:1; display:flex; align-items:center; justify-content:center; width:100%; min-height:0; }
   </style>
 </head>
 <body data-page="stats">
@@ -35,21 +35,134 @@
   <main class="page-shell"><div class="container">
     <section class="card" style="margin-bottom:20px;text-align:center;"><h1>BGCMAP statistics overview</h1><div class="footer-note" id="stats-release"></div></section>
     <div class="kpi-row" id="kpi-strip"></div>
-    <div class="chart-grid">
-      <article class="chart-card"><h2>Collection year</h2><img src="/static/stats_collection_year.svg" alt="Year"></article>
-      <article class="chart-card"><h2>Biome distribution</h2><img src="/static/stats_biome.svg" alt="Biome"></article>
-      <article class="chart-card"><h2>BGC type abundance</h2><img src="/static/stats_bgc_type.svg" alt="BGC type"></article>
-      <article class="chart-card"><h2>GCF size distribution</h2><img src="/static/stats_gcf_size.svg" alt="GCF"></article>
-    </div>
+    <div class="chart-grid" id="chart-grid"></div>
   </div></main>
   <script>
-    fetch('/api/home').then(r=>r.json()).then(d=>{
-      let s=d.stats;
+    var CS = ['#4a7aaa','#6a9ac8','#87b8d0','#f0e0a8','#c8a098','#c0c8d0','#a0c8e0','#a098b0','#7a9a7a','#e0e8f0','#6a9a90','#7aaa9e','#8aa89a','#a0a0b8','#b0b0c8','#c0b8a8','#d0c8b8','#b8d8e8','#5a8a8a','#4a6a7a','#3a4a5a'];
+    var CC = '#42586b', CG = '#d4dfef', CF = '#fbfdff';
+
+    function hbarSVG(rows, svgW, labelW, maxBarW){
+      var total = rows.reduce(function(s,r){return s+r.cnt},0);
+      var max = rows[0] ? rows[0].cnt : 1;
+      var rh=21, rg=6, n=rows.length, padT=12, padB=22;
+      var h = padT + n*(rh+rg) + padB;
+      var xl = labelW;
+      var s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+svgW+' '+h+'" width="100%" style="background:'+CF+';font-family:system-ui,sans-serif">';
+      for(var i=0;i<n;i++){
+        var y = padT + i*(rh+rg);
+        var w = Math.max(rows[i].cnt/max*maxBarW, 3);
+        var nm = rows[i].name;
+        s+='<text x="'+(xl-5)+'" y="'+(y+rh-4)+'" text-anchor="end" font-size="13" fill="'+CC+'" font-weight="600">'+nm+'</text>';
+        s+='<rect x="'+xl+'" y="'+y+'" width="'+w+'" height="'+rh+'" rx="3" fill="'+CS[i%CS.length]+'" opacity="0.88"/>';
+        s+='<text x="'+(xl+w+6)+'" y="'+(y+rh-4)+'" font-size="13" fill="'+CC+'" font-weight="700">'+(rows[i].cnt).toLocaleString()+'</text>';
+      }
+      s+='</svg>';
+      return s;
+    }
+
+    function vbBarSVG(rows, svgW, svgH, bw, gap, basePct){
+      var max = rows.reduce(function(m,r){return r.cnt>m?r.cnt:m},1);
+      var n = rows.length;
+      var tw = n*bw + (n-1)*gap;
+      var ox = (svgW - tw)/2;
+      var baseY = Math.floor(svgH * (basePct||0.82));
+      var maxH = baseY - 28;
+      var s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+svgW+' '+svgH+'" width="100%" style="background:'+CF+';font-family:system-ui,sans-serif">';
+      s+='<line x1="'+(ox-8)+'" y1="'+baseY+'" x2="'+(ox+tw+8)+'" y2="'+baseY+'" stroke="'+CG+'" stroke-width="2"/>';
+      for(var i=0;i<n;i++){
+        var bh = Math.max(rows[i].cnt/max*maxH, 3);
+        var x = ox + i*(bw+gap), y = baseY - bh;
+        s+='<rect x="'+x+'" y="'+y+'" width="'+bw+'" height="'+bh+'" rx="5" fill="'+CS[i%CS.length]+'" opacity="0.88"/>';
+        s+='<text x="'+(x+bw/2)+'" y="'+(y-9)+'" text-anchor="middle" font-size="14" fill="'+CC+'" font-weight="700">'+(rows[i].cnt).toLocaleString()+'</text>';
+        s+='<text x="'+(x+bw/2)+'" y="'+(baseY+17)+'" text-anchor="middle" font-size="13" fill="#667b8f" font-weight="600">'+rows[i].label+'</text>';
+      }
+      s+='</svg>';
+      return s;
+    }
+
+    function pieSVG(rows, svgW, svgH, unit){
+      var total = rows.reduce(function(s,r){return s+r.cnt},0);
+      var cx = Math.floor(svgW*0.25), cy = Math.floor(svgH*0.5), r = Math.min(cx-18, cy-18, 100);
+      var sofar=0, sl='';
+      for(var i=0;i<rows.length;i++){
+        var pct=rows[i].cnt/total;
+        var sweep=pct*360, start=sofar/total*360;
+        sofar+=rows[i].cnt;
+        var a1=start*Math.PI/180, a2=(start+sweep)*Math.PI/180;
+        var x1=cx+r*Math.cos(a1), y1=cy+r*Math.sin(a1);
+        var x2=cx+r*Math.cos(a2), y2=cy+r*Math.sin(a2);
+        var la=sweep>180?1:0;
+        sl+='<path d="M'+cx+','+cy+' L'+x1+','+y1+' A'+r+','+r+' 0 '+la+' 1 '+x2+','+y2+' Z" fill="'+CS[i%CS.length]+'" stroke="#fff" stroke-width="1.5" opacity="0.92"/>';
+      }
+      var lx = Math.floor(svgW*0.52), ly0=Math.floor(svgH*0.06), lg='', step=Math.min(34, Math.floor((svgH-16)/rows.length));
+      for(var i=0;i<rows.length;i++){
+        var y=ly0+i*step;
+        lg+='<rect x="'+lx+'" y="'+(y-8)+'" width="13" height="13" rx="3" fill="'+CS[i%CS.length]+'"/>';
+        var lb=rows[i].name;
+        lg+='<text x="'+(lx+20)+'" y="'+(y+1)+'" font-size="13" fill="'+CC+'" font-weight="600">'+lb+'</text>';
+        lg+='<text x="'+(lx+20)+'" y="'+(y+16)+'" font-size="12" fill="#889aaa" font-weight="600">'+(rows[i].cnt).toLocaleString()+(unit||' BGCs')+'</text>';
+      }
+      return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+svgW+' '+svgH+'" width="100%" style="background:'+CF+';font-family:system-ui,sans-serif">'+sl+lg+'</svg>';
+    }
+
+    function emptySVG(svgW, svgH, msg){
+      return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+svgW+' '+svgH+'" width="100%" style="background:'+CF+';font-family:system-ui,sans-serif"><text x="'+(svgW/2)+'" y="'+(svgH/2)+'" text-anchor="middle" font-size="13" fill="#889aaa">'+msg+'</text></svg>';
+    }
+
+    function chartCard(title, svgHtml){
+      return '<article class="chart-card"><h2>'+title+'</h2><div class="chart-wrap">'+svgHtml+'</div></article>';
+    }
+
+    Promise.all([
+      fetch('/api/home').then(function(r){return r.json()}),
+      fetch('/api/stats-charts').then(function(r){return r.json()}),
+      fetch('/api/np-hierarchy').then(function(r){return r.json()})
+    ]).then(function(resps){
+      var d=resps[0], ch=resps[1], npd=resps[2];
+      var s=d.stats;
       document.getElementById('stats-release').innerHTML='Current release: <strong>'+d.release.release_name+'</strong>';
       document.getElementById('kpi-strip').innerHTML=[
-        ['Samples',s.sample_count],['MAGs',s.mag_count],['BGCs',s.bgc_count],['GCFs',s.gcf_count],
+        ['Samples',s.sample_count],['MAGs',s.mag_count],['BGCs',s.bgc_count],['NPs',s.np_count],['GCFs',s.gcf_count],
         ['Geocoded',s.geocoded_sample_count]
-      ].map(([l,v])=>'<div class="kpi-box"><div class="num">'+(v||0).toLocaleString()+'</div><div class="label">'+l+'</div></div>').join('');
+      ].map(function(lv){return '<div class="kpi-box"><div class="num">'+(lv[1]||0).toLocaleString()+'</div><div class="label">'+lv[0]+'</div></div>'}).join('');
+
+      // 1. Phylum: top 20 + Other
+      var phy = ch.phylum.slice(0,20);
+      var rest = ch.phylum.slice(20);
+      if(rest.length){var rc=rest.reduce(function(s,r){return s+r.cnt},0);phy.push({name:'Other ('+rest.length+' phyla)',cnt:rc})}
+      var h1 = hbarSVG(phy, 580, 180, 260);
+
+      // 2. Biome pie
+      var h2 = ch.biome.length ? pieSVG(ch.biome, 500, 280, ' samples') : emptySVG(500,100,'No data');
+
+      // 3. NP pathway pie (7 split values)
+      var npPw={};
+      for(var i=0;i<npd.rows.length;i++){
+        var r=npd.rows[i];if(r.superclass||r.class)continue;
+        var vs=r.pathway.split(';');
+        for(var j=0;j<vs.length;j++){var v=vs[j].trim();if(v)npPw[v]=(npPw[v]||0)+r.cnt}
+      }
+      var npArr=[];for(var k in npPw)npArr.push({name:k,cnt:npPw[k]});
+      npArr.sort(function(a,b){return b.cnt-a.cnt});
+      var h3 = pieSVG(npArr, 500, 290);
+
+      // 4. BGC type pie
+      var h4 = ch.bgc_type.length ? pieSVG(ch.bgc_type, 500, 310) : emptySVG(500,100,'No data');
+
+      // 5. GCF size bar
+      var h5 = vbBarSVG(ch.gcf_size, 500, 250, 65, 18, 0.82);
+
+      // 6. GCF membership bar
+      var gcfLabels={backbone:'Backbone',core:'Core',peripheral:'Peripheral'};
+      var gcfArr = ch.gcf_membership.map(function(r){return{label:gcfLabels[r.type]||r.type,cnt:r.cnt}});
+      var h6 = vbBarSVG(gcfArr, 500, 250, 100, 30, 0.82);
+
+      var titles = ['Phylum distribution','Biome distribution','NP pathway distribution',
+                    'BGC type abundance','GCF size distribution','GCF membership type'];
+      document.getElementById('chart-grid').innerHTML = [
+        chartCard(titles[0], h1), chartCard(titles[1], h2), chartCard(titles[2], h3),
+        chartCard(titles[3], h4), chartCard(titles[4], h5), chartCard(titles[5], h6)
+      ].join('');
     });
   </script>
   <script src="/static/app.js?v=20260630"></script>
