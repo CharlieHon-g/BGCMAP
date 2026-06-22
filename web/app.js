@@ -1176,7 +1176,7 @@ function initHomeSearch() {
       { field:"sample_id", op:"equals", page:"sample", label:"Sample ID" },
       { field:"project", op:"equals", page:"sample", label:"Project" },
       { field:"category", op:"equals", page:"sample", label:"BGC Category" },
-      { field:"biome", op:"equals", page:"sample", label:"Biome" },
+      { field:"biome1", op:"equals", page:"sample", label:"Biome" },
     ],
   };
 

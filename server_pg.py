@@ -1380,10 +1380,10 @@ class SpireHandler(BaseHTTPRequestHandler):
                 rows = pg_query(conn, "SELECT DISTINCT species FROM mag WHERE species ILIKE %s AND species IS NOT NULL AND species <> '' ORDER BY species LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["species"], "value": r["species"]} for r in rows]
             elif stype == "project":
-                rows = pg_query(conn, "SELECT DISTINCT project FROM sample WHERE project ILIKE %s AND project IS NOT NULL AND project <> '' ORDER BY project LIMIT %s", (f"%{q}%", limit))
+                rows = pg_query(conn, "SELECT project FROM sample WHERE project ILIKE %s AND project IS NOT NULL AND project <> '' GROUP BY project ORDER BY CASE WHEN project LIKE 'PRJ%' THEN 0 ELSE 1 END, project LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["project"], "value": r["project"]} for r in rows]
             elif stype in ("sample_id",):
-                rows = pg_query(conn, "SELECT DISTINCT sample_id FROM sample WHERE sample_id ILIKE %s AND sample_id IS NOT NULL AND sample_id <> '' ORDER BY sample_id LIMIT %s", (f"%{q}%", limit))
+                rows = pg_query(conn, "SELECT sample_id FROM sample WHERE sample_id ILIKE %s AND sample_id IS NOT NULL AND sample_id <> '' GROUP BY sample_id ORDER BY CASE WHEN sample_id LIKE 'SAMN%' THEN 0 ELSE 1 END, sample_id LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["sample_id"], "value": r["sample_id"]} for r in rows]
             elif stype in ("np_superclass",):
                 rows = pg_query(conn, "SELECT DISTINCT np_superclass AS v FROM mv_bgc_page WHERE np_superclass ILIKE %s AND np_superclass IS NOT NULL AND np_superclass <> '' ORDER BY v LIMIT %s", (f"%{q}%", limit))
@@ -1397,14 +1397,11 @@ class SpireHandler(BaseHTTPRequestHandler):
             elif stype == "genus":
                 rows = pg_query(conn, "SELECT DISTINCT genus FROM mag WHERE genus ILIKE %s AND genus IS NOT NULL AND genus <> '' ORDER BY genus LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["genus"], "value": r["genus"]} for r in rows]
-            elif stype == "biome":
+            elif stype in ("biome", "biome1"):
                 bo = load_biome_selector_options()
-                vals = set()
-                for b in bo.get("biome1", []): vals.add(b)
-                for b in bo.get("biome2_all", []): vals.add(b)
-                for b in bo.get("biome3_all", []): vals.add(b)
+                vals = bo.get("biome1", [])
                 lower_q = q.lower()
-                suggestions = [{"label": v, "value": v} for v in sorted(vals, key=lambda x: x.lower()) if lower_q in v.lower()][:limit]
+                suggestions = [{"label": v, "value": v} for v in vals if lower_q in v.lower()][:limit]
         finally:
             conn.close()
         send_json(self, {"suggestions": suggestions})
