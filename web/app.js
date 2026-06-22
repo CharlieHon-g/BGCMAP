@@ -1153,21 +1153,92 @@ function initHomeSearch() {
   let activeIndex = -1;
   let fetchId = 0;
 
-  const navigateMap = {
-    project: (v) => `/sample.html?q=${encodeURIComponent(v)}`,
-    sample_id: (v) => `/sample.html?sample_id=${encodeURIComponent(v)}`,
-    bgc_category: (v) => `/bgc.html?bigscape_type=${encodeURIComponent(v)}`,
+  const chipSets = {
+    bgc: [
+      { field:"product", op:"equals", page:"bgc", label:"Product" },
+      { field:"category", op:"equals", page:"bgc", label:"Category" },
+      { field:"sample_id", op:"equals", page:"bgc", label:"Sample ID" },
+    ],
+    np: [
+      { field:"np_pathway", op:"equals", page:"nps", label:"Pathway" },
+      { field:"np_superclass", op:"equals", page:"nps", label:"Superclass" },
+      { field:"np_class", op:"equals", page:"nps", label:"Class" },
+    ],
+    tax: [
+      { field:"phylum", op:"equals", page:"tax", label:"Phylum" },
+      { field:"class_name", op:"equals", page:"tax", label:"Class" },
+      { field:"genus", op:"equals", page:"tax", label:"Genus" },
+      { field:"species", op:"equals", page:"tax", label:"Species" },
+      { field:"category", op:"equals", page:"tax", label:"BGC Category" },
+      { field:"sample_id", op:"equals", page:"tax", label:"Sample ID" },
+    ],
+    sample: [
+      { field:"sample_id", op:"equals", page:"sample", label:"Sample ID" },
+      { field:"project", op:"equals", page:"sample", label:"Project" },
+      { field:"category", op:"equals", page:"sample", label:"BGC Category" },
+      { field:"biome", op:"equals", page:"sample", label:"Biome" },
+    ],
   };
 
-  const placeholders = {
-    project: "Enter BioProject accession (e.g. PRJNA123456)...",
-    sample_id: "Enter sample ID (e.g. SAMN12345678)...",
-    bgc_category: "Enter BGC category (e.g. PKSI, NRPS, RiPP)...",
-  };
+  const chipsContainer = qs("#search-field-chips");
+  let activeChip = null;
+
+  function updateInputState() {
+    input.disabled = !activeChip;
+    if (activeChip) {
+      input.placeholder = `Enter ${activeChip.label.toLowerCase()} to search...`;
+      input.focus();
+    } else {
+      input.placeholder = "Select a search field above...";
+    }
+  }
+
+  function renderChips(pageKey) {
+    const chips = chipSets[pageKey] || [];
+    chipsContainer.innerHTML = chips.map((c, i) =>
+      `<button type="button" class="search-chip${i===0?" is-active":""}" data-index="${i}">${c.label}</button>`
+    ).join("");
+    activeChip = chips.length > 0 ? chips[0] : null;
+    updateInputState();
+  }
+
+  function makeFieldFilter(chip, value) {
+    const rule = (f, op, v) => ({ type:"rule", id:nextFilterId("rule"), field:f, operator:op, value:v||"", value_secondary:"", taxon:makeTaxonValue(), negated:false });
+    if (chip.field === "biome" && chip.page === "sample") {
+      return JSON.stringify({ type:"group", id:"root", combinator:"and", negated:false, rules:[
+        { type:"group", id:nextFilterId("group"), combinator:"or", negated:false, rules:[
+          rule("biome1",chip.op,value), rule("biome2",chip.op,value), rule("biome3",chip.op,value)
+        ]}
+      ]});
+    }
+    return JSON.stringify({ type:"group", id:"root", combinator:"and", negated:false, rules:[rule(chip.field, chip.op, value)] });
+  }
+
+  function getTargetPage(chip) { return chip.page; }
+
+  function navigate(value) {
+    const chip = activeChip;
+    if (!chip || !value) return;
+    const page = getTargetPage(chip);
+    const filters = makeFieldFilter(chip, value);
+    window.location = `/${page}.html?filters=${encodeURIComponent(filters)}`;
+  }
+
+  chipsContainer.addEventListener("click", (e) => {
+    const btn = e.target.closest(".search-chip");
+    if (!btn) return;
+    chipsContainer.querySelectorAll(".search-chip").forEach((el) => el.classList.remove("is-active"));
+    btn.classList.add("is-active");
+    activeChip = chipSets[typeSelect.value][Number(btn.dataset.index)];
+    updateInputState();
+    fetchSuggestions();
+  });
 
   function updatePlaceholder() {
-    const type = typeSelect.value;
-    input.placeholder = placeholders[type] || "Type to search...";
+    renderChips(typeSelect.value);
+    input.value = "";
+    clearSuggestions();
+    fetchSuggestions();
   }
 
   function clearSuggestions() {
@@ -1204,24 +1275,14 @@ function initHomeSearch() {
     }
   }
 
-  function navigate(value) {
-    const type = typeSelect.value;
-    const urlBuilder = navigateMap[type];
-    if (urlBuilder && value) {
-      window.location = urlBuilder(value);
-    }
-  }
-
   async function fetchSuggestions() {
     const q = input.value.trim();
-    if (!q) {
-      clearSuggestions();
-      return;
-    }
     const id = ++fetchId;
     try {
-      const resp = await getJSON(
-        `/api/search-suggest?type=${encodeURIComponent(typeSelect.value)}&q=${encodeURIComponent(q)}`
+      const chip = activeChip;
+    const suggestType = chip ? chip.field : typeSelect.value;
+    const resp = await getJSON(
+        `/api/search-suggest?type=${encodeURIComponent(suggestType)}&q=${encodeURIComponent(q)}`
       );
       if (id !== fetchId) return;
       renderSuggestions(resp.suggestions || []);
@@ -1273,9 +1334,8 @@ function initHomeSearch() {
 
   typeSelect.addEventListener("change", () => {
     updatePlaceholder();
-    input.value = "";
-    clearSuggestions();
     input.focus();
+    fetchSuggestions();
   });
 
   document.addEventListener("click", (e) => {
@@ -1490,6 +1550,7 @@ function makeRule(pageKey) {
     value: "",
     value_secondary: "",
     taxon: makeTaxonValue(),
+    negated: false,
   };
 }
 
@@ -1523,6 +1584,7 @@ function makeSingleRuleGroup(field, value = "", operator = "equals", taxon = {},
       value,
       value_secondary: valueSecondary,
       taxon: makeTaxonValue(taxon),
+      negated: false,
     },
   ]);
 }
@@ -1569,7 +1631,13 @@ function seedFilterStateFromParams(pageKey) {
       rules.push({ type: "rule", id: nextFilterId("rule"), field: "sample_id", operator: "equals", value: sampleId, taxon: makeTaxonValue() });
     }
     if (rules.length) return makeCustomGroup(rules);
-    return makeGroup(pageKey);
+    return {
+      type: "group",
+      id: "root",
+      combinator: "and",
+      negated: false,
+      rules: [],
+    };
   }
   if (pageKey === "bgc") {
     const rules = [];
@@ -1590,7 +1658,13 @@ function seedFilterStateFromParams(pageKey) {
     if (bgcId) rules.push({ type: "rule", id: nextFilterId("rule"), field: "bgc_id", operator: "equals", value: bgcId, taxon: makeTaxonValue() });
     if (gcfId) rules.push({ type: "rule", id: nextFilterId("rule"), field: "gcf_id", operator: "equals", value: gcfId, taxon: makeTaxonValue() });
     if (rules.length) return makeCustomGroup(rules);
-    return makeGroup(pageKey);
+    return {
+      type: "group",
+      id: "root",
+      combinator: "and",
+      negated: false,
+      rules: [],
+    };
   }
   if (pageKey === "tax") {
     const rules = [];
@@ -1609,7 +1683,34 @@ function seedFilterStateFromParams(pageKey) {
     if (sampleId) rules.push({ type: "rule", id: nextFilterId("rule"), field: "sample_id", operator: "equals", value: sampleId, taxon: makeTaxonValue() });
     if (genomeId) rules.push({ type: "rule", id: nextFilterId("rule"), field: "genome_id", operator: "equals", value: genomeId, taxon: makeTaxonValue() });
     if (rules.length) return makeCustomGroup(rules);
-    return makeGroup(pageKey);
+    return {
+      type: "group",
+      id: "root",
+      combinator: "and",
+      negated: false,
+      rules: [],
+    };
+  }
+  if (pageKey === "nps") {
+    const rules = [];
+    const npPathway = params.get("np_pathway") || "";
+    const npClass = params.get("np_class") || "";
+    const bgcId = params.get("bgc_id") || "";
+    const gcfId = params.get("gcf_id") || "";
+    const membershipValue = params.get("membership_value") || "";
+    if (npPathway) rules.push({ type: "rule", id: nextFilterId("rule"), field: "np_pathway", operator: "equals", value: npPathway, taxon: makeTaxonValue() });
+    if (npClass) rules.push({ type: "rule", id: nextFilterId("rule"), field: "np_class", operator: "equals", value: npClass, taxon: makeTaxonValue() });
+    if (bgcId) rules.push({ type: "rule", id: nextFilterId("rule"), field: "bgc_id", operator: "equals", value: bgcId, taxon: makeTaxonValue() });
+    if (gcfId) rules.push({ type: "rule", id: nextFilterId("rule"), field: "gcf_id", operator: "equals", value: gcfId, taxon: makeTaxonValue() });
+    if (membershipValue) rules.push({ type: "rule", id: nextFilterId("rule"), field: "membership_value", operator: "equals", value: membershipValue, taxon: makeTaxonValue() });
+    if (rules.length) return makeCustomGroup(rules);
+    return {
+      type: "group",
+      id: "root",
+      combinator: "and",
+      negated: false,
+      rules: [],
+    };
   }
   return makeGroup(pageKey);
 }
@@ -1634,6 +1735,7 @@ function hydrateFilterNode(pageKey, node) {
       value: typeof node.value === "string" || typeof node.value === "number" ? String(node.value) : "",
       value_secondary: typeof node.value_secondary === "string" || typeof node.value_secondary === "number" ? String(node.value_secondary) : "",
       taxon,
+      negated: !!node.negated,
     };
   }
   return {
@@ -1695,15 +1797,24 @@ function removeFilterNode(root, id, pageKey) {
 
 function serializeFilterState(pageKey) {
   const state = filterStates[pageKey];
-  if (!state || !state.rules?.length) return "";
-  const rules = state.rules || [];
-  for (const rule of rules) {
-    if (rule.type !== "rule") continue;
-    if (rule.operator === "is_null" || rule.operator === "is_not_null") return JSON.stringify(state);
-    if (String(rule.value || "").trim()) return JSON.stringify(state);
-    if (rule.taxon && taxonValueHasSelection(rule.taxon)) return JSON.stringify(state);
+  if (!state) return "";
+  function hasValue(node) {
+    if (node.type === "rule") {
+      if (node.operator === "is_null" || node.operator === "is_not_null") return true;
+      if (String(node.value || "").trim()) return true;
+      if (node.operator === "between" && String(node.value_secondary || "").trim()) return true;
+      if (node.taxon && taxonValueHasSelection(node.taxon)) return true;
+      return false;
+    }
+    if (node.type === "group" && node.rules) {
+      return node.rules.some(hasValue);
+    }
+    return false;
   }
-  return "";
+  if (!hasValue(state)) return "";
+  const json = JSON.stringify(state);
+  if (json.length > 2000) return "";
+  return json;
 }
 
 function buildFilterSummary(node, pageKey) {
@@ -1718,23 +1829,24 @@ function buildFilterSummary(node, pageKey) {
         })
         .filter(Boolean);
       const operator =
-        [...TEXT_OPERATORS, ...NUMBER_OPERATORS].find((item) => item.key === node.operator)?.label || node.operator;
-      return parts.length ? `Taxon ${operator} ${parts.join(" · ")}` : `Taxon ${operator}`;
+      [...TEXT_OPERATORS, ...NUMBER_OPERATORS].find((item) => item.key === node.operator)?.label || node.operator;
+      const base = parts.length ? `Taxon ${operator} ${parts.join(" · ")}` : `Taxon ${operator}`;
+      return node.negated ? `NOT (${base})` : base;
     }
     if (node.operator === "between") {
       const lower = String(node.value || "").trim();
       const upper = String(node.value_secondary || "").trim();
       if (!lower && !upper) return "";
       const field = getFieldMeta(pageKey, node.field)?.label || node.field;
-      if (lower && upper) return `${field} between ${lower} and ${upper}`;
-      if (lower) return `${field} ≥ ${lower}`;
-      return `${field} ≤ ${upper}`;
+      const base = lower && upper ? `${field} between ${lower} and ${upper}` : lower ? `${field} ≥ ${lower}` : `${field} ≤ ${upper}`;
+      return node.negated ? `NOT (${base})` : base;
     }
     if (!String(node.value || "").trim() && !String(node.operator || "").startsWith("is_")) return "";
     const field = getFieldMeta(pageKey, node.field)?.label || node.field;
     const operator =
       [...TEXT_OPERATORS, ...NUMBER_OPERATORS].find((item) => item.key === node.operator)?.label || node.operator;
-    return `${field} ${operator}${node.operator.startsWith("is_") ? "" : ` ${node.value || ""}`}`.trim();
+    const base = `${field} ${operator}${node.operator.startsWith("is_") ? "" : ` ${node.value || ""}`}`.trim();
+    return node.negated ? `NOT (${base})` : base;
   }
   const pieces = (node.rules || []).map((child) => buildFilterSummary(child, pageKey)).filter(Boolean);
   if (!pieces.length) return "";
@@ -1743,17 +1855,105 @@ function buildFilterSummary(node, pageKey) {
   return node.negated ? `NOT (${combined})` : `(${combined})`;
 }
 
+function r(field, operator, value, opts = {}) {
+  return { type:"rule", id:nextFilterId("rule"), field, operator, value:value||"", value_secondary:opts.value_secondary||"", taxon:opts.taxon||makeTaxonValue(), negated:!!opts.negated };
+}
+function g(rules, combinator = "and", negated = false) {
+  return { type:"group", id:nextFilterId("group"), combinator, negated, rules };
+}
+
+const EXAMPLES = {
+  sample: [
+    { build: () => g([
+      r("biome1","equals","aquatic environment"),
+      g([r("category","equals","PKS"), r("category","equals","NRPS")], "or"),
+      g([r("geo_region","equals","Pacific Ocean")], "and", true),
+    ])},
+    { build: () => g([
+      r("biome2","equals","marine/saline water environment"),
+      g([r("mag_count","gt","200"), r("bgc_count","gt","100")], "or"),
+      g([r("biome1","equals","terrestrial environment")], "and", true),
+    ])},
+    { build: () => g([
+      g([r("biome2","equals","marine/saline water environment"), r("biome2","equals","fresh water environment")], "or"),
+      r("category","equals","RiPP"),
+      r("collection_time","between","2020-01-01", {value_secondary:"2024-12-31"}),
+    ])},
+  ],
+  tax: [
+    { build: () => g([
+      r("completeness","gte","90"),
+      r("contamination","lte","5"),
+      g([r("biome1","equals","aquatic environment")], "and", true),
+    ])},
+    { build: () => g([
+      r("completeness","gte","90"),
+      g([r("category","equals","PKS"), r("category","equals","NRPS")], "or"),
+    ])},
+    { build: () => g([
+      r("bgc_count","gt","20"),
+      g([r("taxon","equals","", {taxon:{domain:"",phylum:"Firmicutes",class_name:"",order_name:"",genus:"",species:""}}), r("completeness","lt","50")], "and", true),
+    ])},
+  ],
+  bgc: [
+    { build: () => g([
+      g([r("category","equals","NRPS"), r("category","equals","PKS-NRP_Hybrids")], "or"),
+      r("membership_value","lte","0.1"),
+      g([r("biome1","equals","aquatic environment")], "and", true),
+    ])},
+    { build: () => g([
+      g([r("category","equals","Saccharides"), r("category","equals","Terpene")], "or"),
+      g([r("length","gt","40000"), r("contig_edge","equals","Yes")], "or"),
+    ])},
+    { build: () => g([
+      r("membership_value","gt","0.4"),
+      g([r("membership_value","lte","0.4"), r("contig_edge","equals","Yes")], "and", true),
+    ], "or")},
+  ],
+  nps: [
+    { build: () => g([
+      g([r("np_class","equals","Alkaloids"), r("np_class","equals","Terpenoids")], "or"),
+      r("membership_value","lte","0.1"),
+    ])},
+    { build: () => g([
+      r("np_superclass","equals","Polyketides"),
+      r("gcf_id","is_not_null",""),
+      g([r("np_class","equals","Alkaloids")], "and", true),
+    ])},
+    { build: () => g([
+      r("membership_value","gt","0.4"),
+      g([r("np_class","equals","Terpenoids")], "and", true),
+    ])},
+  ],
+};
+
+function applyExampleFilter(pageKey, example, onApply) {
+  filterStates[pageKey] = example.build();
+  renderFilterBuilder(pageKey, onApply);
+  syncParams({ filters: null, page: 1 });
+}
+
 function mountAdvancedFilters(pageKey, onApply) {
   const tableCard = qs(".table-card");
   if (!tableCard || qs("#advanced-filter-card")) return;
+
   const section = document.createElement("section");
   section.className = "card advanced-filter-card";
   section.id = "advanced-filter-card";
+  const examples = EXAMPLES[pageKey] || [];
   section.innerHTML = `
     <div id="advanced-filter-root"></div>
-    <div class="advanced-filter-query"><span>Query logic:</span> <code id="advanced-filter-query-text">None</code></div>
+    ${examples.length ? `<div class="advanced-filter-examples">examples: ${examples.map((_, i) => `<button type="button" class="example-btn" data-example-index="${i}">#${i+1}</button>`).join(" ")}</div>` : ""}
+    <div class="advanced-filter-query"><span>Query:</span> <code id="advanced-filter-query-text">None</code></div>
   `;
   tableCard.parentNode.insertBefore(section, tableCard);
+  if (examples.length) {
+    qs("#advanced-filter-card").addEventListener("click", (e) => {
+      const btn = e.target.closest(".example-btn");
+      if (!btn) return;
+      applyExampleFilter(pageKey, examples[Number(btn.dataset.exampleIndex)], onApply);
+    });
+  }
   renderFilterBuilder(pageKey, onApply);
 }
 
@@ -1771,7 +1971,7 @@ function renderFilterBuilder(pageKey, onApply) {
     onApply(1);
   });
   qs("#advanced-filter-reset")?.addEventListener("click", () => {
-    filterStates[pageKey] = makeGroup(pageKey);
+    filterStates[pageKey] = { type:"group", id:"root", combinator:"and", negated:false, rules:[] };
     syncParams({ q: null, sample_id: null, sample_accession: null, genome_id: null, bgc_name: null, gcf_id: null, bigscape_type: null, group1: null, map_filter: null, filters: null, order_by: null, order_dir: null, page: null, page_size: null });
     renderFilterBuilder(pageKey, onApply);
     onApply(1);
@@ -1880,51 +2080,62 @@ function renderFilterGroupNode(pageKey, group, depth, onApply) {
   const wrapper = document.createElement("div");
   wrapper.className = `filter-group depth-${depth}`;
   const isRoot = depth === 0;
+  const labels = ["Filters", "", "", ""];
   wrapper.innerHTML = `
       <div class="filter-group-toolbar">
-      <div class="filter-combinator" data-group-id="${group.id}">
-        <button type="button" data-combinator="and" class="${group.combinator === "and" ? "is-active" : ""}">AND</button>
-        <button type="button" data-combinator="or" class="${group.combinator === "or" ? "is-active" : ""}">OR</button>
-        <button type="button" data-combinator="not" class="filter-not-toggle ${group.negated ? "is-active" : ""}">NOT</button>
+        ${labels[Math.min(depth,3)] ? `<span class="fg-label" style="font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:11px">${labels[Math.min(depth,3)]}</span>` : ""}
+        <div class="filter-combinator">
+          <button type="button" data-combinator="and" class="${group.combinator==="and"?"is-active":""}">AND</button>
+          <button type="button" data-combinator="or" class="${group.combinator==="or"?"is-active":""}">OR</button>
+          <button type="button" data-combinator="not" class="filter-not-toggle ${group.negated?"is-active":""}">NOT</button>
+        </div>
+        <span class="filter-group-hover-actions">
+          <button type="button" class="secondary" data-action="add-rule">+ Rule</button>
+          <button type="button" class="secondary" data-action="add-group">+ Group</button>
+        </span>
+        ${isRoot?`<span class="filter-group-root-actions">
+          <button type="button" class="secondary" id="advanced-filter-reset">Reset</button>
+          <button type="button" id="advanced-filter-apply">Apply</button>
+        </span>`:`<button type="button" class="ghost-danger" data-action="remove-group" style="margin-left:auto"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>`}
       </div>
-      <div class="filter-group-actions">
-        <button type="button" class="secondary" data-action="add-rule" data-group-id="${group.id}">+ Rule</button>
-        <button type="button" class="secondary" data-action="add-group" data-group-id="${group.id}">+ Group</button>
-        ${isRoot ? "" : `<button type="button" class="ghost-danger" data-action="remove-group" data-group-id="${group.id}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="trash-icon"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>`}
-      </div>
-      ${isRoot ? `
-      <div class="advanced-filter-actions">
-        <button type="button" class="secondary" id="advanced-filter-reset">Reset</button>
-        <button type="button" id="advanced-filter-apply">Apply filters</button>
-      </div>` : ""}
-    </div>
-    <div class="filter-group-body"></div>
+      <div class="filter-group-body"></div>
   `;
   const body = qs(".filter-group-body", wrapper);
   for (const child of group.rules) {
-    body.appendChild(child.type === "group" ? renderFilterGroupNode(pageKey, child, depth + 1, onApply) : renderFilterRuleNode(pageKey, child, onApply));
+    body.appendChild(child.type==="group"?renderFilterGroupNode(pageKey,child,depth+1,onApply):renderFilterRuleNode(pageKey,child,onApply));
   }
-  qsa(".filter-combinator button", wrapper).forEach((button) => {
-    button.addEventListener("click", () => {
-      if (button.dataset.combinator === "not") {
-        group.negated = !group.negated;
-      } else {
-        group.combinator = button.dataset.combinator || "and";
-      }
-      renderFilterBuilder(pageKey, onApply);
-    });
+  qs(".filter-combinator", wrapper)?.addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    e.stopPropagation();
+    if (btn.dataset.combinator === "not") {
+      group.negated = !group.negated;
+    } else {
+      group.combinator = btn.dataset.combinator || "and";
+    }
+    renderFilterBuilder(pageKey, onApply);
   });
-  qsa(".filter-group-actions button", wrapper).forEach((button) => {
-    button.addEventListener("click", () => {
-      const action = button.dataset.action;
-      if (action === "add-rule") group.rules.push(makeRule(pageKey));
-      if (action === "add-group") group.rules.push(makeGroup(pageKey));
-      if (action === "remove-group") {
-        removeFilterNode(getFilterState(pageKey), group.id, pageKey);
-      }
-      renderFilterBuilder(pageKey, onApply);
-    });
+  qs(".filter-group-toolbar", wrapper)?.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-action]");
+    if (!btn) return;
+    e.stopPropagation();
+    const action = btn.dataset.action;
+    if (action === "add-rule") { group.rules.push(makeRule(pageKey)); renderFilterBuilder(pageKey, onApply); }
+    if (action === "add-group") { group.rules.push(makeGroup(pageKey)); renderFilterBuilder(pageKey, onApply); }
+    if (action === "remove-group") { removeFilterNode(getFilterState(pageKey), group.id, pageKey); renderFilterBuilder(pageKey, onApply); }
   });
+  if (isRoot) {
+    qs("#advanced-filter-reset", wrapper)?.addEventListener("click", () => {
+      filterStates[pageKey] = { type:"group", id:"root", combinator:"and", negated:false, rules:[] };
+      syncParams({filters:null,order_by:null,order_dir:null,page:null,page_size:null});
+      renderFilterBuilder(pageKey, onApply);
+      onApply(1);
+    });
+    qs("#advanced-filter-apply", wrapper)?.addEventListener("click", () => {
+      if (!serializeFilterState(pageKey)) { filterStates[pageKey] = makeGroup(pageKey); syncParams({filters:null,page:1}); }
+      onApply(1);
+    });
+  }
   return wrapper;
 }
 
@@ -1935,7 +2146,7 @@ function renderFilterRuleNode(pageKey, rule, onApply) {
   const isRangeType = fieldMeta?.type === "number" || fieldMeta?.type === "date";
   const equalsOnly = rule.field === "gcf_id" || rule.field === "bgc_id";
   const noNullNumber = isRangeType && fieldMeta?.type === "number" && !(pageKey === "sample" && (rule.field === "lat" || rule.field === "lon"));
-  const noNullText = !isRangeType && !isGeoField(rule.field) && (rule.field === "sample_id" || rule.field === "genome_id");
+  const noNullText = !isRangeType && !isGeoField(rule.field) && (rule.field === "sample_id" || rule.field === "genome_id" || rule.field === "contig_edge");
   const operators = equalsOnly ? [TEXT_OPERATORS.find((o) => o.key === "equals") || NUMBER_OPERATORS.find((o) => o.key === "equals")] : (noNullNumber ? NUMBER_OPERATORS.filter((o) => o.key !== "is_null" && o.key !== "is_not_null") : (noNullText ? TEXT_OPERATORS.filter((o) => o.key !== "is_null" && o.key !== "is_not_null") : (isRangeType ? NUMBER_OPERATORS : (isGeoField(rule.field) ? TEXT_OPERATORS.filter((o) => GEO_ALL_OPERATORS.has(o.key)) : TEXT_OPERATORS))));
   const showRangeInputs = isRangeType && rule.operator === "between";
   const showBiomeDropdown = isBiomeField(rule.field) && BIOME_DROPDOWN_OPERATORS.has(rule.operator);
@@ -2073,7 +2284,7 @@ function renderFilterRuleNode(pageKey, rule, onApply) {
           </div>
         `}
       </label>
-      <button type="button" class="ghost-danger filter-remove"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="trash-icon"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+      <button type="button" class="ghost-danger filter-remove"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
     </div>
   `;
   qs(".filter-field", wrapper).addEventListener("change", (event) => {
@@ -2256,6 +2467,7 @@ async function loadMags(page = Number(params.get("page") || 1)) {
   showLoading(qs("#entries-label"));
   const taxMode = params.get("tax_mode") || "phylum";
   syncParams({
+    q,
     page,
     page_size: pageSize,
     tax_mode: taxMode,

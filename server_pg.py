@@ -1023,7 +1023,11 @@ def compile_filter_rule(node: dict, page_kind: str, conn) -> Tuple[str, List]:
 
 def compile_filter_group(node: dict, page_kind: str, conn) -> Tuple[str, List]:
     if not isinstance(node, dict): return "", []
-    if node.get("type") == "rule": return compile_filter_rule(node, page_kind, conn)
+    if node.get("type") == "rule":
+        clause, params = compile_filter_rule(node, page_kind, conn)
+        if clause and node.get("negated"):
+            clause = f"(NOT {clause})"
+        return clause, params
     children = node.get("rules") or []
     compiled = []
     params: List = []
@@ -1342,17 +1346,65 @@ class SpireHandler(BaseHTTPRequestHandler):
             elif stype == "phylum":
                 rows = pg_query(conn, "SELECT DISTINCT phylum FROM mag WHERE phylum ILIKE %s AND phylum IS NOT NULL AND phylum <> '' ORDER BY phylum LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["phylum"], "value": r["phylum"]} for r in rows]
-            elif stype == "biome":
-                bo = load_biome_selector_options()
-                vals = bo.get("biome1", [])
-                lower_q = q.lower()
-                suggestions = [{"label": v, "value": v} for v in vals if lower_q in v.lower()][:limit]
             elif stype == "bgc_name":
                 rows = pg_query(conn, "SELECT bgc_name FROM bgc WHERE bgc_name LIKE %s ORDER BY bgc_name LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["bgc_name"], "value": r["bgc_name"]} for r in rows]
             elif stype == "project":
                 rows = pg_query(conn, "SELECT DISTINCT bioproject_accession FROM sample_project WHERE bioproject_accession LIKE %s AND bioproject_accession IS NOT NULL AND bioproject_accession <> '' ORDER BY bioproject_accession LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["bioproject_accession"], "value": r["bioproject_accession"]} for r in rows]
+            elif stype == "bgc":
+                rows = pg_query(conn, "SELECT DISTINCT product FROM mv_bgc_page WHERE product ILIKE %s AND product IS NOT NULL AND product <> '' ORDER BY product LIMIT %s", (f"%{q}%", limit))
+                suggestions = [{"label": r["product"], "value": r["product"]} for r in rows]
+            elif stype == "np":
+                rows = pg_query(conn, "SELECT DISTINCT v FROM (SELECT np_pathway AS v FROM mv_bgc_page WHERE np_pathway ILIKE %s AND np_pathway IS NOT NULL AND np_pathway <> '' UNION SELECT np_superclass FROM mv_bgc_page WHERE np_superclass ILIKE %s AND np_superclass IS NOT NULL AND np_superclass <> '') sub ORDER BY v LIMIT %s", (f"%{q}%", f"%{q}%", limit))
+                suggestions = [{"label": r["v"], "value": r["v"]} for r in rows]
+            elif stype == "tax":
+                rows = pg_query(conn, "SELECT DISTINCT v FROM (SELECT species AS v FROM mag WHERE species ILIKE %s AND species IS NOT NULL AND species <> '' UNION SELECT genus FROM mag WHERE genus ILIKE %s AND genus IS NOT NULL AND genus <> '' UNION SELECT phylum FROM mag WHERE phylum ILIKE %s AND phylum IS NOT NULL AND phylum <> '') sub ORDER BY v LIMIT %s", (f"%{q}%", f"%{q}%", f"%{q}%", limit))
+                suggestions = [{"label": r["v"], "value": r["v"]} for r in rows]
+            elif stype == "sample":
+                rows = pg_query(conn, "SELECT DISTINCT v FROM (SELECT sample_id AS v FROM sample WHERE sample_id ILIKE %s AND sample_id IS NOT NULL AND sample_id <> '' UNION SELECT project FROM sample WHERE project ILIKE %s AND project IS NOT NULL AND project <> '') sub ORDER BY v LIMIT %s", (f"%{q}%", f"%{q}%", limit))
+                suggestions = [{"label": r["v"], "value": r["v"]} for r in rows]
+            elif stype in ("product", "bgc_product"):
+                rows = pg_query(conn, "SELECT DISTINCT product FROM mv_bgc_page WHERE product ILIKE %s AND product IS NOT NULL AND product <> '' ORDER BY product LIMIT %s", (f"%{q}%", limit))
+                suggestions = [{"label": r["product"], "value": r["product"]} for r in rows]
+            elif stype in ("category", "bgc_category"):
+                rows = pg_query(conn, "SELECT DISTINCT category_primary FROM bgc WHERE category_primary ILIKE %s AND category_primary IS NOT NULL AND category_primary <> '' ORDER BY category_primary LIMIT %s", (f"%{q}%", limit))
+                suggestions = [{"label": r["category_primary"], "value": r["category_primary"]} for r in rows]
+            elif stype in ("np_pathway",):
+                rows = pg_query(conn, "SELECT DISTINCT np_pathway AS v FROM mv_bgc_page WHERE np_pathway ILIKE %s AND np_pathway IS NOT NULL AND np_pathway <> '' ORDER BY v LIMIT %s", (f"%{q}%", limit))
+                suggestions = [{"label": r["v"], "value": r["v"]} for r in rows]
+            elif stype in ("np_class",):
+                rows = pg_query(conn, "SELECT DISTINCT np_class AS v FROM mv_bgc_page WHERE np_class ILIKE %s AND np_class IS NOT NULL AND np_class <> '' ORDER BY v LIMIT %s", (f"%{q}%", limit))
+                suggestions = [{"label": r["v"], "value": r["v"]} for r in rows]
+            elif stype in ("species", "tax_species"):
+                rows = pg_query(conn, "SELECT DISTINCT species FROM mag WHERE species ILIKE %s AND species IS NOT NULL AND species <> '' ORDER BY species LIMIT %s", (f"%{q}%", limit))
+                suggestions = [{"label": r["species"], "value": r["species"]} for r in rows]
+            elif stype == "project":
+                rows = pg_query(conn, "SELECT DISTINCT project FROM sample WHERE project ILIKE %s AND project IS NOT NULL AND project <> '' ORDER BY project LIMIT %s", (f"%{q}%", limit))
+                suggestions = [{"label": r["project"], "value": r["project"]} for r in rows]
+            elif stype in ("sample_id",):
+                rows = pg_query(conn, "SELECT DISTINCT sample_id FROM sample WHERE sample_id ILIKE %s AND sample_id IS NOT NULL AND sample_id <> '' ORDER BY sample_id LIMIT %s", (f"%{q}%", limit))
+                suggestions = [{"label": r["sample_id"], "value": r["sample_id"]} for r in rows]
+            elif stype in ("np_superclass",):
+                rows = pg_query(conn, "SELECT DISTINCT np_superclass AS v FROM mv_bgc_page WHERE np_superclass ILIKE %s AND np_superclass IS NOT NULL AND np_superclass <> '' ORDER BY v LIMIT %s", (f"%{q}%", limit))
+                suggestions = [{"label": r["v"], "value": r["v"]} for r in rows]
+            elif stype == "phylum":
+                rows = pg_query(conn, "SELECT DISTINCT phylum FROM mag WHERE phylum ILIKE %s AND phylum IS NOT NULL AND phylum <> '' ORDER BY phylum LIMIT %s", (f"%{q}%", limit))
+                suggestions = [{"label": r["phylum"], "value": r["phylum"]} for r in rows]
+            elif stype == "class_name":
+                rows = pg_query(conn, "SELECT DISTINCT class_name FROM mag WHERE class_name ILIKE %s AND class_name IS NOT NULL AND class_name <> '' ORDER BY class_name LIMIT %s", (f"%{q}%", limit))
+                suggestions = [{"label": r["class_name"], "value": r["class_name"]} for r in rows]
+            elif stype == "genus":
+                rows = pg_query(conn, "SELECT DISTINCT genus FROM mag WHERE genus ILIKE %s AND genus IS NOT NULL AND genus <> '' ORDER BY genus LIMIT %s", (f"%{q}%", limit))
+                suggestions = [{"label": r["genus"], "value": r["genus"]} for r in rows]
+            elif stype == "biome":
+                bo = load_biome_selector_options()
+                vals = set()
+                for b in bo.get("biome1", []): vals.add(b)
+                for b in bo.get("biome2_all", []): vals.add(b)
+                for b in bo.get("biome3_all", []): vals.add(b)
+                lower_q = q.lower()
+                suggestions = [{"label": v, "value": v} for v in sorted(vals, key=lambda x: x.lower()) if lower_q in v.lower()][:limit]
         finally:
             conn.close()
         send_json(self, {"suggestions": suggestions})
@@ -1374,7 +1426,7 @@ class SpireHandler(BaseHTTPRequestHandler):
             env_sample_ids = search_sample_ids_by_env_text(search)
             search_clause = ("(lower(sample_id) LIKE %s OR lower(COALESCE(project, '')) LIKE %s OR "
                              "lower(COALESCE(primary_sample_accession, '')) LIKE %s OR "
-                             "lower(COALESCE(category, '')) LIKE %s OR lower(COALESCE(biome, '')) LIKE %s OR "
+                             "lower(COALESCE(category, '')) LIKE %s OR lower(COALESCE(biome3, '')) LIKE %s OR "
                              "lower(COALESCE(geo_region, '')) LIKE %s")
             if env_sample_ids:
                 ec, ep = build_in_clauses("sample_id", env_sample_ids)

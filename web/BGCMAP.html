@@ -4,14 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>BGCMAP</title>
-  <link rel="stylesheet" href="/static/style.css?v=20260620">
+  <link rel="stylesheet" href="/static/style.css?v=20260715">
 </head>
 <body data-page="home">
   <header class="site-header">
     <div class="site-header-inner">
       <a class="brand-title" href="/BGCMAP.html">
-        <span class="brand-mark"><span class="diamond-icon"></span><strong>BGCMAP</strong></span>
-        <span>A Global Ecological Metagenome-Identified Biosynthetic Gene Cluster Resource!</span>
+        <span class="brand-mark"><img class="diamond-icon" src="/static/assets/bgcmap_compass_v3.svg" alt=""><strong>BGCMAP</strong></span>
       </a>
       <nav class="top-nav">
         <a data-page="home" href="/BGCMAP.html">Home</a>
@@ -32,31 +31,30 @@
         <div class="home-hero-split">
           <div class="home-hero-search">
             <div class="title-line">
-              <span class="hero-welcome">Welcome to</span>
-              <span class="hero-brand"><span class="diamond-icon hero-diamond"></span>BGCMAP</span>
+              <img class="diamond-icon hero-diamond" src="/static/assets/bgcmap_compass_v3.svg" alt="">
+              <div class="hero-title-text">
+                <span class="hero-welcome">Welcome to</span>
+                <span class="hero-brand">BGCMAP</span>
+              </div>
             </div>
-            <div class="home-search-bar">
-              <select class="search-type-select" id="home-search-type" aria-label="Search type">
-                <option value="project">Project</option>
-                <option value="sample_id">Sample ID</option>
-                <option value="bgc_category">BGC Category</option>
-              </select>
-              <input
-                type="text"
-                class="search-input"
-                id="home-search-input"
-                placeholder="Type to search..."
-                autocomplete="off"
-              >
-              <button class="search-submit" id="home-search-submit" aria-label="Search">&#8594;</button>
-            </div>
-            <div class="search-suggest" id="home-search-suggest" hidden></div>
           </div>
           <div class="home-hero-copy">
             <p id="hero-summary" class="intro-text home-intro">
-              BGCMAP Resource is a hierarchical database for exploring biosynthetic gene clusters together with their genome-resolved, taxonomic, and ecological context. It links each BGC to its source metagenome-assembled genome (MAG), and further connects each MAG to sample provenance, collection habitat, and taxonomic annotation, enabling users to trace biosynthetic potential from globally collected samples to genomes and gene clusters. Built upon SPIRE-derived MAGs and associated metagenomic datasets, BGCMAP predicts BGCs from MAGs using antiSMASH 8.0.
+              Biosynthetic Gene Clusters from Metagenome-Assembled genomes with Product predictions.
             </p>
           </div>
+        </div>
+        <div class="home-search-bar">
+          <select class="search-type-select" id="home-search-type" aria-label="Search type">
+            <option value="bgc">BGC</option>
+            <option value="np">NP</option>
+            <option value="tax">Taxon</option>
+            <option value="sample">Sample</option>
+          </select>
+          <div class="search-field-chips" id="search-field-chips"></div>
+          <input type="text" class="search-input" id="home-search-input" placeholder="Select a field above or click a tag to search..." autocomplete="off">
+          <button class="search-submit" id="home-search-submit" aria-label="Search">&#8594;</button>
+          <div class="search-suggest" id="home-search-suggest" hidden></div>
         </div>
       </section>
 
@@ -100,6 +98,6 @@
       <div id="page-error" class="footer-note"></div>
     </div>
   </main>
-  <script src="/static/app.js?v=20260630"></script>
+  <script src="/static/app.js?v=20260718"></script>
 </body>
 </html>

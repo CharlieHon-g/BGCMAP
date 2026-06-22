@@ -350,7 +350,7 @@ SELECT
     m.mag_pk,
     m.genome_id,
     s.sample_id,
-    s.biome3 AS biome,
+    s.biome3,
     m.species,
     m.spire_cluster,
     m.completeness,
@@ -401,8 +401,8 @@ CREATE INDEX IF NOT EXISTS idx_mv_mag_sample_id_lower
     ON mv_mag_page (lower(sample_id));
 CREATE INDEX IF NOT EXISTS idx_mv_mag_page_species_lower
     ON mv_mag_page (lower(species));
-CREATE INDEX IF NOT EXISTS idx_mv_mag_biome_lower_trgm
-    ON mv_mag_page USING gin (lower(biome) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_mag_biome3_lower_trgm
+    ON mv_mag_page USING gin (lower(biome3) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_mv_mag_biome1_lower_trgm
     ON mv_mag_page USING gin (lower(biome1) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_mv_mag_biome2_lower_trgm
@@ -423,7 +423,7 @@ CREATE INDEX IF NOT EXISTS idx_mv_mag_biome1_lower
 CREATE INDEX IF NOT EXISTS idx_mv_mag_biome2_lower
     ON mv_mag_page (lower(biome2));
 CREATE INDEX IF NOT EXISTS idx_mv_mag_biome3_lower
-    ON mv_mag_page (lower(biome));
+    ON mv_mag_page (lower(biome3));
 CREATE INDEX IF NOT EXISTS idx_mv_mag_sample_id_lower_genome_id
     ON mv_mag_page (lower(sample_id), genome_id);
 CREATE INDEX IF NOT EXISTS idx_mv_mag_completeness
@@ -443,7 +443,7 @@ SELECT
     b.bgc_source_id,
     m.genome_id,
     s.sample_id,
-    s.biome3 AS biome,
+    s.biome3,
     s.biome1,
     s.biome2,
     m.species,
@@ -485,13 +485,13 @@ CREATE INDEX IF NOT EXISTS idx_mv_bgc_sample_id_lower ON mv_bgc_page (lower(samp
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_genome_id_src ON mv_bgc_page (lower(genome_id), bgc_source_id);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_biome1_lower ON mv_bgc_page (lower(biome1));
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_biome2_lower ON mv_bgc_page (lower(biome2));
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_biome3_lower ON mv_bgc_page (lower(biome));
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_biome3_lower ON mv_bgc_page (lower(biome3));
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_biome1_lower_trgm ON mv_bgc_page USING gin (lower(biome1) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_biome2_lower_trgm ON mv_bgc_page USING gin (lower(biome2) gin_trgm_ops);
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_biome3_lower_trgm ON mv_bgc_page USING gin (lower(biome) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_biome3_lower_trgm ON mv_bgc_page USING gin (lower(biome3) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b1_src ON mv_bgc_page (lower(biome1), bgc_source_id);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b2_src ON mv_bgc_page (lower(biome2), bgc_source_id);
-CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b3_src ON mv_bgc_page (lower(biome), bgc_source_id);
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b3_src ON mv_bgc_page (lower(biome3), bgc_source_id);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_category_lower ON mv_bgc_page (lower(category));
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_product_lower ON mv_bgc_page (lower(product));
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_contig_edge ON mv_bgc_page (contig_edge);

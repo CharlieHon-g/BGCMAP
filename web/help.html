@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Help · BGCMAP</title>
-  <link rel="stylesheet" href="/static/style.css?v=20260630">
+  <link rel="stylesheet" href="/static/style.css?v=20260715">
   <style>
     .help-section{max-width:1000px;margin:0 auto}
     .help-card{background:#fff;border:1px solid #dbe6f8;border-radius:14px;padding:24px 28px;margin-bottom:20px}
@@ -31,7 +31,7 @@
 <body data-page="help">
   <header class="site-header">
     <div class="site-header-inner">
-      <a class="brand-title" href="/BGCMAP.html"><span class="brand-mark"><span class="diamond-icon"></span><strong>BGCMAP</strong></span><span>Help &amp; Documentation</span></a>
+      <a class="brand-title" href="/BGCMAP.html"><span class="brand-mark"><img class="diamond-icon" src="/static/assets/bgcmap_compass_v3.svg" alt=""><strong>BGCMAP</strong></span></a>
       <nav class="top-nav">
         <a data-page="home" href="/BGCMAP.html">Home</a>
         <a data-page="sample" href="/sample.html">Sample</a>
@@ -49,12 +49,12 @@
 
       <div class="help-card">
         <h2>What is the BGCMAP Database?</h2>
-        <p>The BGCMAP database (Biosynthetic Gene Cluster Mapping and Analysis Portal) organizes biosynthetic information across four interconnected levels: <strong>Sample</strong> → <strong>MAG</strong> (Metagenome-Assembled Genome) → <strong>BGC</strong> (Biosynthetic Gene Cluster) → <strong>GCF</strong> (Gene Cluster Family). Each level carries extensive metadata, allowing users to trace from environmental context through taxonomic classification, specific biosynthetic gene clusters, and their evolutionary families. The database integrates data from published metagenomic studies and includes antiSMASH-derived annotations, NPClassifier natural product predictions, and BiG-SLiCE clustering.</p>
+        <p>The BGCMAP database (Biosynthetic Gene Clusters from Metagenome-Assembled genomes with Product predictions) organizes biosynthetic information across four interconnected levels: <strong>Sample</strong> → <strong>MAG</strong> (Metagenome-Assembled Genome) → <strong>BGC</strong> (Biosynthetic Gene Cluster) → <strong>NP</strong> (Natural Product). Each level carries extensive metadata, allowing users to trace from environmental context through taxonomic classification, specific biosynthetic gene clusters, their evolutionary families, and natural product predictions. The database integrates data from published metagenomic studies and includes antiSMASH-derived annotations, NPClassifier natural product predictions, and BiG-SLiCE clustering.</p>
       </div>
 
       <div class="help-card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
         <div><h2 style="margin:0">Release information</h2><p style="margin:4px 0 0;font-size:0.88rem">Current release: <strong>v1.0</strong> &middot; Last updated: <strong>2026.4.10</strong></p></div>
-        <div style="text-align:right;font-size:0.82rem;color:#667b8f">antiSMASH 8.0 &middot; BiG-SLiCE 2.0 &middot; NPClassifier</div>
+        <div style="text-align:right;font-size:0.82rem;color:#667b8f">How to cite this database:</div>
       </div>
 
       <div class="faq-section">
@@ -67,8 +67,7 @@
   <script>
     var faq = [
 
-      // ── 入门引导 ──
-      {q:"I'm new here. How do I start exploring the database?",
+      {q:"How do I start exploring the database?",
        a:"Start from the <b>Home page</b> for an overview of database statistics and the global sample distribution map. "
        +"From there, you can navigate to individual pages:<br><br>"
        +"<b>Sample → Taxon → BGC → NP</b> follows the natural data hierarchy. Each page has a filter panel on the left, "
@@ -179,13 +178,6 @@
        +"<b>Practical use:</b> If you want to find BGCs most similar to a query BGC, focus on backbone members. "
        +"For diversity within a family, include core and peripheral members."},
 
-      {q:"How do I find the largest GCFs in the database?",
-       a:"Go to the <b>Statistics page</b> and look at the <b>GCF Size Distribution</b> chart. "
-       +"It shows how many GCFs have 1, 2-4, 5-8, 9-30, 31-50, or >50 BGCs. "
-       +"Most GCFs (the majority) contain a single BGC, while a small number of "
-       +"'super-GCFs' contain hundreds of BGCs. "
-       +"You can sort the GCF table by BGC count to find the largest families."},
-
       // ── NP ──
       {q:"How do I find BGCs predicted to produce specific types of natural products?",
        a:"Go to the <b>NP page</b>. Use the filter panel and select <b>Pathway</b> = <b>contains</b> "
@@ -264,16 +256,6 @@
        +"<li><b>NPClassifier</b> — deep learning-based natural product class prediction</li>"
        +"<li><b>CheckM</b> — MAG completeness and contamination estimation</li></ul>"},
 
-      {q:"Where does the data come from?",
-       a:"The data is derived from published metagenomic studies. "
-       +"Source data files include:<br><br>"
-       +"<ul><li><b>gem_sra.tsv</b> — sample metadata and SRA sequencing information</li>"
-       +"<li><b>spire_v1_genome_metadata.tsv</b> — MAG assembly metrics and taxonomy</li>"
-       +"<li><b>spire_full_scape_env.tsv</b> — BGC product annotations</li>"
-       +"<li><b>spire_gcf_sorted.tsv</b> — BGC-to-GCF membership data</li>"
-       +"<li><b>sample_env_new.csv</b> — curated sample environment assignments</li>"
-       +"<li><b>merged_with_npclassifier_final.tsv</b> — NPClassifier predictions</li></ul>"},
-
       // ── 下载与导出 ──
       {q:"Can I download data from the database?",
        a:"Yes. Go to the <b>Download page</b> where you can download various data assets. "
@@ -292,18 +274,11 @@
        a:"Empty values occur when the source data didn't contain that information:<br><br>"
        +"<ul><li><b>Missing taxonomy:</b> Some MAGs lack confident species-level classification</li>"
        +"<li><b>Missing coordinates:</b> Some samples don't have recorded latitude/longitude</li>"
-       +"<li><b>Missing NP data:</b> Only ~767K of 3.3M BGCs have NPClassifier predictions</li>"
-       +"<li><b>Missing antiSMASH:</b> Local antiSMASH HTML is only available for a subset</li></ul>"
+       +"<li><b>Missing NP data:</b> NPClassifier predictions are only computed for complete BGCs (contig_edge = FALSE)</li>"
+       +"<li><b>Missing sample metadata:</b> Some samples lack geographic coordinates, collection dates, or environment classification due to incomplete original study metadata or data integration limitations</li></ul>"
        +"You can use the <b>is_null</b> / <b>is_not_null</b> filter operators to find records "
        +"with or without specific data."},
 
-      {q:"The page seems slow. What can I do?",
-       a:"The database contains millions of records, so large unfiltered queries can take time. "
-       +"Tips for faster browsing:<br><br>"
-       +"<ul><li>Use <b>filters</b> to narrow results before paginating</li>"
-       +"<li>Reduce <b>page size</b> from 25 to 10 for faster loads</li>"
-       +"<li>Use the <b>search bar</b> on the Home page for direct lookups</li>"
-       +"<li>BGC page queries are the heaviest — filter by GCF ID or Category for faster results</li></ul>"},
     ];
 
     var html = '';
@@ -331,6 +306,6 @@
       if(!isOpen){a.classList.add('open');el.classList.add('open')}
     }
   </script>
-  <script src="/static/app.js?v=20260630"></script>
+  <script src="/static/app.js?v=20260718"></script>
 </body>
 </html>
