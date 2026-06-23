@@ -434,6 +434,11 @@ CREATE INDEX IF NOT EXISTS idx_mv_mag_bgc_count
     ON mv_mag_page (bgc_count);
 CREATE INDEX IF NOT EXISTS idx_mv_mag_cat_preview_lower
     ON mv_mag_page (lower(category_preview));
+CREATE INDEX IF NOT EXISTS idx_mv_mag_phylum_lower ON mv_mag_page (lower(phylum));
+CREATE INDEX IF NOT EXISTS idx_mv_mag_phylum_lower_trgm ON mv_mag_page USING gin (lower(phylum) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_mag_class_name_lower ON mv_mag_page (lower(class_name));
+CREATE INDEX IF NOT EXISTS idx_mv_mag_class_name_lower_trgm ON mv_mag_page USING gin (lower(class_name) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mv_mag_genus_lower ON mv_mag_page (lower(genus));
 
 -- BGC 页
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_bgc_page AS
