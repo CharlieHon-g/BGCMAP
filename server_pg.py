@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
 import mimetypes
 import re
 import sys
