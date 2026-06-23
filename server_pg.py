@@ -1810,18 +1810,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Spire BGC Portal (PostgreSQL)")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)
-    parser.add_argument("--ssl", action="store_true", help="Enable HTTPS with self-signed cert")
     args = parser.parse_args()
     server = ThreadingHTTPServer((args.host, args.port), SpireHandler)
-    if args.ssl:
-        import ssl
-        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-        ctx.load_cert_chain("/tmp/server.crt", "/tmp/server.key")
-        server.socket = ctx.wrap_socket(server.socket, server_side=True)
-        print(f"Spire server at https://{args.host}:{args.port}")
-    else:
-        print(f"Spire server at http://{args.host}:{args.port}")
     cfg = get_pg_config()
+    print(f"Spire server at http://{args.host}:{args.port}")
     print(f"Database: {cfg.dbname} on {cfg.host}:{cfg.port}")
     try:
         server.serve_forever()
