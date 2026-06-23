@@ -1218,6 +1218,20 @@ class SpireHandler(BaseHTTPRequestHandler):
     def log_message(self, fmt: str, *args) -> None:
         return
 
+    _rl: dict = {}  # rate limit: {ip: [count, start_time]}
+
+    def _check_rate(self, path: str) -> bool:
+        now = time.time()
+        limit = 20 if "suggest" in path else 5
+        ip = self.client_address[0]
+        entry = self._rl.get(ip)
+        if entry and now - entry[1] < 1:
+            entry[0] += 1
+            if entry[0] > limit: return False
+        else:
+            self._rl[ip] = [1, now]
+        return True
+
     def do_GET(self) -> None:
         try:
             self._do_GET()
@@ -1229,9 +1243,8 @@ class SpireHandler(BaseHTTPRequestHandler):
         path = parsed.path
         query = parse_qs(parsed.query)
         if path.startswith("/api/") and path != "/api/health":
-            token = self.headers.get("X-API-Token") or query.get("token", [""])[0]
-            if token != "bgcmap2026":
-                self.send_error(HTTPStatus.FORBIDDEN, "Forbidden"); return
+            if not self._check_rate(path):
+                self.send_error(HTTPStatus.TOO_MANY_REQUESTS, "Rate limit exceeded"); return
         if path in PAGE_ROUTES: return self.serve_page(PAGE_ROUTES[path])
         if path.startswith("/static/"): return self.serve_static(path.removeprefix("/static/"))
         if path.startswith("/antismash/"): return self.serve_antismash(path.removeprefix("/antismash/"))
@@ -1797,10 +1810,18 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Spire BGC Portal (PostgreSQL)")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--ssl", action="store_true", help="Enable HTTPS with self-signed cert")
     args = parser.parse_args()
     server = ThreadingHTTPServer((args.host, args.port), SpireHandler)
+    if args.ssl:
+        import ssl
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ctx.load_cert_chain("/tmp/server.crt", "/tmp/server.key")
+        server.socket = ctx.wrap_socket(server.socket, server_side=True)
+        print(f"Spire server at https://{args.host}:{args.port}")
+    else:
+        print(f"Spire server at http://{args.host}:{args.port}")
     cfg = get_pg_config()
-    print(f"Spire PostgreSQL server at http://{args.host}:{args.port}")
     print(f"Database: {cfg.dbname} on {cfg.host}:{cfg.port}")
     try:
         server.serve_forever()

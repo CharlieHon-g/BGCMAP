@@ -27,7 +27,7 @@ function setActiveNav() {
 }
 
 async function getJSON(url) {
-  const response = await fetch(url, { headers: { "X-API-Token": "bgcmap2026" } });
+  const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Request failed: ${response.status}`);
   }

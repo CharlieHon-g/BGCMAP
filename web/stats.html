@@ -114,9 +114,9 @@
     }
 
     Promise.all([
-      fetch('/api/home', { headers: { "X-API-Token": "bgcmap2026" } }).then(function(r){return r.json()}),
-      fetch('/api/stats-charts', { headers: { "X-API-Token": "bgcmap2026" } }).then(function(r){return r.json()}),
-      fetch('/api/np-hierarchy', { headers: { "X-API-Token": "bgcmap2026" } }).then(function(r){return r.json()})
+      fetch('/api/home').then(function(r){return r.json()}),
+      fetch('/api/stats-charts').then(function(r){return r.json()}),
+      fetch('/api/np-hierarchy').then(function(r){return r.json()})
     ]).then(function(resps){
       var d=resps[0], ch=resps[1], npd=resps[2];
       var s=d.stats;

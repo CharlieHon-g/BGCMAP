@@ -303,7 +303,7 @@ function drDt(pw){
   drawCloud();
 }
 
-fetch('/api/np-hierarchy', { headers: { "X-API-Token": "bgcmap2026" } }).then(function(r){return r.json()}).then(function(d){
+fetch('/api/np-hierarchy').then(function(r){return r.json()}).then(function(d){
   var rows=d.rows;pwA={};scA={};tot=0;
   for(var i=0;i<rows.length;i++){
     var r=rows[i];
