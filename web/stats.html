@@ -114,7 +114,7 @@
     }
 
     Promise.all([
-      fetch('/api/home').then(function(r){return r.json()}),
+      fetch('/api/stats').then(function(r){return r.json()}),
       fetch('/api/stats-charts').then(function(r){return r.json()}),
       fetch('/api/np-hierarchy').then(function(r){return r.json()})
     ]).then(function(resps){

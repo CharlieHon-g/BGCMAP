@@ -1233,7 +1233,8 @@ class SpireHandler(BaseHTTPRequestHandler):
         if path.startswith("/antismash/"): return self.serve_antismash(path.removeprefix("/antismash/"))
         if path.startswith("/download-asset/"):
             return self.serve_download_asset(unquote(path.removeprefix("/download-asset/")))
-        if path == "/api/home": return self.api_home()
+        if path == "/api/stats": return self.api_home()
+        if path == "/api/home": return self.api_home()  # 兼容旧链接
         if path == "/api/home-phylo": return self.api_home_phylo()
         if path == "/api/samples": return self.api_samples(query)
         if path == "/api/mags": return self.api_mags(query)
