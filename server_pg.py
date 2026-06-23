@@ -955,7 +955,6 @@ def compile_filter_rule(node: dict, page_kind: str, conn) -> Tuple[str, List]:
             "product": ("text", "v.product"),
             "category": ("text", "v.category"),
             "species": ("text", "v.species"),
-            "bgc_species": ("text", "v.species"),
             "biome1": ("text", "v.biome1"),
             "biome2": ("text", "v.biome2"),
             "biome3": ("text", "v.biome"),
@@ -1377,7 +1376,7 @@ class SpireHandler(BaseHTTPRequestHandler):
                 rows = pg_query(conn, "SELECT DISTINCT np_class AS v FROM mv_bgc_page WHERE np_class ILIKE %s AND np_class IS NOT NULL AND np_class <> '' ORDER BY v LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["v"], "value": r["v"]} for r in rows]
             elif stype in ("species", "tax_species"):
-                rows = pg_query(conn, "SELECT DISTINCT species FROM mag WHERE species ILIKE %s AND species IS NOT NULL AND species <> '' ORDER BY species LIMIT %s", (f"%{q}%", limit))
+                rows = pg_query(conn, "SELECT DISTINCT species FROM mag WHERE species ILIKE %s AND species IS NOT NULL AND species <> '' GROUP BY species ORDER BY CASE WHEN species ~ '^[A-Z][a-z]+ [a-z]' THEN 0 ELSE 1 END, species LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["species"], "value": r["species"]} for r in rows]
             elif stype == "project":
                 rows = pg_query(conn, "SELECT project FROM sample WHERE project ILIKE %s AND project IS NOT NULL AND project <> '' GROUP BY project ORDER BY CASE WHEN project LIKE 'PRJ%%' THEN 0 ELSE 1 END, project LIMIT %s", (f"%{q}%", limit))
@@ -1394,9 +1393,6 @@ class SpireHandler(BaseHTTPRequestHandler):
             elif stype == "genus":
                 rows = pg_query(conn, "SELECT DISTINCT genus FROM mag WHERE genus ILIKE %s AND genus IS NOT NULL AND genus <> '' ORDER BY genus LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["genus"], "value": r["genus"]} for r in rows]
-            elif stype == "bgc_species":
-                rows = pg_query(conn, "SELECT DISTINCT species FROM mv_bgc_page WHERE species ILIKE %s AND species IS NOT NULL AND species <> '' ORDER BY species LIMIT %s", (f"%{q}%", limit))
-                suggestions = [{"label": r["species"], "value": r["species"]} for r in rows]
             elif stype in ("biome", "biome1"):
                 bo = load_biome_selector_options()
                 vals = bo.get("biome1", [])
