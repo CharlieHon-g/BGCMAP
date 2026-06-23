@@ -1036,7 +1036,7 @@
 
     async function loadTree() {
       try {
-        const response = await fetch("/api/home-phylo");
+        const response = await fetch("/api/home-phylo", { headers: { "X-API-Key": "bgcmap2026" } });
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
