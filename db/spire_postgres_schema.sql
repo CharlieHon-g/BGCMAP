@@ -560,3 +560,6 @@ WHERE b.np_classifier_pathway IS NOT NULL
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_mv_np_page_bgc_source_id
     ON mv_np_page (bgc_source_id);
+CREATE INDEX IF NOT EXISTS idx_mv_np_pathway_lower ON mv_np_page (lower(np_pathway));
+CREATE INDEX IF NOT EXISTS idx_mv_np_superclass_lower ON mv_np_page (lower(np_superclass));
+CREATE INDEX IF NOT EXISTS idx_mv_np_class_lower ON mv_np_page (lower(np_class));
