@@ -1157,7 +1157,7 @@ function initHomeSearch() {
     bgc: [
       { field:"product", op:"equals", page:"bgc", label:"Product" },
       { field:"category", op:"equals", page:"bgc", label:"Category" },
-      { field:"bgc_species", op:"contains", page:"bgc", label:"Species" },
+      { field:"species", op:"contains", page:"bgc", label:"Species", suggest:"bgc_species" },
       { field:"biome1", op:"equals", page:"bgc", label:"Biome" },
       { field:"sample_id", op:"equals", page:"bgc", label:"Sample ID" },
     ],
@@ -1282,7 +1282,7 @@ function initHomeSearch() {
     const id = ++fetchId;
     try {
       const chip = activeChip;
-    const suggestType = chip ? chip.field : typeSelect.value;
+    const suggestType = chip ? (chip.suggest || chip.field) : typeSelect.value;
     const resp = await getJSON(
         `/api/search-suggest?type=${encodeURIComponent(suggestType)}&q=${encodeURIComponent(q)}`
       );
