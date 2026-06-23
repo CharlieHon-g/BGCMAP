@@ -1348,13 +1348,6 @@ function initHomeSearch() {
 }
 
 async function loadHome() {
-  const payload = await getJSON("/api/home");
-  if (qs("#release-label")) qs("#release-label").textContent = payload.release.release_name || payload.release.release_label;
-  if (qs("#release-date")) qs("#release-date").textContent = payload.release.released_on || "NA";
-  if (qs("#hero-summary")) {
-    qs("#hero-summary").textContent =
-      "BGCMAP Resource is a hierarchical database for exploring biosynthetic gene clusters together with their genome-resolved, taxonomic, and ecological context. It links each BGC to its source metagenome-assembled genome (MAG), and further connects each MAG to sample provenance, collection habitat, and taxonomic annotation, enabling users to trace biosynthetic potential from globally collected samples to genomes, gene clusters, and clustered gene families (GCFs). Built upon SPIRE-derived MAGs and associated metagenomic datasets, BGCMAP predicts BGCs from MAGs using antiSMASH 8.0 and groups them into GCFs with BiG-SLiCE 2.0.";
-  }
   initHomeCarousel();
   initHomeSearch();
 }
