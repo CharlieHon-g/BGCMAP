@@ -1472,6 +1472,7 @@ const FILTER_FIELD_CONFIG = {
     { key: "gcf_id", label: "GCF ID", type: "number" },
     { key: "product", label: "Product", type: "text" },
     { key: "category", label: "Category", type: "text" },
+    { key: "species", label: "Species", type: "text" },
     { key: "biome1", label: "Biome1", type: "text" },
     { key: "biome2", label: "Biome2", type: "text" },
     { key: "biome3", label: "Biome3", type: "text" },

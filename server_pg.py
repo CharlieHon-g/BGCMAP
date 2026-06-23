@@ -954,6 +954,7 @@ def compile_filter_rule(node: dict, page_kind: str, conn) -> Tuple[str, List]:
             "gcf_id": ("number", "v.gcf_id"),
             "product": ("text", "v.product"),
             "category": ("text", "v.category"),
+            "species": ("text", "v.species"),
             "biome1": ("text", "v.biome1"),
             "biome2": ("text", "v.biome2"),
             "biome3": ("text", "v.biome"),
