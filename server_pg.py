@@ -1394,7 +1394,8 @@ class SpireHandler(BaseHTTPRequestHandler):
                 rows = pg_query(conn, "SELECT genus FROM (SELECT DISTINCT genus FROM mv_mag_page WHERE genus ILIKE %s AND genus IS NOT NULL AND genus <> '') sub ORDER BY CASE WHEN genus ~ '^[A-Z][a-z]' THEN 0 ELSE 1 END, genus LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["genus"], "value": r["genus"]} for r in rows]
             elif stype == "bgc_species":
-                rows = pg_query(conn, "SELECT species FROM (SELECT DISTINCT species FROM mv_bgc_page WHERE species ILIKE %s AND species IS NOT NULL AND species <> '') sub ORDER BY CASE WHEN species ~ '^[A-Z][a-z]+ [a-z]' THEN 0 ELSE 1 END, species LIMIT %s", (f"%{q}%", limit))
+                like = f"%{q.lower()}%"
+                rows = pg_query(conn, "SELECT DISTINCT species FROM mv_bgc_page WHERE lower(species) LIKE %s AND species IS NOT NULL AND species <> '' ORDER BY species LIMIT %s", (like, limit))
                 suggestions = [{"label": r["species"], "value": r["species"]} for r in rows]
             elif stype in ("biome", "biome1"):
                 bo = load_biome_selector_options()
