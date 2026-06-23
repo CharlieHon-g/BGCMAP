@@ -873,7 +873,8 @@ def build_taxon_clause(operator: str, taxon_value, table_prefix: str = "m") -> T
         if raw == "Unclassified":
             clauses.append(f"{expr} IS NULL")
         else:
-            clause, cp = build_text_clause(expr, operator, raw)
+            op = "contains" if operator == "equals" else operator
+            clause, cp = build_text_clause(expr, op, raw)
             clauses.append(clause)
             params.extend(cp)
     if not clauses: return "", []
@@ -980,9 +981,9 @@ def compile_filter_rule(node: dict, page_kind: str, conn) -> Tuple[str, List]:
     ftype, target = spec
     if ftype == "text" and operator == "equals":
         contains_fields = {
-            "sample": {"sample_id", "project", "category"},
-            "tax": {"sample_id", "category"},
-            "bgc": {"product", "sample_id", "species"},
+            "sample": {"sample_id", "project", "category", "biome1", "biome2", "biome3"},
+            "tax": {"sample_id", "category", "biome1", "biome2", "biome3"},
+            "bgc": {"product", "sample_id", "species", "biome1", "biome2", "biome3"},
             "nps": {"np_pathway", "np_superclass", "np_class"},
         }
         if field in contains_fields.get(page_kind, set()):
