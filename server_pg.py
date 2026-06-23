@@ -59,6 +59,7 @@ PAGE_ROUTES = {
     "/download.html": "download.html",
     "/np": "np.html",
     "/np.html": "np.html",
+    "/help": "help.html",
     "/help.html": "help.html",
 }
 VALID_PAGE_SIZES = {10, 25, 50, 100}
