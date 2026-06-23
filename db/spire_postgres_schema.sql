@@ -499,6 +499,7 @@ CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b2_src ON mv_bgc_page (lower(biome2)
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_lower_b3_src ON mv_bgc_page (lower(biome3), bgc_source_id);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_category_lower ON mv_bgc_page (lower(category));
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_product_lower ON mv_bgc_page (lower(product));
+CREATE INDEX IF NOT EXISTS idx_mv_bgc_species ON mv_bgc_page (species);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_species_lower ON mv_bgc_page (lower(species));
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_species_lower_trgm ON mv_bgc_page USING gin (lower(species) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_mv_bgc_contig_edge ON mv_bgc_page (contig_edge);
