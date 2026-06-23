@@ -923,7 +923,7 @@ def compile_filter_rule(node: dict, page_kind: str, conn) -> Tuple[str, List]:
             "geo_region": ("geo_region", "COALESCE(geo_region, '')"),
             "biome1": ("text", "biome1"),
             "biome2": ("text", "biome2"),
-            "biome3": ("text", "biome"),
+            "biome3": ("text", "biome3"),
             "lat": ("env_number", "lat"),
             "lon": ("env_number", "lon"),
             "mag_count": ("number", "mag_count"),
@@ -941,7 +941,7 @@ def compile_filter_rule(node: dict, page_kind: str, conn) -> Tuple[str, List]:
             "genome_id": ("text", "v.genome_id"),
             "biome1": ("text", "v.biome1"),
             "biome2": ("text", "v.biome2"),
-            "biome3": ("text", "v.biome"),
+            "biome3": ("text", "v.biome3"),
             "category": ("text", "COALESCE(v.category_preview, '')"),
             "bgc_count": ("number", "v.bgc_count"),
             "completeness": ("number", "v.completeness"),
@@ -957,7 +957,7 @@ def compile_filter_rule(node: dict, page_kind: str, conn) -> Tuple[str, List]:
             "species": ("text", "v.species"),
             "biome1": ("text", "v.biome1"),
             "biome2": ("text", "v.biome2"),
-            "biome3": ("text", "v.biome"),
+            "biome3": ("text", "v.biome3"),
             "length": ("number", "v.length"),
             "membership_value": ("number", "v.membership_value"),
             "np_pathway": ("text", "v.np_pathway"),
@@ -1507,7 +1507,7 @@ class SpireHandler(BaseHTTPRequestHandler):
             like = f"%{search}%"
             env_sample_ids = search_sample_ids_by_env_text(search)
             sc = ("(lower(v.genome_id) LIKE %s OR lower(v.species) LIKE %s OR "
-                  "lower(v.biome) LIKE %s OR lower(v.sample_id) LIKE %s OR "
+                  "lower(v.biome3) LIKE %s OR lower(v.sample_id) LIKE %s OR "
                   "lower(v.phylum) LIKE %s OR lower(v.class_name) LIKE %s OR "
                   "lower(v.genus) LIKE %s OR "
                   "lower(v.biome1) LIKE %s OR lower(v.biome2) LIKE %s OR "
@@ -1642,7 +1642,7 @@ class SpireHandler(BaseHTTPRequestHandler):
             send_json(self, page_payload(0, page, page_size, []))
             return
         rows = pg_query(conn, f"""
-            SELECT v.bgc_pk, v.bgc_name, v.bgc_source_id, v.genome_id, v.sample_id, v.biome AS biome3,
+            SELECT v.bgc_pk, v.bgc_name, v.bgc_source_id, v.genome_id, v.sample_id, v.biome3,
                    v.species, v.biome1, v.biome2, v.domain, v.phylum, v.class_name, v.order_name,
                    v.family, v.genus, v.product, v.category, v.length, v.contig_edge,
                    v.gcf_id, v.membership_value, v.membership_status, v.antismash_html_path,

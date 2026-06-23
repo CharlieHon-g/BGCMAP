@@ -1,7 +1,7 @@
 BEGIN;
 
 CREATE SCHEMA IF NOT EXISTS spire;
-SET search_path TO gem, public;
+SET search_path TO bgcmap, public;
 
 -----------------------------------------------
 -- 1. 辅助表
