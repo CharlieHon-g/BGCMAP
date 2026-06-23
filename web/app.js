@@ -2709,10 +2709,9 @@ async function loadDownloads() {
   qs("#download-date").textContent = payload.release.released_on || "NA";
   renderTable(
     qs("#table-root"),
-    ["Module", "Title", "Format", { label: "Size", sortKey: "bytes" }, "Description", "Download"],
+    ["Title", "Format", { label: "Size", sortKey: "bytes" }, "Description", "Download"],
     rows,
     (row) => `
-      <td>${ellipsisText(row.module_name)}</td>
       <td>${ellipsisText(row.title)}</td>
       <td>${ellipsisText(row.file_format || "NA")}</td>
       <td>${row.bytes ? (row.bytes / 1073741824).toFixed(2) + ' GB' : 'NA'}</td>
