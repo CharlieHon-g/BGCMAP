@@ -982,7 +982,7 @@ def compile_filter_rule(node: dict, page_kind: str, conn) -> Tuple[str, List]:
         contains_fields = {
             "sample": {"sample_id", "project", "category"},
             "tax": {"sample_id", "category"},
-            "bgc": {"product", "sample_id", "species"},
+            "bgc": {"product", "sample_id"},
             "nps": {"np_pathway", "np_superclass", "np_class"},
         }
         if field in contains_fields.get(page_kind, set()):
