@@ -1960,10 +1960,11 @@ function renderFilterBuilder(pageKey, onApply) {
   root.innerHTML = "";
   root.appendChild(renderFilterGroupNode(pageKey, state, 0, onApply));
   qs("#advanced-filter-apply")?.addEventListener("click", () => {
-    if (!serializeFilterState(pageKey)) {
+    const filters = serializeFilterState(pageKey);
+    if (!filters) {
       filterStates[pageKey] = makeGroup(pageKey);
-      syncParams({ q: null, sample_id: null, sample_accession: null, genome_id: null, gcf_id: null, bgc_name: null, group1: null, map_filter: null, phylum: null, class_name: null, genus: null, species: null, bigscape_type: null, filters: null, page: 1 });
     }
+    syncParams({ q: null, sample_id: null, sample_accession: null, genome_id: null, gcf_id: null, bgc_name: null, group1: null, map_filter: null, phylum: null, class_name: null, genus: null, species: null, bigscape_type: null, filters: filters || null, page: 1 });
     onApply(1);
   });
   qs("#advanced-filter-reset")?.addEventListener("click", () => {
@@ -2127,10 +2128,7 @@ function renderFilterGroupNode(pageKey, group, depth, onApply) {
       renderFilterBuilder(pageKey, onApply);
       onApply(1);
     });
-    qs("#advanced-filter-apply", wrapper)?.addEventListener("click", () => {
-      if (!serializeFilterState(pageKey)) { filterStates[pageKey] = makeGroup(pageKey); syncParams({filters:null,page:1}); }
-      onApply(1);
-    });
+
   }
   return wrapper;
 }
