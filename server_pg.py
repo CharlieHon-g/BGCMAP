@@ -1248,7 +1248,6 @@ class SpireHandler(BaseHTTPRequestHandler):
         if path == "/api/biome-options": return self.api_biome_options()
         if path == "/api/geo-options": return self.api_geo_options()
         if path == "/api/taxon-options": return self.api_taxon_options()
-        if path == "/api/taxon-options-catalog": return self.api_taxon_catalog()
         if path == "/api/category-options": return self.api_category_options()
         if path == "/api/search-suggest": return self.api_search_suggest(query)
         if path == "/api/np-hierarchy": return self.api_np_hierarchy()
