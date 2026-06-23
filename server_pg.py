@@ -1213,7 +1213,7 @@ def normalize_order_dir(raw: str) -> str:
 
 
 class SpireHandler(BaseHTTPRequestHandler):
-    server_version = "SpirePG/2.0"
+    server_version = "BGCMAP"
 
     def log_message(self, fmt: str, *args) -> None:
         return
