@@ -1162,9 +1162,9 @@ function initHomeSearch() {
       { field:"sample_id", op:"equals", page:"bgc", label:"Sample ID" },
     ],
     np: [
-      { field:"np_pathway", op:"equals", page:"nps", label:"Pathway" },
-      { field:"np_superclass", op:"equals", page:"nps", label:"Superclass" },
-      { field:"np_class", op:"equals", page:"nps", label:"Class" },
+      { field:"np_pathway", op:"equals", page:"np", label:"Pathway" },
+      { field:"np_superclass", op:"equals", page:"np", label:"Superclass" },
+      { field:"np_class", op:"equals", page:"np", label:"Class" },
     ],
     tax: [
       { field:"phylum", op:"equals", page:"tax", label:"Phylum" },
