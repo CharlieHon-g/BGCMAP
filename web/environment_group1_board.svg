@@ -3,7 +3,7 @@
 <rect x="38" y="18" width="1844" height="912" rx="34" fill="#ffffff" stroke="#D8E2E9" stroke-width="2"/>
 <path d="M 140 538 C 410 456, 700 472, 970 548 S 1505 685, 1780 560" fill="none" stroke="#E8EEF3" stroke-width="56" stroke-linecap="round"/>
 <path d="M 180 314 C 510 250, 875 285, 1160 372 S 1500 495, 1750 424" fill="none" stroke="#EEF3F7" stroke-width="28" stroke-linecap="round"/>
-<a href="/sample.html?group1=Aquatic%20Environment" target="_top">
+<a href="/sample?group1=Aquatic%20Environment" target="_top">
 <title>Aquatic environment · Click to filter Sample records by biome1</title>
 <rect x="56.0" y="166.0" width="585.3" height="290.0" rx="30" fill="#DCEFFA" stroke="#4E9FD1" stroke-width="2.6"/>
 <rect x="74.0" y="184.0" width="549.3" height="254.0" rx="22" fill="#ffffff" fill-opacity="0.82"/>
@@ -14,7 +14,7 @@
 <rect x="80.0" y="398.0" width="537.3" height="38" rx="12" fill="#4E9FD1" fill-opacity="0.14" stroke="#4E9FD1" stroke-width="1.2"/>
 <text x="348.7" y="423.0" font-size="14" font-weight="800" fill="#2E6E96" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"><tspan x="348.7" dy="0">Explore aquatic samples</tspan></text>
 </a>
-<a href="/sample.html?group1=Terrestrial%20Environment" target="_top">
+<a href="/sample?group1=Terrestrial%20Environment" target="_top">
 <title>Terrestrial environment · Click to filter Sample records by biome1</title>
 <rect x="667.3" y="166.0" width="585.3" height="290.0" rx="30" fill="#E4F0DB" stroke="#7FA75F" stroke-width="2.6"/>
 <rect x="685.3" y="184.0" width="549.3" height="254.0" rx="22" fill="#ffffff" fill-opacity="0.82"/>
@@ -25,7 +25,7 @@
 <rect x="691.3" y="398.0" width="537.3" height="38" rx="12" fill="#7FA75F" fill-opacity="0.14" stroke="#7FA75F" stroke-width="1.2"/>
 <text x="960.0" y="423.0" font-size="14" font-weight="800" fill="#4C6D36" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"><tspan x="960.0" dy="0">Explore terrestrial samples</tspan></text>
 </a>
-<a href="/sample.html?group1=Artificial/Engineered%20Environment" target="_top">
+<a href="/sample?group1=Artificial/Engineered%20Environment" target="_top">
 <title>Artificial / engineered environment · Click to filter Sample records by biome1</title>
 <rect x="1278.7" y="166.0" width="585.3" height="290.0" rx="30" fill="#F5E4D8" stroke="#C88B58" stroke-width="2.6"/>
 <rect x="1296.7" y="184.0" width="549.3" height="254.0" rx="22" fill="#ffffff" fill-opacity="0.82"/>
@@ -36,7 +36,7 @@
 <rect x="1302.7" y="398.0" width="537.3" height="38" rx="12" fill="#C88B58" fill-opacity="0.14" stroke="#C88B58" stroke-width="1.2"/>
 <text x="1571.3" y="423.0" font-size="14" font-weight="800" fill="#8B5831" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"><tspan x="1571.3" dy="0">Explore engineered samples</tspan></text>
 </a>
-<a href="/sample.html?group1=Host-Associated%20Environment" target="_top">
+<a href="/sample?group1=Host-Associated%20Environment" target="_top">
 <title>Host-associated environment · Click to filter Sample records by biome1</title>
 <rect x="56.0" y="490.0" width="585.3" height="290.0" rx="30" fill="#F6E1EE" stroke="#C47CA8" stroke-width="2.6"/>
 <rect x="74.0" y="508.0" width="549.3" height="254.0" rx="22" fill="#ffffff" fill-opacity="0.82"/>
@@ -47,7 +47,7 @@
 <rect x="80.0" y="722.0" width="537.3" height="38" rx="12" fill="#C47CA8" fill-opacity="0.14" stroke="#C47CA8" stroke-width="1.2"/>
 <text x="348.7" y="747.0" font-size="14" font-weight="800" fill="#8A4D71" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"><tspan x="348.7" dy="0">Explore host-associated samples</tspan></text>
 </a>
-<a href="/sample.html?group1=Special/Extreme%20Environment" target="_top">
+<a href="/sample?group1=Special/Extreme%20Environment" target="_top">
 <title>Special / extreme environment · Click to filter Sample records by biome1</title>
 <rect x="667.3" y="490.0" width="585.3" height="290.0" rx="30" fill="#EAE4FB" stroke="#8A7ACB" stroke-width="2.6"/>
 <rect x="685.3" y="508.0" width="549.3" height="254.0" rx="22" fill="#ffffff" fill-opacity="0.82"/>
@@ -58,7 +58,7 @@
 <rect x="691.3" y="722.0" width="537.3" height="38" rx="12" fill="#8A7ACB" fill-opacity="0.14" stroke="#8A7ACB" stroke-width="1.2"/>
 <text x="960.0" y="747.0" font-size="14" font-weight="800" fill="#574A92" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"><tspan x="960.0" dy="0">Explore extreme samples</tspan></text>
 </a>
-<a href="/sample.html?group1=Other%20Environment" target="_top">
+<a href="/sample?group1=Other%20Environment" target="_top">
 <title>Other environment · Click to filter Sample records by biome1</title>
 <rect x="1278.7" y="490.0" width="585.3" height="290.0" rx="30" fill="#F8E2E2" stroke="#D85C5C" stroke-width="2.6"/>
 <rect x="1296.7" y="508.0" width="549.3" height="254.0" rx="22" fill="#ffffff" fill-opacity="0.82"/>

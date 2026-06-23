@@ -399,7 +399,7 @@
           ],
         })
       );
-      return `/tax.html?${params.toString()}`;
+      return `/tax?${params.toString()}`;
     }
 
     function openPortalUrl(url) {
@@ -730,7 +730,7 @@
           "Click to open all MAG records",
         ])
       );
-      rootHit.addEventListener("click", () => openPortalUrl("/tax.html?tax_mode=phylum&page=1"));
+      rootHit.addEventListener("click", () => openPortalUrl("/tax?tax_mode=phylum&page=1"));
       svg.appendChild(rootHit);
 
       drawLabel(
