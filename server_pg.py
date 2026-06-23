@@ -1253,6 +1253,8 @@ class SpireHandler(BaseHTTPRequestHandler):
         serve_file(self, WEB_ROOT / file_name)
 
     def serve_static(self, relative_path: str) -> None:
+        if relative_path.startswith(".") or "/." in relative_path:
+            self.send_error(HTTPStatus.NOT_FOUND, "Not found"); return
         target = (WEB_ROOT / relative_path).resolve()
         if WEB_ROOT.resolve() not in target.parents and target != WEB_ROOT.resolve():
             self.send_error(HTTPStatus.FORBIDDEN, "Forbidden"); return
