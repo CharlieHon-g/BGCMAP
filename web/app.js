@@ -26,8 +26,9 @@ function setActiveNav() {
   });
 }
 
+const API_AUTH = "Basic " + btoa("api_user:bgcmap2026");
 async function getJSON(url) {
-  const response = await fetch(url);
+  const response = await fetch(url, { headers: { "Authorization": API_AUTH } });
   if (!response.ok) {
     throw new Error(`Request failed: ${response.status}`);
   }
