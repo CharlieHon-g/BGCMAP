@@ -24,7 +24,7 @@ import psycopg2.extras
 def open_db(autocommit: bool = True):
     conn = get_conn(autocommit=autocommit, cursor_factory=psycopg2.extras.RealDictCursor)
     cur = conn.cursor()
-    cur.execute("SET search_path TO gem, public")
+    cur.execute("SET search_path TO bgcmap, public")
     cur.close()
     return conn
 
