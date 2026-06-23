@@ -1223,7 +1223,7 @@ class SpireHandler(BaseHTTPRequestHandler):
 
     def _check_rate(self, path: str) -> bool:
         now = time.time()
-        limit = 20 if "suggest" in path else 5
+        limit = 30 if "suggest" in path else 15
         ip = self.client_address[0]
         entry = self._rl.get(ip)
         if entry and now - entry[1] < 1:
