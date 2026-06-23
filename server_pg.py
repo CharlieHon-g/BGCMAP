@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import time
 import mimetypes
 import re
 import sys
@@ -1219,20 +1218,6 @@ class SpireHandler(BaseHTTPRequestHandler):
     def log_message(self, fmt: str, *args) -> None:
         return
 
-    _rl: dict = {}  # rate limit: {ip: [count, start_time]}
-
-    def _check_rate(self, path: str) -> bool:
-        now = time.time()
-        limit = 30 if "suggest" in path else 15
-        ip = self.client_address[0]
-        entry = self._rl.get(ip)
-        if entry and now - entry[1] < 1:
-            entry[0] += 1
-            if entry[0] > limit: return False
-        else:
-            self._rl[ip] = [1, now]
-        return True
-
     def do_GET(self) -> None:
         try:
             self._do_GET()
@@ -1243,9 +1228,6 @@ class SpireHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
         query = parse_qs(parsed.query)
-        if path.startswith("/api/") and path != "/api/health":
-            if not self._check_rate(path):
-                self.send_error(HTTPStatus.TOO_MANY_REQUESTS, "Rate limit exceeded"); return
         if path in PAGE_ROUTES: return self.serve_page(PAGE_ROUTES[path])
         if path.startswith("/static/"): return self.serve_static(path.removeprefix("/static/"))
         if path.startswith("/antismash/"): return self.serve_antismash(path.removeprefix("/antismash/"))
