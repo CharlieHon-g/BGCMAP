@@ -734,7 +734,7 @@ def load_taxon_selector_options() -> dict:
               COALESCE(order_name, '') AS order_name,
               COALESCE(genus, '') AS genus,
               COALESCE(species, '') AS species
-            FROM mag
+            FROM mv_mag_page
         """)
         for row in rows:
             d = (row["domain"] or "").strip()
@@ -769,7 +769,7 @@ def load_taxon_selector_options() -> dict:
                 if c: relations["species_by_class_name"][c].add(s)
                 if o: relations["species_by_order_name"][o].add(s)
                 if g: relations["species_by_genus"][g].add(s)
-        has_null = pg_query_one(conn, "SELECT 1 FROM mag WHERE domain IS NULL OR domain = '' LIMIT 1") is not None
+        has_null = pg_query_one(conn, "SELECT 1 FROM mv_mag_page WHERE domain IS NULL OR domain = '' LIMIT 1") is not None
     finally:
         conn.close()
 
@@ -805,7 +805,7 @@ def load_home_phylo_payload() -> dict:
               COALESCE(NULLIF(phylum, ''), 'Unclassified') AS phylum_name,
               COALESCE(NULLIF(genus, ''), 'Unclassified') AS genus_name,
               COUNT(*) AS mag_count
-            FROM mag
+            FROM mv_mag_page
             GROUP BY 1, 2, 3
         """)
     finally:
@@ -1340,7 +1340,7 @@ class SpireHandler(BaseHTTPRequestHandler):
                 rows = pg_query(conn, "SELECT sample_id FROM sample WHERE sample_id ILIKE %s AND sample_id IS NOT NULL AND sample_id <> '' GROUP BY sample_id ORDER BY CASE WHEN sample_id LIKE 'SAMN%%' THEN 0 ELSE 1 END, sample_id LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["sample_id"], "value": r["sample_id"]} for r in rows]
             elif stype == "genome_id":
-                rows = pg_query(conn, "SELECT genome_id FROM mag WHERE genome_id LIKE %s ORDER BY genome_id LIMIT %s", (f"%{q}%", limit))
+                rows = pg_query(conn, "SELECT genome_id FROM mv_mag_page WHERE genome_id LIKE %s ORDER BY genome_id LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["genome_id"], "value": r["genome_id"]} for r in rows]
             elif stype == "bgc_category":
                 rows = pg_query(conn, "SELECT DISTINCT category_primary FROM bgc WHERE category_primary ILIKE %s AND category_primary IS NOT NULL AND category_primary <> '' ORDER BY category_primary LIMIT %s", (f"%{q}%", limit))
@@ -1358,7 +1358,7 @@ class SpireHandler(BaseHTTPRequestHandler):
                 rows = pg_query(conn, "SELECT DISTINCT v FROM (SELECT np_pathway AS v FROM mv_bgc_page WHERE np_pathway ILIKE %s AND np_pathway IS NOT NULL AND np_pathway <> '' UNION SELECT np_superclass FROM mv_bgc_page WHERE np_superclass ILIKE %s AND np_superclass IS NOT NULL AND np_superclass <> '') sub ORDER BY v LIMIT %s", (f"%{q}%", f"%{q}%", limit))
                 suggestions = [{"label": r["v"], "value": r["v"]} for r in rows]
             elif stype == "tax":
-                rows = pg_query(conn, "SELECT DISTINCT v FROM (SELECT species AS v FROM mag WHERE species ILIKE %s AND species IS NOT NULL AND species <> '' UNION SELECT genus FROM mag WHERE genus ILIKE %s AND genus IS NOT NULL AND genus <> '' UNION SELECT phylum FROM mag WHERE phylum ILIKE %s AND phylum IS NOT NULL AND phylum <> '') sub ORDER BY v LIMIT %s", (f"%{q}%", f"%{q}%", f"%{q}%", limit))
+                rows = pg_query(conn, "SELECT DISTINCT v FROM (SELECT species AS v FROM mv_mag_page WHERE species ILIKE %s AND species IS NOT NULL AND species <> '' UNION SELECT genus FROM mv_mag_page WHERE genus ILIKE %s AND genus IS NOT NULL AND genus <> '' UNION SELECT phylum FROM mv_mag_page WHERE phylum ILIKE %s AND phylum IS NOT NULL AND phylum <> '') sub ORDER BY v LIMIT %s", (f"%{q}%", f"%{q}%", f"%{q}%", limit))
                 suggestions = [{"label": r["v"], "value": r["v"]} for r in rows]
             elif stype == "sample":
                 rows = pg_query(conn, "SELECT DISTINCT v FROM (SELECT sample_id AS v FROM sample WHERE sample_id ILIKE %s AND sample_id IS NOT NULL AND sample_id <> '' UNION SELECT project FROM sample WHERE project ILIKE %s AND project IS NOT NULL AND project <> '') sub ORDER BY v LIMIT %s", (f"%{q}%", f"%{q}%", limit))
@@ -1527,7 +1527,7 @@ class SpireHandler(BaseHTTPRequestHandler):
 
         if phylum_group_filter == "other_top20":
             top_phyla = [r["phylum"] for r in pg_query(conn, """
-                SELECT COALESCE(NULLIF(phylum, ''), 'Unclassified') AS phylum FROM mag GROUP BY 1 ORDER BY COUNT(*) DESC LIMIT 20
+                SELECT COALESCE(NULLIF(phylum, ''), 'Unclassified') AS phylum FROM mv_mag_page GROUP BY 1 ORDER BY COUNT(*) DESC LIMIT 20
             """)]
             if top_phyla:
                 phs = ",".join("%s" for _ in top_phyla)
@@ -1747,7 +1747,7 @@ class SpireHandler(BaseHTTPRequestHandler):
         conn = open_db()
         phylum_rows = pg_query(conn, """
             SELECT COALESCE(NULLIF(phylum, ''), 'Unclassified') AS phylum, COUNT(*) AS cnt
-            FROM mag GROUP BY phylum ORDER BY cnt DESC
+            FROM mv_mag_page GROUP BY phylum ORDER BY cnt DESC
         """)
         gcf_rows = pg_query(conn, """
             SELECT CASE WHEN membership_value <= 0.1 THEN 'backbone'
