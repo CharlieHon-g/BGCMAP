@@ -2632,37 +2632,6 @@ async function loadBgcs(page = Number(params.get("page") || 1)) {
   slot.appendChild(pager);
 }
 
-async function loadGcfTable(page = Number(params.get("page") || 1)) {
-  const q = params.get("q") || "";
-  const pageSize = qs("#page-size")?.value || "25";
-  syncParams({ q, page, page_size: pageSize });
-  const meta = await getJSON(`/api/gcfs?q=${encodeURIComponent(q)}&page=${page}&page_size=${pageSize}`);
-  updateEntriesLabel(meta, qs("#entries-label"));
-  renderTable(
-    qs("#table-root"),
-    ["GCF ID", "BGC count", "Complete BGC", "Incomplete BGC", "Median length", "Mean membership", "Genome count", "Open"],
-    meta.rows,
-    (row) => `
-      <td>${makeLocalLink(row.detail_url, row.gcf_id)}</td>
-      <td>${formatNumber(row.bgc_count)}</td>
-      <td>${formatNumber(row.complete_bgc_count)}</td>
-      <td>${formatNumber(row.incomplete_bgc_count)}</td>
-      <td>${formatNumber(row.median_length)}</td>
-          <td>${makeMembershipBadge(row.mean_membership_value, null, row.representative_type || "family")}</td>
-      <td>${formatNumber(row.genome_count)}</td>
-      <td>${makeLocalLink(row.detail_url, "View")}</td>
-    `,
-    {
-      tableClass: "generic-table-fixed",
-
-    }
-  );
-  const pager = buildPager(meta, loadGcfTable);
-  const slot = qs("#pager-root");
-  slot.innerHTML = "";
-  slot.appendChild(pager);
-}
-
 function renderListBars(target, rows) {
   if (!rows.length) {
     target.innerHTML = '<div class="subtle">No local records available yet.</div>';

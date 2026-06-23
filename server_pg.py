@@ -1241,7 +1241,6 @@ class SpireHandler(BaseHTTPRequestHandler):
         if path == "/api/samples": return self.api_samples(query)
         if path == "/api/mags": return self.api_mags(query)
         if path == "/api/bgcs": return self.api_bgcs(query)
-        if path == "/api/gcfs": return self.api_gcfs(query)
         if path == "/api/gcf-detail": return self.api_gcf_detail(query)
         if path == "/api/nps": return self.api_nps(query)
         if path == "/api/downloads": return self.api_downloads()
@@ -1661,31 +1660,6 @@ class SpireHandler(BaseHTTPRequestHandler):
             item["gcf_url"] = f"/bgc.html?gcf_id={item['gcf_id']}" if item["gcf_id"] is not None else None
             item["antismash_url"] = antismash_url(item["genome_id"], item["bgc_name"])
             item["mag_antismash_url"] = antismash_mag_url(item["genome_id"])
-            payload_rows.append(item)
-        send_json(self, page_payload(total, page, page_size, payload_rows))
-
-    def api_gcfs(self, query: dict) -> None:
-        search = (query.get("q", [""])[0] or "").strip().lower()
-        page = safe_page(query.get("page", ["1"])[0])
-        page_size = safe_page_size(query.get("page_size", ["25"])[0])
-        where = ""; params: List = []
-        if search:
-            like = f"%{search}%"
-            where = "WHERE lower(COALESCE(representative_type, '')) LIKE %s"
-            params.extend([like])
-        conn = open_db()
-        total = cached_count(conn, f"SELECT count(*) AS cnt FROM mv_gcf_page {where}", list(params))
-        if total == 0:
-            conn.close()
-            send_json(self, page_payload(0, page, page_size, []))
-            return
-        rows = pg_query(conn, f"SELECT * FROM mv_gcf_page {where} ORDER BY gcf_id LIMIT %s OFFSET %s",
-                        params + [page_size, (page - 1) * page_size])
-        conn.close()
-        payload_rows = []
-        for row in rows:
-            item = row_to_dict(row)
-            item["detail_url"] = f"/gcf.html?gcf_id={item['gcf_id']}"
             payload_rows.append(item)
         send_json(self, page_payload(total, page, page_size, payload_rows))
 
