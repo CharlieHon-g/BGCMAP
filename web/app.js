@@ -2709,13 +2709,13 @@ async function loadDownloads() {
   qs("#download-date").textContent = payload.release.released_on || "NA";
   renderTable(
     qs("#table-root"),
-    ["Module", "Title", "Format", { label: "Bytes", sortKey: "bytes" }, "Description", "Download"],
+    ["Module", "Title", "Format", { label: "Size", sortKey: "bytes" }, "Description", "Download"],
     rows,
     (row) => `
       <td>${ellipsisText(row.module_name)}</td>
       <td>${ellipsisText(row.title)}</td>
       <td>${ellipsisText(row.file_format || "NA")}</td>
-      <td>${formatNumber(row.bytes)}</td>
+      <td>${row.bytes ? (row.bytes / 1073741824).toFixed(2) + ' GB' : 'NA'}</td>
       <td>${ellipsisText(row.description || "NA")}</td>
       <td><a class="pill-link" href="${row.download_url}">Download</a></td>
     `,
