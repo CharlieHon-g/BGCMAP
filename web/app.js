@@ -1157,7 +1157,7 @@ function initHomeSearch() {
     bgc: [
       { field:"product", op:"equals", page:"bgc", label:"Product" },
       { field:"category", op:"equals", page:"bgc", label:"Category" },
-      { field:"species", op:"contains", page:"bgc", label:"Species", suggest:"bgc_species" },
+      { field:"species", op:"equals", page:"bgc", label:"Species", suggest:"bgc_species" },
       { field:"biome1", op:"equals", page:"bgc", label:"Biome" },
       { field:"sample_id", op:"equals", page:"bgc", label:"Sample ID" },
     ],

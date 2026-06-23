@@ -1370,28 +1370,28 @@ class SpireHandler(BaseHTTPRequestHandler):
                 rows = pg_query(conn, "SELECT DISTINCT category_primary FROM bgc WHERE category_primary ILIKE %s AND category_primary IS NOT NULL AND category_primary <> '' ORDER BY category_primary LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["category_primary"], "value": r["category_primary"]} for r in rows]
             elif stype in ("np_pathway",):
-                rows = pg_query(conn, "SELECT DISTINCT np_pathway AS v FROM mv_np_page WHERE np_pathway ILIKE %s AND np_pathway IS NOT NULL AND np_pathway <> '' ORDER BY v LIMIT %s", (f"%{q}%", limit))
+                rows = pg_query(conn, "SELECT DISTINCT np_pathway AS v FROM mv_bgc_page WHERE np_pathway ILIKE %s AND np_pathway IS NOT NULL AND np_pathway <> '' ORDER BY v LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["v"], "value": r["v"]} for r in rows]
             elif stype in ("np_class",):
-                rows = pg_query(conn, "SELECT DISTINCT np_class AS v FROM mv_np_page WHERE np_class ILIKE %s AND np_class IS NOT NULL AND np_class <> '' ORDER BY v LIMIT %s", (f"%{q}%", limit))
+                rows = pg_query(conn, "SELECT DISTINCT np_class AS v FROM mv_bgc_page WHERE np_class ILIKE %s AND np_class IS NOT NULL AND np_class <> '' ORDER BY v LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["v"], "value": r["v"]} for r in rows]
             elif stype in ("species", "tax_species"):
-                rows = pg_query(conn, "SELECT species FROM (SELECT DISTINCT species FROM mv_mag_page WHERE species ILIKE %s AND species IS NOT NULL AND species <> '') sub ORDER BY CASE WHEN species ~ '^[A-Z][a-z]+ [a-z]' THEN 0 ELSE 1 END, species LIMIT %s", (f"%{q}%", limit))
+                rows = pg_query(conn, "SELECT species FROM (SELECT DISTINCT species FROM mag WHERE species ILIKE %s AND species IS NOT NULL AND species <> '') sub ORDER BY CASE WHEN species ~ '^[A-Z][a-z]+ [a-z]' THEN 0 ELSE 1 END, species LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["species"], "value": r["species"]} for r in rows]
             elif stype == "project":
                 rows = pg_query(conn, "SELECT project FROM sample WHERE project ILIKE %s AND project IS NOT NULL AND project <> '' GROUP BY project ORDER BY CASE WHEN project LIKE 'PRJ%%' THEN 0 ELSE 1 END, project LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["project"], "value": r["project"]} for r in rows]
             elif stype in ("np_superclass",):
-                rows = pg_query(conn, "SELECT DISTINCT np_superclass AS v FROM mv_np_page WHERE np_superclass ILIKE %s AND np_superclass IS NOT NULL AND np_superclass <> '' ORDER BY v LIMIT %s", (f"%{q}%", limit))
+                rows = pg_query(conn, "SELECT DISTINCT np_superclass AS v FROM mv_bgc_page WHERE np_superclass ILIKE %s AND np_superclass IS NOT NULL AND np_superclass <> '' ORDER BY v LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["v"], "value": r["v"]} for r in rows]
             elif stype == "phylum":
-                rows = pg_query(conn, "SELECT phylum FROM (SELECT DISTINCT phylum FROM mv_mag_page WHERE phylum ILIKE %s AND phylum IS NOT NULL AND phylum <> '') sub ORDER BY CASE WHEN phylum ~ '^[A-Z][a-z]' THEN 0 ELSE 1 END, phylum LIMIT %s", (f"%{q}%", limit))
+                rows = pg_query(conn, "SELECT phylum FROM (SELECT DISTINCT phylum FROM mag WHERE phylum ILIKE %s AND phylum IS NOT NULL AND phylum <> '') sub ORDER BY CASE WHEN phylum ~ '^[A-Z][a-z]' THEN 0 ELSE 1 END, phylum LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["phylum"], "value": r["phylum"]} for r in rows]
             elif stype == "class_name":
-                rows = pg_query(conn, "SELECT class_name FROM (SELECT DISTINCT class_name FROM mv_mag_page WHERE class_name ILIKE %s AND class_name IS NOT NULL AND class_name <> '') sub ORDER BY CASE WHEN class_name ~ '^[A-Z][a-z]' THEN 0 ELSE 1 END, class_name LIMIT %s", (f"%{q}%", limit))
+                rows = pg_query(conn, "SELECT class_name FROM (SELECT DISTINCT class_name FROM mag WHERE class_name ILIKE %s AND class_name IS NOT NULL AND class_name <> '') sub ORDER BY CASE WHEN class_name ~ '^[A-Z][a-z]' THEN 0 ELSE 1 END, class_name LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["class_name"], "value": r["class_name"]} for r in rows]
             elif stype == "genus":
-                rows = pg_query(conn, "SELECT genus FROM (SELECT DISTINCT genus FROM mv_mag_page WHERE genus ILIKE %s AND genus IS NOT NULL AND genus <> '') sub ORDER BY CASE WHEN genus ~ '^[A-Z][a-z]' THEN 0 ELSE 1 END, genus LIMIT %s", (f"%{q}%", limit))
+                rows = pg_query(conn, "SELECT genus FROM (SELECT DISTINCT genus FROM mag WHERE genus ILIKE %s AND genus IS NOT NULL AND genus <> '') sub ORDER BY CASE WHEN genus ~ '^[A-Z][a-z]' THEN 0 ELSE 1 END, genus LIMIT %s", (f"%{q}%", limit))
                 suggestions = [{"label": r["genus"], "value": r["genus"]} for r in rows]
             elif stype == "bgc_species":
                 rows = pg_query(conn, "SELECT species FROM (SELECT DISTINCT species FROM mv_bgc_page WHERE species ILIKE %s AND species IS NOT NULL AND species <> '') sub ORDER BY CASE WHEN species ~ '^[A-Z][a-z]+ [a-z]' THEN 0 ELSE 1 END, species LIMIT %s", (f"%{q}%", limit))
