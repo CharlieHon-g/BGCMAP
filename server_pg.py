@@ -1291,7 +1291,10 @@ class SpireHandler(BaseHTTPRequestHandler):
         row = pg_query_one(conn, "SELECT title, file_path FROM download_asset WHERE asset_key = %s", (asset_key,))
         conn.close()
         if row is None: self.send_error(HTTPStatus.NOT_FOUND, "Asset not found"); return
-        serve_file(self, ROOT / Path(row["file_path"]), download_name=row["title"])
+        target = (ROOT / Path(row["file_path"])).resolve()
+        if ROOT.resolve() not in target.parents and target != ROOT.resolve():
+            self.send_error(HTTPStatus.FORBIDDEN, "Forbidden"); return
+        serve_file(self, target, download_name=row["title"])
 
     def api_health(self) -> None:
         send_json(self, {"ok": True, "database": "PostgreSQL", "antismash_results": len(CATALOG.html_urls)})
