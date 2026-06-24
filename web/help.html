@@ -110,13 +110,7 @@
        +"These are standard thresholds used in metagenomics (MIMAG standards). "
        +"Medium-quality MAGs typically have completeness ≥ 50 and contamination < 10."},
 
-      {q:"How is MAG completeness and contamination calculated?",
-       a:"Both metrics come from <b>CheckM</b>, a tool that estimates genome quality by analyzing "
-       +"lineage-specific marker genes:<br><br>"
-       +"<b>Completeness</b> — percentage of marker genes present. A complete MAG has ≥ 90%. "
-       +"Values over 100 may indicate redundancy or strain heterogeneity.<br><br>"
-       +"<b>Contamination</b> — percentage of marker genes found in multiple copies (indicating "
-       +"the assembly may contain sequences from multiple organisms). < 5% is considered clean."},
+
 
       {q:"I want to find MAGs from a specific species. How?",
        a:"On the <b>Taxon page</b>, use the <b>Species</b> filter. You can type a partial name — "
@@ -142,16 +136,14 @@
        +"filter for <b>Contig Edge = FALSE</b> to work with complete BGCs. "
        +"About <b>25% of BGCs</b> in the database are on contig edges."},
 
-      {q:"How can I view the full antiSMASH results for a BGC?",
-       a:"When antiSMASH HTML output is available (for BGCs with local antiSMASH data), "
-       +"the BGC page table shows a clickable link in the BGC ID column. "
-       +"Clicking opens the full antiSMASH report in a new tab, including:<br>"
-       +"<ul><li>Gene cluster schematic with predicted CDS features</li>"
-       +"<li>Domain architecture (PFAM, TIGRFAM, etc.)</li>"
-       +"<li>Known cluster BLAST matches</li>"
-       +"<li>Secondary metabolite predictions</li></ul>"
-       +"Not all BGCs have local antiSMASH results — only those where the source MAG's "
-       +"antiSMASH output was available during database building."},
+       {q:"How can I view the full antiSMASH results for a BGC?",
+        a:"When antiSMASH HTML output is available (for BGCs with local antiSMASH data), "
+        +"the BGC page table shows a clickable link in the BGC ID column. "
+        +"Clicking opens the full antiSMASH report in a new tab, including:<br>"
+        +"<ul><li>Gene cluster schematic with predicted CDS features</li>"
+        +"<li>Gene and enzyme functional annotations</li></ul>"
+        +"Not all BGCs have local antiSMASH results — only those where the source MAG's "
+        +"antiSMASH output was available during database building."},
 
       // ── GCF ──
       {q:"What exactly is a GCF and how is it created?",
@@ -203,14 +195,7 @@
        +"Hover over segments to see counts. Click the center 'NP' to go back.<br><br>"
        +"You can click any segment to <b>jump to the NP table</b> filtered to that category."},
 
-      // ── 筛选技巧 ──
-      {q:"Why is my filter returning no results?",
-       a:"Common reasons:<br><br>"
-       +"<ul><li><b>Case sensitivity:</b> Text filters are case-insensitive (e.g., 'terpene' matches 'Terpene')</li>"
-       +"<li><b>Empty/Null values:</b> If a field is empty for many records, using <b>equals</b> won't match them. "
-       +"Use <b>is_null</b> to find records where no value was recorded.</li>"
-       +"<li><b>AND logic:</b> When you add multiple rules, ALL must match. Use fewer rules to broaden the search.</li>"
-       +"<li><b>Page refresh:</b> The count badge shows matching records. If it says 0, try clearing all filters.</li></ul>"},
+
 
       {q:"How do I use the NOT toggle in filters?",
        a:"Each filter rule has a <b>NOT</b> toggle (a checkbox labeled 'not'). "
@@ -254,7 +239,7 @@
        +"<li><b>BiG-SLiCE 2.0</b> — BGC clustering into GCFs based on sequence similarity</li>"
        +"<li><b>BiG-SCAPE</b> — BGC product and category classification</li>"
        +"<li><b>NPClassifier</b> — deep learning-based natural product class prediction</li>"
-       +"<li><b>CheckM</b> — MAG completeness and contamination estimation</li></ul>"},
+        +"</ul>"},
 
       // ── 下载与导出 ──
       {q:"Can I download data from the database?",
@@ -264,10 +249,8 @@
        +"For ad-hoc data export, you can also copy data from the table views on each page."},
 
       {q:"How do I cite the BGCMAP database in my publication?",
-       a:"Citation information is available on the <b>Download page</b> and in the release card on the <b>Help page</b>. "
-       +"The current release is <b>v1.0</b>, released April 10, 2026. "
-       +"Please cite the database release and the individual tools used (antiSMASH, BiG-SLiCE, NPClassifier) "
-       +"as applicable to your analysis."},
+        a:"Citation information is available on the <b>Download page</b> and in the release card on the <b>Help page</b>. "
+        +"The current release is <b>v1.0</b>, released April 10, 2026."},
 
       // ── 问题排查 ──
       {q:"Why are some fields empty/NULL in the data?",
