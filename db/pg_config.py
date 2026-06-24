@@ -25,7 +25,7 @@ class PgConfig:
     dbname: str
     user: str
     password: str
-    application_name: str = "spire_portal"
+    application_name: str = "bgcmap_portal"
 
 
 def get_pg_config() -> PgConfig:
@@ -35,7 +35,7 @@ def get_pg_config() -> PgConfig:
         dbname=os.environ.get("PGDATABASE", "gem_portal"),
         user=os.environ.get("PGUSER", "postgres"),
         password=os.environ.get("PGPASSWORD", ""),
-        application_name=os.environ.get("PGAPPNAME", "spire_portal"),
+        application_name=os.environ.get("PGAPPNAME", "bgcmap_portal"),
     )
 
 

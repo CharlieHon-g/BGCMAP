@@ -1354,15 +1354,17 @@ async function loadHome() {
 
 async function loadStats() {
   const payload = await getJSON("/api/stats");
-  const overview = payload.overview;
+  const overview = payload.stats;
   const coverage = payload.coverage;
   const magQuality = payload.mag_quality;
   const gcfStats = payload.gcf_stats;
   const bgcTypes = payload.bgc_types;
   const sampleHierarchy = payload.sample_hierarchy;
 
-  qs("#stats-release-label").textContent = payload.release.release_name || payload.release.release_label;
-  qs("#stats-release-date").textContent = payload.release.released_on || "NA";
+  const relLabel = qs("#stats-release-label");
+  const relDate = qs("#stats-release-date");
+  if (relLabel) relLabel.textContent = payload.release.release_name || payload.release.release_label;
+  if (relDate) relDate.textContent = payload.release.released_on || "NA";
 
   const kpis = [
     ["Samples", overview.sample_count],
@@ -2774,7 +2776,7 @@ async function bootstrap() {
   setActiveNav();
   const page = document.body.dataset.page;
   if (page === "home") return loadHome();
-  if (page === "stats") return loadStats();
+  if (page === "stats") return;
   if (page === "sample") {
     buildStandardControls("q");
     await ensureBiomeOptions();

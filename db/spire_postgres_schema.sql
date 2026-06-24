@@ -1,6 +1,6 @@
 BEGIN;
 
-CREATE SCHEMA IF NOT EXISTS spire;
+CREATE SCHEMA IF NOT EXISTS bgcmap;
 SET search_path TO bgcmap, public;
 
 -----------------------------------------------

@@ -175,7 +175,7 @@ def parse_coord_from_fields(*values: str) -> Optional[float]:
 def drop_and_init_schema(conn) -> None:
     """Drop all tables/views and run the schema DDL."""
     cur = conn.cursor()
-    cur.execute("SET search_path TO gem, public;")
+    cur.execute("SET search_path TO bgcmap, public;")
     # Drop materialized views first
     cur.execute("""
         DROP MATERIALIZED VIEW IF EXISTS mv_gcf_page CASCADE;
@@ -1177,7 +1177,7 @@ def main() -> None:
 
     try:
         cur = conn.cursor()
-        cur.execute("SET search_path TO spire, public")
+        cur.execute("SET search_path TO bgcmap, public")
         cur.close()
 
         # 1. Drop & recreate schema
@@ -1236,7 +1236,7 @@ def build_stats_json(conn) -> None:
     import json as _json
 
     cur = conn.cursor()
-    cur.execute("SET search_path TO gem, public;")
+    cur.execute("SET search_path TO bgcmap, public;")
 
     cur.execute("SELECT biome1 AS g, COUNT(*) AS c FROM sample WHERE biome1 IS NOT NULL AND biome1 <> '' GROUP BY biome1 ORDER BY c DESC")
     group1_rows = [{"label": r["g"], "value": r["c"]} for r in cur.fetchall()]
