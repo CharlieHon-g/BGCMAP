@@ -679,6 +679,7 @@
       gradient.appendChild(createSvg("stop", { offset: "100%", "stop-color": "#7b8ea4" }));
       defs.appendChild(gradient);
       svg.appendChild(defs);
+      svg.appendChild(createSvg("rect", { x:0, y:0, width, height, fill:"#ffffff" }));
 
       layout.forEach(({ domain, topY, bottomY, centerY }) => {
         const color = DOMAIN_COLORS[domain.name] || "#7b8ea4";
