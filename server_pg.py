@@ -1117,8 +1117,9 @@ try:
         _cache_path.write_text(json.dumps({"html_urls": CATALOG.html_urls, "anchor_urls": CATALOG.anchor_urls}, ensure_ascii=False))
 except Exception:
     CATALOG = build_antismash_catalog()
-# Pre-warm taxon cache at startup so first user doesn't wait
-load_taxon_selector_options()
+# Pre-warm taxon cache in background so server starts immediately
+import threading
+threading.Thread(target=load_taxon_selector_options, daemon=True).start()
 BIOSAMPLE_URL_OVERRIDES = load_biosample_overrides()
 
 
