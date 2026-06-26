@@ -1178,7 +1178,7 @@ def serve_file(handler, target: Path, *, download_name: Optional[str] = None) ->
             if not chunk: break
             try:
                 handler.wfile.write(chunk)
-            except (BrokenPipeError, ConnectionResetError):
+            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
                 return
 
 
