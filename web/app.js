@@ -212,7 +212,8 @@ function makeExternalLink(href, label) {
 }
 
 function makeLocalLink(href, label) {
-  return href ? `<a href="${href}">${escapeHtml(label)}</a>` : `<span class="subtle">${escapeHtml(label)}</span>`;
+  const h = href && href.startsWith("/") ? BASE + href : href;
+  return h ? `<a href="${h}">${escapeHtml(label)}</a>` : `<span class="subtle">${escapeHtml(label)}</span>`;
 }
 
 function sortRowsByNullableNumber(rows, field, dir, tieKey) {
@@ -238,8 +239,9 @@ function ellipsisText(value, fallback = "NA") {
 function ellipsisLink(href, label, fallback = "NA") {
   const text = label === null || label === undefined || label === "" ? fallback : String(label);
   if (!href) return `<span class="cell-ellipsis subtle" title="${escapeHtml(text)}">${escapeHtml(text)}</span>`;
+  const h = !href.startsWith("http") ? BASE + href : href;
   const ext = href.startsWith("http") ? ' target="_blank" rel="noreferrer"' : "";
-  return `<a class="cell-ellipsis cell-ellipsis-link" href="${href}"${ext} title="${escapeHtml(text)}">${escapeHtml(text)}</a>`;
+  return `<a class="cell-ellipsis cell-ellipsis-link" href="${h}"${ext} title="${escapeHtml(text)}">${escapeHtml(text)}</a>`;
 }
 
 function normalizeNumericIdLabel(value) {
@@ -2523,7 +2525,7 @@ async function loadMags(page = Number(params.get("page") || 1)) {
       return {
         cells: `
           <td>${renderTaxonomyDisclosure(row, label, target)}</td>
-          <td>${row.antismash_url || row.portal_url ? `<a class="cell-ellipsis cell-ellipsis-link" href="${row.antismash_url || row.portal_url}" target="_blank" rel="noreferrer" title="${escapeHtml(row.genome_id)}">${escapeHtml(row.genome_id_display || row.genome_id)}</a>` : `<span class="cell-ellipsis subtle">${escapeHtml(row.genome_id_display || row.genome_id)}</span>`}</td>
+          <td>${row.antismash_url || row.portal_url ? `<a class="cell-ellipsis cell-ellipsis-link" href="${row.antismash_url || (row.portal_url ? BASE + row.portal_url : '')}" target="_blank" rel="noreferrer" title="${escapeHtml(row.genome_id)}">${escapeHtml(row.genome_id_display || row.genome_id)}</a>` : `<span class="cell-ellipsis subtle">${escapeHtml(row.genome_id_display || row.genome_id)}</span>`}</td>
           <td>${Number(row.bgc_count) > 0 ? makeLocalLink(row.bgc_url, formatNumber(row.bgc_count)) : '<span class="subtle">0</span>'}</td>
           <td>${ellipsisText(row.category_preview || "NA")}</td>
           <td>${escapeHtml(row.completeness ?? "NA")}</td>
@@ -2600,7 +2602,7 @@ async function loadBgcs(page = Number(params.get("page") || 1)) {
 
           <td>${formatNumber(row.length)}</td>
           <td>${row.contig_edge === true ? 'TRUE' : row.contig_edge === false ? 'FALSE' : 'NA'}</td>
-          <td>${row.genome_url ? `<a class="cell-ellipsis cell-ellipsis-link" href="${row.genome_url}" title="${escapeHtml(row.genome_id)}">${escapeHtml(row.genome_id_display || row.genome_id.replace(/^spire_/, ''))}</a>` : `<span class="cell-ellipsis subtle">${escapeHtml(row.genome_id_display || row.genome_id.replace(/^spire_/, ''))}</span>`}</td>
+          <td>${row.genome_url ? `<a class="cell-ellipsis cell-ellipsis-link" href="${BASE + row.genome_url}" title="${escapeHtml(row.genome_id)}">${escapeHtml(row.genome_id_display || row.genome_id.replace(/^spire_/, ''))}</a>` : `<span class="cell-ellipsis subtle">${escapeHtml(row.genome_id_display || row.genome_id.replace(/^spire_/, ''))}</span>`}</td>
           <td>${ellipsisLink(row.sample_url, row.sample_id)}</td>
           <td>${ellipsisText(row.species || "NA")}</td>
           <td>${ellipsisText(displayGroupLabel(row.biome1) || "NA")}</td>
