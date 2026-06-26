@@ -399,7 +399,7 @@
           ],
         })
       );
-      return `/tax?${params.toString()}`;
+      return `/BGCMAP/tax?${params.toString()}`;
     }
 
     function openPortalUrl(url) {
@@ -731,7 +731,7 @@
           "Click to open all MAG records",
         ])
       );
-      rootHit.addEventListener("click", () => openPortalUrl("/tax?tax_mode=phylum&page=1"));
+      rootHit.addEventListener("click", () => openPortalUrl("/BGCMAP/tax?tax_mode=phylum&page=1"));
       svg.appendChild(rootHit);
 
       drawLabel(
