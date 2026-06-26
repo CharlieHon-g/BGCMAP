@@ -1,6 +1,6 @@
 const qs = (selector, root = document) => root.querySelector(selector);
 const qsa = (selector, root = document) => [...root.querySelectorAll(selector)];
-const BASE = "/BGC-MAP";
+const BASE = "/BGCMAP";
 let params = new URLSearchParams(window.location.search);
 const taxExpandedRows = new Set();
 let taxExpandAll = false;
@@ -1449,7 +1449,7 @@ async function loadStats() {
   renderPieChart(qs("#bgc-type-chart"), bgcTypes);
 
   qs("#stats-intro-text").textContent =
-    "This statistics module summarizes the current BGC-MAP release using real database- and source-derived measurements, arranged as paired panels for collection time and biome, MAG quality, BGC type abundance, and GCF size structure.";
+    "This statistics module summarizes the current BGCMAP release using real database- and source-derived measurements, arranged as paired panels for collection time and biome, MAG quality, BGC type abundance, and GCF size structure.";
 }
 
 function buildStandardControls(pageKey, placeholder) {

@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Stat · BGC-MAP</title>
-  <link rel="stylesheet" href="/BGC-MAP/static/style.css?v=20260720">
+  <title>Stat · BGCMAP</title>
+  <link rel="stylesheet" href="/BGCMAP/static/style.css?v=20260720">
   <style>
     .kpi-row { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:24px; justify-content:center; }
     .kpi-box { flex:0 1 180px; background:#fbfdff; border:1px solid #d4dfef; border-radius:14px; padding:18px 20px; text-align:center; }
@@ -19,21 +19,21 @@
 <body data-page="stats">
   <header class="site-header">
     <div class="site-header-inner">
-      <a class="brand-title" href="/BGC-MAP"><span class="brand-mark"><img class="diamond-icon" src="/BGC-MAP/static/assets/bgc-map_logo_v1.svg" alt=""><strong>BGC-MAP</strong></span></a>
+      <a class="brand-title" href="/BGCMAP"><span class="brand-mark"><img class="diamond-icon" src="/BGCMAP/static/assets/bgcmap_logo_v1.svg" alt=""><strong>BGCMAP</strong></span></a>
       <nav class="top-nav">
-        <a data-page="home" href="/BGC-MAP">Home</a>
-        <a data-page="sample" href="/BGC-MAP/sample">Sample</a>
-        <a data-page="tax" href="/BGC-MAP/tax">Taxon</a>
-        <a data-page="bgc" href="/BGC-MAP/bgc">BGC</a>
-        <a data-page="np" href="/BGC-MAP/np">NP</a>
-        <a data-page="stats" href="/BGC-MAP/stats">Stat</a>
-        <a data-page="download" href="/BGC-MAP/download">Download</a>
-        <a data-page="help" href="/BGC-MAP/help">Help</a>
+        <a data-page="home" href="/BGCMAP">Home</a>
+        <a data-page="sample" href="/BGCMAP/sample">Sample</a>
+        <a data-page="tax" href="/BGCMAP/tax">Taxon</a>
+        <a data-page="bgc" href="/BGCMAP/bgc">BGC</a>
+        <a data-page="np" href="/BGCMAP/np">NP</a>
+        <a data-page="stats" href="/BGCMAP/stats">Stat</a>
+        <a data-page="download" href="/BGCMAP/download">Download</a>
+        <a data-page="help" href="/BGCMAP/help">Help</a>
       </nav>
     </div>
   </header>
   <main class="page-shell"><div class="container">
-    <section class="card" style="margin-bottom:20px;text-align:center;"><h1>BGC-MAP statistics overview</h1><div class="footer-note" id="stats-release"></div></section>
+    <section class="card" style="margin-bottom:20px;text-align:center;"><h1>BGCMAP statistics overview</h1><div class="footer-note" id="stats-release"></div></section>
     <div class="kpi-row" id="kpi-strip"></div>
     <div class="chart-grid" id="chart-grid"></div>
   </div></main>
@@ -113,7 +113,7 @@
       return '<article class="chart-card"><h2>'+title+'</h2><div class="chart-wrap">'+svgHtml+'</div></article>';
     }
 
-    fetch('/BGC-MAP/static/stats_data.json').then(function(r){return r.json()}).then(function(d){
+    fetch('/BGCMAP/static/stats_data.json').then(function(r){return r.json()}).then(function(d){
       var s=d.stats;
       document.getElementById('stats-release').innerHTML='Current release: <strong>'+d.release.release_name+'</strong>';
       document.getElementById('kpi-strip').innerHTML=[
@@ -154,6 +154,6 @@
       ].join('');
     });
   </script>
-  <script src="/BGC-MAP/static/app.js?v=20260720"></script>
+  <script src="/BGCMAP/static/app.js?v=20260720"></script>
 </body>
 </html>
