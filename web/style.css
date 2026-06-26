@@ -2113,7 +2113,7 @@ tr:hover td {
 /* ── Home search bar ── */
 .home-search-wrap {
   position: relative;
-  padding-left: 5px;
+  padding-left: 15px;
 }
 .home-search-bar {
   display: flex;
