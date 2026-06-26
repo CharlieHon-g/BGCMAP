@@ -87,8 +87,7 @@ a:hover {
 .brand-subtitle {
   font-size: 1rem;
   color: #2b6eb0;
-  max-width: 240px;
-  line-height: 1.3;
+  white-space: nowrap;
 }
 
 .diamond-icon {
