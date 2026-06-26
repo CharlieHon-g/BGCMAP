@@ -2538,7 +2538,7 @@ async function loadMags(page = Number(params.get("page") || 1)) {
       return {
         cells: `
           <td>${renderTaxonomyDisclosure(row, label, target)}</td>
-          <td>${row.antismash_url || row.portal_url ? `<a class="cell-ellipsis cell-ellipsis-link" href="${row.antismash_url || (row.portal_url ? BASE + row.portal_url : '')}" target="_blank" rel="noreferrer" title="${escapeHtml(row.genome_id)}">${escapeHtml(row.genome_id_display || row.genome_id)}</a>` : `<span class="cell-ellipsis subtle">${escapeHtml(row.genome_id_display || row.genome_id)}</span>`}</td>
+          <td>${row.antismash_url || row.portal_url ? `<a class="cell-ellipsis cell-ellipsis-link" href="${row.antismash_url ? BASE + row.antismash_url : BASE + row.portal_url}" target="_blank" rel="noreferrer" title="${escapeHtml(row.genome_id)}">${escapeHtml(row.genome_id_display || row.genome_id)}</a>` : `<span class="cell-ellipsis subtle">${escapeHtml(row.genome_id_display || row.genome_id)}</span>`}</td>
           <td>${Number(row.bgc_count) > 0 ? makeLocalLink(row.bgc_url, formatNumber(row.bgc_count)) : '<span class="subtle">0</span>'}</td>
           <td>${ellipsisText(row.category_preview || "NA")}</td>
           <td>${escapeHtml(row.completeness ?? "NA")}</td>
