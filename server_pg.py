@@ -1726,6 +1726,9 @@ class SpireHandler(BaseHTTPRequestHandler):
         for r in rows:
             item = row_to_dict(r)
             fp = item.get("file_path") or ""
+            target = ROOT / fp
+            if not target.exists():
+                continue
             item["file_name"] = fp.rsplit("/", 1)[-1] if "/" in fp else fp
             del item["file_path"]
             item["download_url"] = f"/download-asset/{item['asset_key']}"
