@@ -1201,9 +1201,9 @@ function initHomeSearch() {
   function renderChips(pageKey) {
     const chips = chipSets[pageKey] || [];
     chipsContainer.innerHTML = chips.map((c, i) =>
-      `<button type="button" class="search-chip${i===0?" is-active":""}" data-index="${i}">${c.label}</button>`
+      `<button type="button" class="search-chip" data-index="${i}">${c.label}</button>`
     ).join("");
-    activeChip = chips.length > 0 ? chips[0] : null;
+    activeChip = null;
     updateInputState();
   }
 
@@ -1229,6 +1229,20 @@ function initHomeSearch() {
     window.location = `${BASE}/${page}?filters=${encodeURIComponent(filters)}`;
   }
 
+  function activateFirstChip() {
+    const first = qs(".search-chip", chipsContainer);
+    if (!first) return;
+    chipsContainer.querySelectorAll(".search-chip").forEach((el) => el.classList.remove("is-active"));
+    first.classList.add("is-active");
+    activeChip = chipSets[typeSelect.value][0];
+    updateInputState();
+    fetchSuggestions();
+  }
+
+  input.addEventListener("focus", () => {
+    if (!activeChip) activateFirstChip();
+  });
+
   chipsContainer.addEventListener("click", (e) => {
     const btn = e.target.closest(".search-chip");
     if (!btn) return;
@@ -1243,7 +1257,6 @@ function initHomeSearch() {
     renderChips(typeSelect.value);
     input.value = "";
     clearSuggestions();
-    fetchSuggestions();
   }
 
   function clearSuggestions() {
