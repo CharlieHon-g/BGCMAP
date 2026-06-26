@@ -1080,13 +1080,13 @@ def build_antismash_catalog() -> AntismashCatalog:
         return AntismashCatalog(html_urls=html_urls, anchor_urls=anchor_urls)
     for item in sorted(ANTISMASH_ROOT.iterdir()):
         if item.is_file() and item.suffix.lower() == ".html":
-            html_urls[item.stem] = f"/BGCMAP/antismash/{quote(item.name)}"
+            html_urls[item.stem] = f"/antismash/{quote(item.name)}"
             continue
         if not item.is_dir(): continue
         genome_id = item.name
         index_file = item / "index.html"
         if index_file.exists():
-            html_urls[genome_id] = f"/BGCMAP/antismash/{quote(genome_id)}/index.html"
+            html_urls[genome_id] = f"/antismash/{quote(genome_id)}/index.html"
         regions_file = item / "regions.js"
         if not regions_file.exists(): continue
         try:
@@ -1235,7 +1235,6 @@ class SpireHandler(BaseHTTPRequestHandler):
         if path in PAGE_ROUTES: return self.serve_page(PAGE_ROUTES[path])
         if path.startswith("/static/"): return self.serve_static(path.removeprefix("/static/"))
         if path.startswith("/antismash/"): return self.serve_antismash(path.removeprefix("/antismash/"))
-        if path.startswith("/BGCMAP/antismash/"): return self.serve_antismash(path.removeprefix("/BGCMAP/antismash/"))
         if path.startswith("/download-asset/"):
             return self.serve_download_asset(unquote(path.removeprefix("/download-asset/")))
         if path == "/api/stats": return self.api_home()
