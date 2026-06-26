@@ -1199,7 +1199,10 @@ def send_json(handler, payload: dict) -> None:
     handler.send_header("Content-Type", "application/json; charset=utf-8")
     handler.send_header("Content-Length", str(len(encoded)))
     handler.end_headers()
-    handler.wfile.write(encoded)
+    try:
+        handler.wfile.write(encoded)
+    except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+        pass
 
 
 def page_payload(total: int, page: int, page_size: int, rows: List[dict]) -> dict:
