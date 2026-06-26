@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>BGCMAP Phylogenetic Overview</title>
+  <title>BGC-MAP Phylogenetic Overview</title>
   <style>
     :root {
       --ink: #20374e;
@@ -279,7 +279,7 @@
   <div class="tree-shell">
     <div class="tree-header">
       <div class="tree-kicker">Tree Overview</div>
-      <h1>Rooted phylogenetic overview of BGCMAP MAG diversity</h1>
+      <h1>Rooted phylogenetic overview of BGC-MAP MAG diversity</h1>
       <p class="tree-subtitle">
         This cladogram now keeps only the biologically central <strong>Domain → Phylum</strong> hierarchy on the homepage. Every visible node can open the corresponding MAG records, while the toolbar above controls focus and expansion.
       </p>
@@ -399,7 +399,7 @@
           ],
         })
       );
-      return `/BGCMAP/tax?${params.toString()}`;
+      return `/BGC-MAP/tax?${params.toString()}`;
     }
 
     function openPortalUrl(url) {
@@ -731,7 +731,7 @@
           "Click to open all MAG records",
         ])
       );
-      rootHit.addEventListener("click", () => openPortalUrl("/BGCMAP/tax?tax_mode=phylum&page=1"));
+      rootHit.addEventListener("click", () => openPortalUrl("/BGC-MAP/tax?tax_mode=phylum&page=1"));
       svg.appendChild(rootHit);
 
       drawLabel(
@@ -1037,7 +1037,7 @@
 
     async function loadTree() {
       try {
-        const response = await fetch("/BGCMAP/api/home-phylo", { headers: { "X-API-Key": "bgcmap2026" } });
+        const response = await fetch("/BGC-MAP/api/home-phylo", { headers: { "X-API-Key": "bgcmap2026" } });
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }

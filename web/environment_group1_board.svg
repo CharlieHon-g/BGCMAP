@@ -3,62 +3,62 @@
 <rect x="38" y="18" width="1844" height="912" rx="34" fill="#ffffff" stroke="#D8E2E9" stroke-width="2"/>
 <path d="M 140 538 C 410 456, 700 472, 970 548 S 1505 685, 1780 560" fill="none" stroke="#E8EEF3" stroke-width="56" stroke-linecap="round"/>
 <path d="M 180 314 C 510 250, 875 285, 1160 372 S 1500 495, 1750 424" fill="none" stroke="#EEF3F7" stroke-width="28" stroke-linecap="round"/>
-<a href="/BGCMAP/sample?group1=Aquatic%20Environment" target="_top">
+<a href="/BGC-MAP/sample?group1=Aquatic%20Environment" target="_top">
 <title>Aquatic environment · Click to filter Sample records by biome1</title>
 <rect x="56.0" y="166.0" width="585.3" height="290.0" rx="30" fill="#DCEFFA" stroke="#4E9FD1" stroke-width="2.6"/>
 <rect x="74.0" y="184.0" width="549.3" height="254.0" rx="22" fill="#ffffff" fill-opacity="0.82"/>
 <circle cx="144.0" cy="264.0" r="54" fill="#DCEFFA" stroke="#4E9FD1" stroke-width="2"/>
-<defs><clipPath id="aquaticClip144264"><circle cx="144.0" cy="264.0" r="46"/></clipPath></defs><image href="/BGCMAP/static/assets/env_imgs/env_img_0.jpeg" x="94.0" y="214.0" width="100" height="100" preserveAspectRatio="xMidYMid slice" clip-path="url(#aquaticClip144264)"/><circle cx="144.0" cy="264.0" r="46" fill="none" stroke="#4E9FD1" stroke-width="3"/><path d="M 106.0 302.0 Q 126.0 290.0 146.0 302.0 T 184.0 302.0" fill="none" stroke="#ffffff" stroke-opacity="0.95" stroke-width="3.2" stroke-linecap="round"/><path d="M 114.0 312.0 Q 134.0 300.0 154.0 312.0 T 192.0 312.0" fill="none" stroke="#2E6E96" stroke-opacity="0.55" stroke-width="2.4" stroke-linecap="round"/>
+<defs><clipPath id="aquaticClip144264"><circle cx="144.0" cy="264.0" r="46"/></clipPath></defs><image href="/BGC-MAP/static/assets/env_imgs/env_img_0.jpeg" x="94.0" y="214.0" width="100" height="100" preserveAspectRatio="xMidYMid slice" clip-path="url(#aquaticClip144264)"/><circle cx="144.0" cy="264.0" r="46" fill="none" stroke="#4E9FD1" stroke-width="3"/><path d="M 106.0 302.0 Q 126.0 290.0 146.0 302.0 T 184.0 302.0" fill="none" stroke="#ffffff" stroke-opacity="0.95" stroke-width="3.2" stroke-linecap="round"/><path d="M 114.0 312.0 Q 134.0 300.0 154.0 312.0 T 192.0 312.0" fill="none" stroke="#2E6E96" stroke-opacity="0.55" stroke-width="2.4" stroke-linecap="round"/>
 <text x="220.0" y="248.0" font-size="24" font-weight="800" fill="#203447" text-anchor="start" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"><tspan x="220.0" dy="0">Aquatic environment</tspan></text>
 <text x="86.0" y="346.0" font-size="14" font-weight="700" fill="#2E6E96" text-anchor="start" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"><tspan x="86.0" dy="0">marine, freshwater,</tspan><tspan x="86.0" dy="16.5">groundwater, and special</tspan><tspan x="86.0" dy="16.5">aquatic habitats</tspan></text>
 <rect x="80.0" y="398.0" width="537.3" height="38" rx="12" fill="#4E9FD1" fill-opacity="0.14" stroke="#4E9FD1" stroke-width="1.2"/>
 <text x="348.7" y="423.0" font-size="14" font-weight="800" fill="#2E6E96" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"><tspan x="348.7" dy="0">Explore aquatic samples</tspan></text>
 </a>
-<a href="/BGCMAP/sample?group1=Terrestrial%20Environment" target="_top">
+<a href="/BGC-MAP/sample?group1=Terrestrial%20Environment" target="_top">
 <title>Terrestrial environment · Click to filter Sample records by biome1</title>
 <rect x="667.3" y="166.0" width="585.3" height="290.0" rx="30" fill="#E4F0DB" stroke="#7FA75F" stroke-width="2.6"/>
 <rect x="685.3" y="184.0" width="549.3" height="254.0" rx="22" fill="#ffffff" fill-opacity="0.82"/>
 <circle cx="755.3" cy="264.0" r="54" fill="#E4F0DB" stroke="#7FA75F" stroke-width="2"/>
-<defs><clipPath id="terrestrialClip755264"><circle cx="755.3" cy="264.0" r="46"/></clipPath></defs><image href="/BGCMAP/static/assets/env_imgs/env_img_1.jpeg" x="705.3" y="214.0" width="100" height="100" preserveAspectRatio="xMidYMid slice" clip-path="url(#terrestrialClip755264)"/><circle cx="755.3" cy="264.0" r="46" fill="none" stroke="#7FA75F" stroke-width="3"/><path d="M 713.3 306.0 L 743.3 272.0 L 763.3 306.0 Z" fill="#ffffff" fill-opacity="0.72"/><path d="M 753.3 306.0 L 775.3 278.0 L 797.3 306.0 Z" fill="#4C6D36" fill-opacity="0.45"/>
+<defs><clipPath id="terrestrialClip755264"><circle cx="755.3" cy="264.0" r="46"/></clipPath></defs><image href="/BGC-MAP/static/assets/env_imgs/env_img_1.jpeg" x="705.3" y="214.0" width="100" height="100" preserveAspectRatio="xMidYMid slice" clip-path="url(#terrestrialClip755264)"/><circle cx="755.3" cy="264.0" r="46" fill="none" stroke="#7FA75F" stroke-width="3"/><path d="M 713.3 306.0 L 743.3 272.0 L 763.3 306.0 Z" fill="#ffffff" fill-opacity="0.72"/><path d="M 753.3 306.0 L 775.3 278.0 L 797.3 306.0 Z" fill="#4C6D36" fill-opacity="0.45"/>
 <text x="831.3" y="248.0" font-size="24" font-weight="800" fill="#203447" text-anchor="start" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"><tspan x="831.3" dy="0">Terrestrial environment</tspan></text>
 <text x="697.3" y="346.0" font-size="14" font-weight="700" fill="#4C6D36" text-anchor="start" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"><tspan x="697.3" dy="0">natural terrestrial, soil,</tspan><tspan x="697.3" dy="16.5">cave, and subsurface</tspan><tspan x="697.3" dy="16.5">habitats</tspan></text>
 <rect x="691.3" y="398.0" width="537.3" height="38" rx="12" fill="#7FA75F" fill-opacity="0.14" stroke="#7FA75F" stroke-width="1.2"/>
 <text x="960.0" y="423.0" font-size="14" font-weight="800" fill="#4C6D36" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"><tspan x="960.0" dy="0">Explore terrestrial samples</tspan></text>
 </a>
-<a href="/BGCMAP/sample?group1=Artificial/Engineered%20Environment" target="_top">
+<a href="/BGC-MAP/sample?group1=Artificial/Engineered%20Environment" target="_top">
 <title>Artificial / engineered environment · Click to filter Sample records by biome1</title>
 <rect x="1278.7" y="166.0" width="585.3" height="290.0" rx="30" fill="#F5E4D8" stroke="#C88B58" stroke-width="2.6"/>
 <rect x="1296.7" y="184.0" width="549.3" height="254.0" rx="22" fill="#ffffff" fill-opacity="0.82"/>
 <circle cx="1366.7" cy="264.0" r="54" fill="#F5E4D8" stroke="#C88B58" stroke-width="2"/>
-<defs><clipPath id="engineeredClip1366264"><circle cx="1366.7" cy="264.0" r="46"/></clipPath></defs><image href="/BGCMAP/static/assets/env_imgs/env_img_2.jpeg" x="1316.7" y="196.0" width="100" height="132" preserveAspectRatio="xMidYMid slice" clip-path="url(#engineeredClip1366264)"/><circle cx="1366.7" cy="264.0" r="46" fill="none" stroke="#C88B58" stroke-width="3"/><rect x="1338.7" y="292.0" width="56" height="18" rx="6" fill="#ffffff" fill-opacity="0.68"/><line x1="1352.7" y1="296.0" x2="1352.7" y2="306.0" stroke="#8B5831" stroke-width="3"/><line x1="1366.7" y1="296.0" x2="1366.7" y2="306.0" stroke="#8B5831" stroke-width="3"/><line x1="1380.7" y1="296.0" x2="1380.7" y2="306.0" stroke="#8B5831" stroke-width="3"/>
+<defs><clipPath id="engineeredClip1366264"><circle cx="1366.7" cy="264.0" r="46"/></clipPath></defs><image href="/BGC-MAP/static/assets/env_imgs/env_img_2.jpeg" x="1316.7" y="196.0" width="100" height="132" preserveAspectRatio="xMidYMid slice" clip-path="url(#engineeredClip1366264)"/><circle cx="1366.7" cy="264.0" r="46" fill="none" stroke="#C88B58" stroke-width="3"/><rect x="1338.7" y="292.0" width="56" height="18" rx="6" fill="#ffffff" fill-opacity="0.68"/><line x1="1352.7" y1="296.0" x2="1352.7" y2="306.0" stroke="#8B5831" stroke-width="3"/><line x1="1366.7" y1="296.0" x2="1366.7" y2="306.0" stroke="#8B5831" stroke-width="3"/><line x1="1380.7" y1="296.0" x2="1380.7" y2="306.0" stroke="#8B5831" stroke-width="3"/>
 <text x="1442.7" y="248.0" font-size="24" font-weight="800" fill="#203447" text-anchor="start" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"><tspan x="1442.7" dy="0">Artificial / engineered</tspan><tspan x="1442.7" dy="28.3">environment</tspan></text>
 <text x="1308.7" y="346.0" font-size="14" font-weight="700" fill="#8B5831" text-anchor="start" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"><tspan x="1308.7" dy="0">agricultural,</tspan><tspan x="1308.7" dy="16.5">treatment-facility,</tspan><tspan x="1308.7" dy="16.5">building, and urban habitats</tspan></text>
 <rect x="1302.7" y="398.0" width="537.3" height="38" rx="12" fill="#C88B58" fill-opacity="0.14" stroke="#C88B58" stroke-width="1.2"/>
 <text x="1571.3" y="423.0" font-size="14" font-weight="800" fill="#8B5831" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"><tspan x="1571.3" dy="0">Explore engineered samples</tspan></text>
 </a>
-<a href="/BGCMAP/sample?group1=Host-Associated%20Environment" target="_top">
+<a href="/BGC-MAP/sample?group1=Host-Associated%20Environment" target="_top">
 <title>Host-associated environment · Click to filter Sample records by biome1</title>
 <rect x="56.0" y="490.0" width="585.3" height="290.0" rx="30" fill="#F6E1EE" stroke="#C47CA8" stroke-width="2.6"/>
 <rect x="74.0" y="508.0" width="549.3" height="254.0" rx="22" fill="#ffffff" fill-opacity="0.82"/>
 <circle cx="144.0" cy="588.0" r="54" fill="#F6E1EE" stroke="#C47CA8" stroke-width="2"/>
-<defs><clipPath id="hostClip144588"><circle cx="144.0" cy="588.0" r="46"/></clipPath></defs><image href="/BGCMAP/static/assets/env_imgs/env_img_3.jpeg" x="88.0" y="540.0" width="112" height="96" preserveAspectRatio="xMidYMid slice" clip-path="url(#hostClip144588)"/><circle cx="144.0" cy="588.0" r="46" fill="none" stroke="#C47CA8" stroke-width="3"/><circle cx="154.0" cy="596.0" r="18" fill="#ffffff" fill-opacity="0.55"/><circle cx="154.0" cy="596.0" r="5" fill="#8A4D71" fill-opacity="0.75"/>
+<defs><clipPath id="hostClip144588"><circle cx="144.0" cy="588.0" r="46"/></clipPath></defs><image href="/BGC-MAP/static/assets/env_imgs/env_img_3.jpeg" x="88.0" y="540.0" width="112" height="96" preserveAspectRatio="xMidYMid slice" clip-path="url(#hostClip144588)"/><circle cx="144.0" cy="588.0" r="46" fill="none" stroke="#C47CA8" stroke-width="3"/><circle cx="154.0" cy="596.0" r="18" fill="#ffffff" fill-opacity="0.55"/><circle cx="154.0" cy="596.0" r="5" fill="#8A4D71" fill-opacity="0.75"/>
 <text x="220.0" y="572.0" font-size="24" font-weight="800" fill="#203447" text-anchor="start" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"><tspan x="220.0" dy="0">Host-associated environment</tspan></text>
 <text x="86.0" y="670.0" font-size="14" font-weight="700" fill="#8A4D71" text-anchor="start" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"><tspan x="86.0" dy="0">animal, plant, human, food,</tspan><tspan x="86.0" dy="16.5">and feed-associated habitats</tspan></text>
 <rect x="80.0" y="722.0" width="537.3" height="38" rx="12" fill="#C47CA8" fill-opacity="0.14" stroke="#C47CA8" stroke-width="1.2"/>
 <text x="348.7" y="747.0" font-size="14" font-weight="800" fill="#8A4D71" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"><tspan x="348.7" dy="0">Explore host-associated samples</tspan></text>
 </a>
-<a href="/BGCMAP/sample?group1=Special/Extreme%20Environment" target="_top">
+<a href="/BGC-MAP/sample?group1=Special/Extreme%20Environment" target="_top">
 <title>Special / extreme environment · Click to filter Sample records by biome1</title>
 <rect x="667.3" y="490.0" width="585.3" height="290.0" rx="30" fill="#EAE4FB" stroke="#8A7ACB" stroke-width="2.6"/>
 <rect x="685.3" y="508.0" width="549.3" height="254.0" rx="22" fill="#ffffff" fill-opacity="0.82"/>
 <circle cx="755.3" cy="588.0" r="54" fill="#EAE4FB" stroke="#8A7ACB" stroke-width="2"/>
-<defs><clipPath id="extremeClip755588"><circle cx="755.3" cy="588.0" r="46"/></clipPath></defs><image href="/BGCMAP/static/assets/env_imgs/env_img_4.jpeg" x="703.3" y="534.0" width="104" height="104" preserveAspectRatio="xMidYMid slice" clip-path="url(#extremeClip755588)"/><circle cx="755.3" cy="588.0" r="46" fill="none" stroke="#8A7ACB" stroke-width="3"/><circle cx="759.3" cy="570.0" r="10" fill="#FFFFFF" fill-opacity="0.18"/>
+<defs><clipPath id="extremeClip755588"><circle cx="755.3" cy="588.0" r="46"/></clipPath></defs><image href="/BGC-MAP/static/assets/env_imgs/env_img_4.jpeg" x="703.3" y="534.0" width="104" height="104" preserveAspectRatio="xMidYMid slice" clip-path="url(#extremeClip755588)"/><circle cx="755.3" cy="588.0" r="46" fill="none" stroke="#8A7ACB" stroke-width="3"/><circle cx="759.3" cy="570.0" r="10" fill="#FFFFFF" fill-opacity="0.18"/>
 <text x="831.3" y="572.0" font-size="24" font-weight="800" fill="#203447" text-anchor="start" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"><tspan x="831.3" dy="0">Special / extreme</tspan><tspan x="831.3" dy="28.3">environment</tspan></text>
 <text x="697.3" y="670.0" font-size="14" font-weight="700" fill="#574A92" text-anchor="start" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"><tspan x="697.3" dy="0">geothermal, contaminated,</tspan><tspan x="697.3" dy="16.5">degraded, and simulated</tspan><tspan x="697.3" dy="16.5">habitats</tspan></text>
 <rect x="691.3" y="722.0" width="537.3" height="38" rx="12" fill="#8A7ACB" fill-opacity="0.14" stroke="#8A7ACB" stroke-width="1.2"/>
 <text x="960.0" y="747.0" font-size="14" font-weight="800" fill="#574A92" text-anchor="middle" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"><tspan x="960.0" dy="0">Explore extreme samples</tspan></text>
 </a>
-<a href="/BGCMAP/sample?group1=Other%20Environment" target="_top">
+<a href="/BGC-MAP/sample?group1=Other%20Environment" target="_top">
 <title>Other environment · Click to filter Sample records by biome1</title>
 <rect x="1278.7" y="490.0" width="585.3" height="290.0" rx="30" fill="#F8E2E2" stroke="#D85C5C" stroke-width="2.6"/>
 <rect x="1296.7" y="508.0" width="549.3" height="254.0" rx="22" fill="#ffffff" fill-opacity="0.82"/>

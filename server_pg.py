@@ -38,9 +38,9 @@ MAP_FILTERS_PATHS = (
     ROOT / "config" / "sample_global_distribution_filters.json",
 )
 PAGE_ROUTES = {
-    "/": "BGCMAP.html",
-    "/BGCMAP": "BGCMAP.html",
-    "/BGCMAP.html": "BGCMAP.html",
+    "/": "BGC-MAP.html",
+    "/BGC-MAP": "BGC-MAP.html",
+    "/BGC-MAP.html": "BGC-MAP.html",
     "/stats": "stats.html",
     "/stats.html": "stats.html",
     "/stat.html": "stats.html",
@@ -1214,7 +1214,7 @@ def normalize_order_dir(raw: str) -> str:
 
 
 class SpireHandler(BaseHTTPRequestHandler):
-    server_version = "BGCMAP"
+    server_version = "BGC-MAP"
 
     def log_message(self, fmt: str, *args) -> None:
         return
@@ -1229,9 +1229,9 @@ class SpireHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
         query = parse_qs(parsed.query)
-        # Strip /BGCMAP prefix for compatibility with nginx path-prefix deployment
-        if path.startswith("/BGCMAP"):
-            path = path[len("/BGCMAP"):] or "/"
+        # Strip /BGC-MAP prefix for compatibility with nginx path-prefix deployment
+        if path.startswith("/BGC-MAP"):
+            path = path[len("/BGC-MAP"):] or "/"
         if path in PAGE_ROUTES: return self.serve_page(PAGE_ROUTES[path])
         if path.startswith("/static/"): return self.serve_static(path.removeprefix("/static/"))
         if path.startswith("/antismash/"): return self.serve_antismash(path.removeprefix("/antismash/"))
