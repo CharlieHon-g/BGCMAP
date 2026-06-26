@@ -60,8 +60,9 @@ a:hover {
 
 .brand-title {
   display: flex;
-  flex-direction: column;
-  gap: 0;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
   min-width: 0;
 }
 
