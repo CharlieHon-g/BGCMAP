@@ -61,16 +61,25 @@ a:hover {
 .brand-title {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
   min-width: 0;
+}
+
+.brand-title strong {
+  margin-top: -4px;
 }
 
 .brand-mark {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   font-size: 1.4rem;
   letter-spacing: 0.02em;
+}
+
+.brand-name-block {
+  display: flex;
+  flex-direction: column;
 }
 
 .brand-title strong {
