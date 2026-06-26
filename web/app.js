@@ -2604,7 +2604,7 @@ async function loadBgcs(page = Number(params.get("page") || 1)) {
     (row) => {
       const label = bestTaxonLabel(row);
       const bgcLabel = row.bgc_source_id || row.bgc_name;
-      const bgcTarget = row.antismash_url || `${BASE}/bgc?bgc_id=${encodeURIComponent(row.bgc_source_id)}`;
+      const bgcTarget = row.antismash_url ? BASE + row.antismash_url : `${BASE}/bgc?bgc_id=${encodeURIComponent(row.bgc_source_id)}`;
       return {
         cells: `
           <td>${renderTaxonomyDisclosure(row, bgcLabel, bgcTarget)}</td>
