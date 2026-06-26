@@ -277,7 +277,7 @@ input {
   text-align: justify;
   font-size: 0.95rem;
   line-height: 1.6;
-  padding-top: 20px;
+  padding-top: 30px;
 }
 .home-hero-copy p {
   margin: 0;
@@ -2096,6 +2096,7 @@ tr:hover td {
 /* ── Home search bar ── */
 .home-search-wrap {
   position: relative;
+  margin-top: -20px;
 }
 .home-search-bar {
   display: flex;
