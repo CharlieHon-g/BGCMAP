@@ -1234,35 +1234,74 @@ def main() -> None:
 
 def build_stats_json(conn) -> None:
     import json as _json
+    from datetime import date as _date, datetime as _datetime
 
     cur = conn.cursor()
     cur.execute("SET search_path TO bgcmap, public;")
 
+    def conv(v):
+        if isinstance(v, (_date, _datetime)):
+            return str(v)
+        return v
+
+    cur.execute("SELECT * FROM mv_home_stats")
+    stats = dict(cur.fetchone())
+    cur.execute("SELECT count(*) AS cnt FROM mv_np_page WHERE np_pathway IS NOT NULL")
+    stats["np_count"] = cur.fetchone()["cnt"]
+    cur.execute("SELECT * FROM release_version WHERE is_current = TRUE LIMIT 1")
+    release = {k: conv(v) for k, v in dict(cur.fetchone()).items()}
+
+    cur.execute("SELECT COALESCE(NULLIF(phylum, ''), 'Unclassified') AS phylum, COUNT(*) AS cnt FROM mv_mag_page GROUP BY phylum ORDER BY cnt DESC")
+    phylum_rows = [{"name": r["phylum"], "cnt": int(r["cnt"])} for r in cur.fetchall()]
+
+    cur.execute("SELECT CASE WHEN membership_value <= 0.1 THEN 'backbone' WHEN membership_value <= 0.4 THEN 'core' ELSE 'peripheral' END AS grp, COUNT(*) AS cnt FROM bgc_gcf_membership GROUP BY grp")
+    gcf_rows = [{"type": r["grp"], "cnt": int(r["cnt"])} for r in cur.fetchall()]
+
+    cur.execute("SELECT COALESCE(NULLIF(biome1, ''), 'Unknown') AS g, COUNT(*) AS c FROM sample WHERE biome1 IS NOT NULL AND biome1 <> '' GROUP BY 1 ORDER BY c DESC")
+    biome_rows = [{"name": r["g"].replace(" Environment", "").replace(" environment", ""), "cnt": int(r["c"])} for r in cur.fetchall()]
+
+    cur.execute("SELECT COALESCE(NULLIF(category_primary, ''), 'Unknown') AS g, COUNT(*) AS c FROM bgc WHERE category_primary IS NOT NULL AND category_primary <> '' GROUP BY 1 ORDER BY c DESC LIMIT 8")
+    bgc_rows = [{"name": r["g"], "cnt": int(r["c"])} for r in cur.fetchall()]
+
+    cur.execute("SELECT COALESCE(SUM(CASE WHEN bgc_count=1 THEN 1 ELSE 0 END),0) AS c1, COALESCE(SUM(CASE WHEN bgc_count BETWEEN 2 AND 4 THEN 1 ELSE 0 END),0) AS c2_4, COALESCE(SUM(CASE WHEN bgc_count BETWEEN 5 AND 8 THEN 1 ELSE 0 END),0) AS c5_8, COALESCE(SUM(CASE WHEN bgc_count BETWEEN 9 AND 30 THEN 1 ELSE 0 END),0) AS c9_30, COALESCE(SUM(CASE WHEN bgc_count BETWEEN 31 AND 50 THEN 1 ELSE 0 END),0) AS c31_50, COALESCE(SUM(CASE WHEN bgc_count>50 THEN 1 ELSE 0 END),0) AS c50p FROM mv_gcf_page")
+    gs = cur.fetchone()
+    gcf_size = [{"label":"1","cnt":int(gs["c1"])},{"label":"2-4","cnt":int(gs["c2_4"])},{"label":"5-8","cnt":int(gs["c5_8"])},{"label":"9-30","cnt":int(gs["c9_30"])},{"label":"31-50","cnt":int(gs["c31_50"])},{"label":">50","cnt":int(gs["c50p"])}]
+
+    cur.execute("""SELECT np_pathway AS pathway, NULL::text AS superclass, NULL::text AS class, count(*) AS cnt FROM mv_np_page WHERE np_pathway IS NOT NULL GROUP BY np_pathway UNION ALL SELECT np_pathway, np_superclass, NULL::text, count(*) FROM mv_np_page WHERE np_pathway IS NOT NULL AND np_superclass IS NOT NULL GROUP BY np_pathway, np_superclass UNION ALL SELECT np_pathway, np_superclass, np_class, count(*) FROM mv_np_page WHERE np_pathway IS NOT NULL AND np_superclass IS NOT NULL AND np_class IS NOT NULL GROUP BY np_pathway, np_superclass, np_class ORDER BY pathway, superclass, class""")
+    np_hierarchy = [dict(r) for r in cur.fetchall()]
+
+    _json.dump({
+        "stats": {k: conv(v) for k, v in stats.items()},
+        "release": release,
+        "phylum": phylum_rows,
+        "gcf_membership": gcf_rows,
+        "biome": biome_rows,
+        "bgc_type": bgc_rows,
+        "gcf_size": gcf_size,
+        "np_hierarchy": np_hierarchy,
+    }, open(ROOT / "web" / "stats_data.json", "w"), ensure_ascii=False)
+
+    # Also write old format for backward compat
     cur.execute("SELECT biome1 AS g, COUNT(*) AS c FROM sample WHERE biome1 IS NOT NULL AND biome1 <> '' GROUP BY biome1 ORDER BY c DESC")
     group1_rows = [{"label": r["g"], "value": r["c"]} for r in cur.fetchall()]
     cur.execute("SELECT biome2 AS g, COUNT(*) AS c FROM sample WHERE biome2 IS NOT NULL AND biome2 <> '' GROUP BY biome2 ORDER BY c DESC")
     group2_rows = [{"label": r["g"], "value": r["c"]} for r in cur.fetchall()]
     cur.execute("SELECT biome3 AS g, COUNT(*) AS c FROM sample WHERE biome3 IS NOT NULL AND biome3 <> '' GROUP BY biome3 ORDER BY c DESC")
     group3_rows = [{"label": r["g"], "value": r["c"]} for r in cur.fetchall()]
-
-    links_12 = []
-    links_23 = []
+    links_12, links_23 = [], []
     cur.execute("SELECT biome1, biome2, biome3 FROM sample WHERE biome1 IS NOT NULL AND biome2 IS NOT NULL AND biome3 IS NOT NULL")
     for row in cur.fetchall():
         links_12.append({"source": row["biome1"], "target": row["biome2"]})
         links_23.append({"source": row["biome2"], "target": row["biome3"]})
-
-    dst = ROOT / "web" / "stats_cache.json"
     cur.execute("SELECT category_primary AS c, COUNT(*) AS cnt FROM bgc WHERE category_primary IS NOT NULL AND category_primary <> '' GROUP BY category_primary ORDER BY cnt DESC")
-    bgc_type_rows = [{"label": r["c"], "value": r["cnt"]} for r in cur.fetchall()]
     _json.dump({
-        "bgc_type_rows": bgc_type_rows,
+        "bgc_type_rows": [{"label": r["c"], "value": r["cnt"]} for r in cur.fetchall()],
         "group1_rows": group1_rows,
         "group2_rows": group2_rows,
         "group3_rows": group3_rows,
         "links_12": links_12,
         "links_23": links_23,
-    }, open(dst, "w"), ensure_ascii=False)
+    }, open(ROOT / "web" / "stats_cache.json", "w"), ensure_ascii=False)
 
     cur.close()
 

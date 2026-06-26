@@ -113,12 +113,7 @@
       return '<article class="chart-card"><h2>'+title+'</h2><div class="chart-wrap">'+svgHtml+'</div></article>';
     }
 
-    Promise.all([
-      fetch('/BGCMAP/api/stats', { headers: { "X-API-Key": "bgcmap2026" } }).then(function(r){return r.json()}),
-      fetch('/BGCMAP/api/stats-charts', { headers: { "X-API-Key": "bgcmap2026" } }).then(function(r){return r.json()}),
-      fetch('/BGCMAP/api/np-hierarchy', { headers: { "X-API-Key": "bgcmap2026" } }).then(function(r){return r.json()})
-    ]).then(function(resps){
-      var d=resps[0], ch=resps[1], npd=resps[2];
+    fetch('/BGCMAP/static/stats_data.json').then(function(r){return r.json()}).then(function(d){
       var s=d.stats;
       document.getElementById('stats-release').innerHTML='Current release: <strong>'+d.release.release_name+'</strong>';
       document.getElementById('kpi-strip').innerHTML=[
@@ -126,19 +121,16 @@
         ['Geocoded',s.geocoded_sample_count]
       ].map(function(lv){return '<div class="kpi-box"><div class="num">'+(lv[1]||0).toLocaleString()+'</div><div class="label">'+lv[0]+'</div></div>'}).join('');
 
-      // 1. Phylum: top 20 + Other
-      var phy = ch.phylum.slice(0,20);
-      var rest = ch.phylum.slice(20);
+      var phy = d.phylum.slice(0,20);
+      var rest = d.phylum.slice(20);
       if(rest.length){var rc=rest.reduce(function(s,r){return s+r.cnt},0);phy.push({name:'Other ('+rest.length+' phyla)',cnt:rc})}
       var h1 = hbarSVG(phy, 580, 180, 260);
 
-      // 2. Biome pie
-      var h2 = ch.biome.length ? pieSVG(ch.biome, 500, 280, ' samples') : emptySVG(500,100,'No data');
+      var h2 = d.biome.length ? pieSVG(d.biome, 500, 280, ' samples') : emptySVG(500,100,'No data');
 
-      // 3. NP pathway pie (7 split values)
       var npPw={};
-      for(var i=0;i<npd.rows.length;i++){
-        var r=npd.rows[i];if(r.superclass||r.class)continue;
+      for(var i=0;i<d.np_hierarchy.length;i++){
+        var r=d.np_hierarchy[i];if(r.superclass||r.class)continue;
         var vs=r.pathway.split(';');
         for(var j=0;j<vs.length;j++){var v=vs[j].trim();if(v)npPw[v]=(npPw[v]||0)+r.cnt}
       }
@@ -146,15 +138,12 @@
       npArr.sort(function(a,b){return b.cnt-a.cnt});
       var h3 = pieSVG(npArr, 500, 290);
 
-      // 4. BGC type pie
-      var h4 = ch.bgc_type.length ? pieSVG(ch.bgc_type, 500, 310) : emptySVG(500,100,'No data');
+      var h4 = d.bgc_type.length ? pieSVG(d.bgc_type, 500, 310) : emptySVG(500,100,'No data');
 
-      // 5. GCF size bar
-      var h5 = vbBarSVG(ch.gcf_size, 500, 250, 65, 18, 0.82);
+      var h5 = vbBarSVG(d.gcf_size, 500, 250, 65, 18, 0.82);
 
-      // 6. GCF membership bar
       var gcfLabels={backbone:'Backbone',core:'Core',peripheral:'Peripheral'};
-      var gcfArr = ch.gcf_membership.map(function(r){return{label:gcfLabels[r.type]||r.type,cnt:r.cnt}});
+      var gcfArr = d.gcf_membership.map(function(r){return{label:gcfLabels[r.type]||r.type,cnt:r.cnt}});
       var h6 = vbBarSVG(gcfArr, 500, 250, 100, 30, 0.82);
 
       var titles = ['Phylum distribution','Biome distribution','NP pathway distribution',
