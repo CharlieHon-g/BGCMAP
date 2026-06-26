@@ -76,6 +76,7 @@ a:hover {
 .brand-title strong {
   color: #173550;
   font-size: 1.5rem;
+  white-space: nowrap;
 }
 
 .brand-title span:last-child {
