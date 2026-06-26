@@ -1233,10 +1233,10 @@ class SpireHandler(BaseHTTPRequestHandler):
         if path.startswith("/BGCMAP"):
             path = path[len("/BGCMAP"):] or "/"
         if path in PAGE_ROUTES: return self.serve_page(PAGE_ROUTES[path])
-        if path.startswith("/static/"): return self.serve_static(path[len("/static/"):])
-        if path.startswith("/antismash/"): return self.serve_antismash(path[len("/antismash/"):])
+        if path.startswith("/static/"): return self.serve_static(path.removeprefix("/static/"))
+        if path.startswith("/antismash/"): return self.serve_antismash(path.removeprefix("/antismash/"))
         if path.startswith("/download-asset/"):
-            return self.serve_download_asset(unquote(path[len("/download-asset/"):]))
+            return self.serve_download_asset(unquote(path.removeprefix("/download-asset/")))
         if path == "/api/stats": return self.api_home()
         if path == "/api/home-phylo": return self.api_home_phylo()
         if path == "/api/samples": return self.api_samples(query)
