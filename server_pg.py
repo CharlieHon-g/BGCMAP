@@ -1730,7 +1730,12 @@ class SpireHandler(BaseHTTPRequestHandler):
             payload_rows.append(item)
         send_json(self, {"rows": payload_rows, "release": row_to_dict(release)})
 
+    _np_hierarchy_cache: Optional[list] = None
+
     def api_np_hierarchy(self) -> None:
+        if self._np_hierarchy_cache is not None:
+            send_json(self, {"rows": self._np_hierarchy_cache})
+            return
         conn = open_db()
         cur = conn.cursor()
         cur.execute("""
@@ -1750,7 +1755,8 @@ class SpireHandler(BaseHTTPRequestHandler):
         rows = cur.fetchall()
         conn.close()
         import json
-        send_json(self, {"rows": [dict(r) for r in rows]})
+        type(self)._np_hierarchy_cache = [dict(r) for r in rows]
+        send_json(self, {"rows": self._np_hierarchy_cache})
 
     def api_stats_charts(self) -> None:
         conn = open_db()
