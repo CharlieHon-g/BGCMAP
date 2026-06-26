@@ -71,7 +71,7 @@ a:hover {
 
 .brand-mark {
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   font-size: 1.4rem;
   letter-spacing: 0.02em;
