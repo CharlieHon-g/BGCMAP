@@ -1163,10 +1163,7 @@ def serve_file(handler, target: Path, *, download_name: Optional[str] = None) ->
             handler.send_header("Content-Encoding", "gzip")
             handler.send_header("Content-Length", str(len(compressed)))
             handler.end_headers()
-            try:
-                handler.wfile.write(compressed)
-            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
-                pass
+            handler.wfile.write(compressed)
             return
     
     handler.send_response(HTTPStatus.OK)
