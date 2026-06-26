@@ -1229,6 +1229,9 @@ class SpireHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
         query = parse_qs(parsed.query)
+        # Strip /BGCMAP prefix for compatibility with nginx path-prefix deployment
+        if path.startswith("/BGCMAP"):
+            path = path[len("/BGCMAP"):] or "/"
         if path in PAGE_ROUTES: return self.serve_page(PAGE_ROUTES[path])
         if path.startswith("/static/"): return self.serve_static(path.removeprefix("/static/"))
         if path.startswith("/antismash/"): return self.serve_antismash(path.removeprefix("/antismash/"))
