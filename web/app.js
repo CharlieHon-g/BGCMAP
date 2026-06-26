@@ -2516,10 +2516,10 @@ async function loadMags(page = Number(params.get("page") || 1)) {
               ? row.genus || "NA"
               : (row.species_lineage || row.species || "NA");
       let target = null;
-      if (taxMode === "phylum" && row.phylum) target = `/tax?tax_mode=phylum&phylum=${encodeURIComponent(row.phylum)}`;
-      else if (taxMode === "class" && row.class_name) target = `/tax?tax_mode=class&class_name=${encodeURIComponent(row.class_name)}`;
-      else if (taxMode === "genus" && row.genus) target = `/tax?tax_mode=genus&genus=${encodeURIComponent(row.genus)}`;
-      else if (taxMode === "species" && (row.species_lineage || row.species)) target = `/tax?tax_mode=species&species=${encodeURIComponent(row.species_lineage || row.species)}`;
+      if (taxMode === "phylum" && row.phylum) target = `${BASE}/tax?tax_mode=phylum&phylum=${encodeURIComponent(row.phylum)}`;
+      else if (taxMode === "class" && row.class_name) target = `${BASE}/tax?tax_mode=class&class_name=${encodeURIComponent(row.class_name)}`;
+      else if (taxMode === "genus" && row.genus) target = `${BASE}/tax?tax_mode=genus&genus=${encodeURIComponent(row.genus)}`;
+      else if (taxMode === "species" && (row.species_lineage || row.species)) target = `${BASE}/tax?tax_mode=species&species=${encodeURIComponent(row.species_lineage || row.species)}`;
       return {
         cells: `
           <td>${renderTaxonomyDisclosure(row, label, target)}</td>
@@ -2589,7 +2589,7 @@ async function loadBgcs(page = Number(params.get("page") || 1)) {
     (row) => {
       const label = bestTaxonLabel(row);
       const bgcLabel = row.bgc_source_id || row.bgc_name;
-      const bgcTarget = row.antismash_url || `/bgc?bgc_id=${encodeURIComponent(row.bgc_source_id)}`;
+      const bgcTarget = row.antismash_url || `${BASE}/bgc?bgc_id=${encodeURIComponent(row.bgc_source_id)}`;
       return {
         cells: `
           <td>${renderTaxonomyDisclosure(row, bgcLabel, bgcTarget)}</td>
