@@ -312,7 +312,7 @@ input {
   align-items: center;
   gap: 12px;
   color: #ef2424;
-  font-size: clamp(1.8rem, 2.8vw, 3rem);
+  font-size: clamp(1.8rem, 2.4vw, 2.4rem);
   font-weight: 900;
 }
 

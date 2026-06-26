@@ -1,5 +1,6 @@
 const qs = (selector, root = document) => root.querySelector(selector);
 const qsa = (selector, root = document) => [...root.querySelectorAll(selector)];
+const BASE = "/BGCMAP";
 let params = new URLSearchParams(window.location.search);
 const taxExpandedRows = new Set();
 let taxExpandAll = false;
@@ -27,7 +28,7 @@ function setActiveNav() {
 }
 
 async function getJSON(url) {
-  const response = await fetch(url, { headers: { "X-API-Key": "bgcmap2026" } });
+  const response = await fetch(BASE + url, { headers: { "X-API-Key": "bgcmap2026" } });
   if (!response.ok) {
     throw new Error(`Request failed: ${response.status}`);
   }
@@ -1223,7 +1224,7 @@ function initHomeSearch() {
     if (!chip || !value) return;
     const page = getTargetPage(chip);
     const filters = makeFieldFilter(chip, value);
-    window.location = `/${page}?filters=${encodeURIComponent(filters)}`;
+    window.location = `${BASE}/${page}?filters=${encodeURIComponent(filters)}`;
   }
 
   chipsContainer.addEventListener("click", (e) => {

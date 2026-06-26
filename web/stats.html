@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Stat · BGCMAP</title>
-  <link rel="stylesheet" href="/static/style.css?v=20260720">
+  <link rel="stylesheet" href="/BGCMAP/static/style.css?v=20260720">
   <style>
     .kpi-row { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:24px; justify-content:center; }
     .kpi-box { flex:0 1 180px; background:#fbfdff; border:1px solid #d4dfef; border-radius:14px; padding:18px 20px; text-align:center; }
@@ -19,16 +19,16 @@
 <body data-page="stats">
   <header class="site-header">
     <div class="site-header-inner">
-      <a class="brand-title" href="/BGCMAP"><span class="brand-mark"><img class="diamond-icon" src="/static/assets/bgcmap_logo_v1.svg" alt=""><strong>BGCMAP</strong></span></a>
+      <a class="brand-title" href="/BGCMAP"><span class="brand-mark"><img class="diamond-icon" src="/BGCMAP/static/assets/bgcmap_logo_v1.svg" alt=""><strong>BGCMAP</strong></span></a>
       <nav class="top-nav">
         <a data-page="home" href="/BGCMAP">Home</a>
-        <a data-page="sample" href="/sample">Sample</a>
-        <a data-page="tax" href="/tax">Taxon</a>
-        <a data-page="bgc" href="/bgc">BGC</a>
-        <a data-page="np" href="/np">NP</a>
-        <a data-page="stats" href="/stats">Stat</a>
-        <a data-page="download" href="/download">Download</a>
-        <a data-page="help" href="/help">Help</a>
+        <a data-page="sample" href="/BGCMAP/sample">Sample</a>
+        <a data-page="tax" href="/BGCMAP/tax">Taxon</a>
+        <a data-page="bgc" href="/BGCMAP/bgc">BGC</a>
+        <a data-page="np" href="/BGCMAP/np">NP</a>
+        <a data-page="stats" href="/BGCMAP/stats">Stat</a>
+        <a data-page="download" href="/BGCMAP/download">Download</a>
+        <a data-page="help" href="/BGCMAP/help">Help</a>
       </nav>
     </div>
   </header>
@@ -114,9 +114,9 @@
     }
 
     Promise.all([
-      fetch('/api/stats', { headers: { "X-API-Key": "bgcmap2026" } }).then(function(r){return r.json()}),
-      fetch('/api/stats-charts', { headers: { "X-API-Key": "bgcmap2026" } }).then(function(r){return r.json()}),
-      fetch('/api/np-hierarchy', { headers: { "X-API-Key": "bgcmap2026" } }).then(function(r){return r.json()})
+      fetch('/BGCMAP/api/stats', { headers: { "X-API-Key": "bgcmap2026" } }).then(function(r){return r.json()}),
+      fetch('/BGCMAP/api/stats-charts', { headers: { "X-API-Key": "bgcmap2026" } }).then(function(r){return r.json()}),
+      fetch('/BGCMAP/api/np-hierarchy', { headers: { "X-API-Key": "bgcmap2026" } }).then(function(r){return r.json()})
     ]).then(function(resps){
       var d=resps[0], ch=resps[1], npd=resps[2];
       var s=d.stats;
@@ -165,6 +165,6 @@
       ].join('');
     });
   </script>
-  <script src="/static/app.js?v=20260720"></script>
+  <script src="/BGCMAP/static/app.js?v=20260720"></script>
 </body>
 </html>
