@@ -1270,7 +1270,7 @@ class SpireHandler(BaseHTTPRequestHandler):
         target = (ANTISMASH_ROOT / relative_path).resolve()
         if ANTISMASH_ROOT.resolve() not in target.parents and target != ANTISMASH_ROOT.resolve():
             self.send_error(HTTPStatus.FORBIDDEN, "Forbidden"); return
-        if target.suffix.lower() not in (".html", ".js"):
+        if target.suffix.lower() not in (".html", ".js", ".css"):
             self.send_error(HTTPStatus.NOT_FOUND, "Not found"); return
         serve_file(self, target)
 
