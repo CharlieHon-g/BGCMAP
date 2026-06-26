@@ -2732,7 +2732,7 @@ async function loadDownloads() {
       <td>${ellipsisText(row.file_format || "NA")}</td>
       <td>${row.bytes ? (row.bytes / 1073741824).toFixed(2) + ' GB' : 'NA'}</td>
       <td>${ellipsisText(row.description || "NA")}</td>
-      <td><a class="pill-link" href="${row.download_url}">Download</a></td>
+      <td><a class="pill-link" href="${BASE + row.download_url}">Download</a></td>
     `,
     {
       tableClass: "download-table-fixed",
